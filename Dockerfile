@@ -33,4 +33,5 @@ COPY ${src} ${target}
 
 #SET Debug-Level and ENTRYPOINT
 ENV WINEDEBUG=-all
+ENV TERM=xterm
 ENTRYPOINT ["wine", "/ready-at-dawn-echo-arena/bin/win10/echovr.exe"]
