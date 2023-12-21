@@ -88,7 +88,32 @@ docker run -d --restart unless-stopped -v $(pwd)/ready-at-dawn-echo-arena:/ready
 
 **It is important that you dont use the -host flag for remove of the network isolation between host and container, as this also changes the hostname of the container.
 This will break it!**
+**Every running Container will stay on as long as you dont stop them manually. Even after reboot!**
 
+
+# Important Things:
+- Logs are located in:
+```
+./ready-at-dawn-echo-arena/logs/<container_id>
+```
+- Show running containers:
+```
+docker ps
+```
+- Stop a running container:
+```
+docker stop <container_id>
+```
+- Stop all containers (Ignore the warnings):
+```
+docker stop $(docker ps)
+```
+
+- Change the start parameters of the Echo Server:
+They are configures in the following file
+```
+./scripts/start-echo.sh
+```
 
 
 
