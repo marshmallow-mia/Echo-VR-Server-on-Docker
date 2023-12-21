@@ -29,16 +29,13 @@ Arch:
 pacman -S git
 ```
 ## Clone the Repo:
-You need to clone this repo into the same directory where your echo folder called **"ready-at-dawn-echo-arena"** is located. 
-Good folders are /opt or /srv as an example.
+Clone the Repo, good folders are /opt or /srv as an example.
 
 Clone it with:
 ```
 git clone https://github.com/BL00DY-C0D3/Echo-VR-Server-on-Docker.git
 ```
-
-
-
+**You need to have the Echo-Folder called  "ready-at-dawn-echo-arena" inside the just cloned folder "Echo-VR-Server-on-Docker"**
 
 # Install using the install.sh script
 
