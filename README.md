@@ -13,7 +13,13 @@ I will get into both methods. The install.sh Method is prefered
 
 # Install using the install.sh script
 
-As already mentioned
+As already mentioned this method does almost everything for you.
+Just run the install.sh with **bash ./install.sh** and it will ask you everything needed like IP, Port, Name, Region.
+
+**You are done.**
+To start a new container just run the run.sh script with **bash ./run.sh**
+Every running Container will stay on as long as you dont stop them manually. Even after reboot!
+See  at **Important Things** for more important informations
 
 
 
