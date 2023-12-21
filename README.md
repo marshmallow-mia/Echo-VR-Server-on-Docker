@@ -37,6 +37,11 @@ git clone https://github.com/BL00DY-C0D3/Echo-VR-Server-on-Docker.git
 ```
 **You need to have the Echo-Folder called  "ready-at-dawn-echo-arena" inside the folder you just cloned called "Echo-VR-Server-on-Docker"**
 
+cd into **Echo-VR-Server-on-Docker** with
+```
+cd ./Echo-VR-Server-on-Docker
+```
+
 # Install using the install.sh script
 
 As already mentioned this method does almost everything for you.
