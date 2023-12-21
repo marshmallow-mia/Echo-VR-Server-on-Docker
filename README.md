@@ -68,6 +68,7 @@ See  at **Important Things** for more important informations
 5. Configure the $region variable at ./scripts/start-echo.sh
 
 # Start a container:
+
 **1.** To start a container you can either just use the run.sh script by:
 
 ```
