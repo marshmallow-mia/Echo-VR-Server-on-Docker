@@ -68,8 +68,22 @@ See  at **Important Things** for more important informations
 5. Configure the $region variable at ./scripts/start-echo.sh
 
 # Start a container:
-To start a container you can either just use the 
+To start a container you can either just use the run.sh script by:
+**1.**
+```
+bash ./run.sh
+```
+This will check for an unsused port that is configured in your 
+```
+./ready-at-dawn-echo-arena/sourcedb/rad15/json/r14/config/netconfig_dedicatedserver.json
+```
+**2.**
+Or you start it with the following command:
+```
+docker run -d --restart unless-stopped -v $(pwd)/ready-at-dawn-echo-arena:/ready-at-dawn-echo-arena -v ./scripts:/scripts  -p <inner_port>:<outer_port>/udp ready-at-dawn-echo-arena &
+````
 
+It is important that you dont use the -host flag for 	Remove network isolation , as this also changes
 
 
 
