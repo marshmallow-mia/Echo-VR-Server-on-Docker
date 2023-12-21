@@ -21,6 +21,7 @@ Debian/Ubuntu:
 apt install git
 ```
 CentOS/Fedora:
+CentOS on Google Cloud might not work correctly for some reason. Even tho it does on other VPS
 ```
 yum install git
 ```
