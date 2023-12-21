@@ -7,8 +7,11 @@ As the Dockerfile is based on the ARM Version of Unusual Norm, a special thanks 
 
 There are 2 methods you can install this. 
 1. with the install.sh: This automatically does install everything needed, builds the container and configures everything needed to get the server running
-2. Building and setting everything ub by yourself
-I will get into both methods. The install.sh Method is prefered
+2. Building and setting everything up by yourself.
+
+I will get into both methods. The install.sh method is prefered
+
+**I will not provide the Echo-Folder that contains the binarys! You need to get it by yourself.**
 
 # First clone this repo
 ## Install git:
@@ -44,15 +47,16 @@ Just run the install.sh with
 ```
 bash ./install.sh
 ```
-and it will ask you everything needed like IP, Port, Name, Region.
+and it will ask you everything needed like IP, Port, Name, Region and more.
 
 **You are done.**
+
 To start a new container just run the run.sh script with 
 ```
 bash ./run.sh
 ```
 Every running Container will stay on as long as you dont stop them manually. Even after reboot!
-See  at **Important Things** for more important informations
+See  at **Important Things** for more important informations.
 
 
 # Install and configure it all by yourself
@@ -88,6 +92,7 @@ docker run -d --restart unless-stopped -v $(pwd)/ready-at-dawn-echo-arena:/ready
 
 **It is important that you dont use the -host flag for remove of the network isolation between host and container, as this also changes the hostname of the container.
 This will break it!**
+
 **Every running Container will stay on as long as you dont stop them manually. Even after reboot!**
 
 
