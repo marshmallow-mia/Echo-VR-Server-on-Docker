@@ -115,38 +115,14 @@ They are configures in the following file
 ./scripts/start-echo.sh
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-you need to change the REGION to one of these:
-
-
-If you want to allow the server instances to run on not more then X threads, you can use:
+- If you want to allow the server instances to run on not more then X threads, you can use the following parameter.
+Dont set this to low, as it will need enough threads to run. 2 should be the minimum.
 ```
 -numtaskthreads X
 ```
-Dont set this to low, as it will need enough threads to run. 2 should be the minimum.
 
 
-Every possible Flag you could set:
-
+- Every possible Flag you could set:
 
 ```
 * -help: takes 0 arguments.
