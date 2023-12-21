@@ -110,7 +110,7 @@ docker stop $(docker ps)
 ```
 
 - Change the start parameters of the Echo Server:
-They are configures in the following file
+They are configured in the following file
 ```
 ./scripts/start-echo.sh
 ```
