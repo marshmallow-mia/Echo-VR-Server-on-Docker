@@ -26,8 +26,13 @@ Arch:
 pacman -S git
 ```
 ## Clone the Repo:
-You need to clone this repo into the same directory where your 
+You need to clone this repo into the same directory where your echo folder called **"ready-at-dawn-echo-arena"** is located. 
+Good folders are /opt or /srv as an example.
 
+Clone it with:
+```
+git clone https://github.com/BL00DY-C0D3/Echo-VR-Server-on-Docker.git
+```
 
 
 
@@ -48,6 +53,25 @@ bash ./run.sh
 ```
 Every running Container will stay on as long as you dont stop them manually. Even after reboot!
 See  at **Important Things** for more important informations
+
+
+# Install and configure it all by yourself
+
+1. Install Docker
+2. Install lsof (Not needed if you dont use the run.sh to start a container)
+3. Build the container with:
+  
+   ``` 
+   docker build -t ready-at-dawn-echo-arena . 
+   ```
+4. Configure the config.json at ./ready-at-dawn-echo-arena/_local/config.json
+5. Configure the $region variable at ./scripts/start-echo.sh
+
+# Start a container:
+To start a container you can either just use the 
+
+
+
 
 
 
