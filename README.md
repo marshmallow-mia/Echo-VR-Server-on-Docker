@@ -1,20 +1,36 @@
 # Echo-Server-on-Docker
+Docker based Echo VR Server with Error-Checking and restarts if an error occours.
 
 With this Repo you can automatically install and configure everything  you need to run the Echo Server Instances in Docker Containers.
 
 As the Dockerfile is based on the ARM Version of Unusual Norm, a special thanks to him!
 
-In the near future I will add an Error Check and autorestart of the Server Instances when errors happen.
+There are 2 methods you can install this. 
+1. with the install.sh: This automatically does install everything needed, builds the container and configures everything needed to get the server running
+2. Building and setting everything ub by yourself
+I will get into both methods. The install.sh Method is prefered
 
-If you want to pull the dockercontainer use:
-```
-docker pull ghcr.io/bl00dy-c0d3/echo-vr-server-on-docker:main
-```
-To start the container, you NEED to be inside the directory where your "ready-at-dawn-echo-arena"-Folder is located.
-You can start the Container with:
-```
-docker run -d --rm -v $(pwd)/ready-at-dawn-echo-arena:/ready-at-dawn-echo-arena --network host ghcr.io/bl00dy-c0d3/echo-vr-server-on-docker:main -noovr -server -headless -timestep 120 -fixedtimestep -nosymbollookup -serverregion REGION
-```
+
+# Install using the install.sh script
+
+As already mentioned
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 you need to change the REGION to one of these:
 ```
 "uscn", // US Central North (Chicago)
