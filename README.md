@@ -10,14 +10,42 @@ There are 2 methods you can install this.
 2. Building and setting everything ub by yourself
 I will get into both methods. The install.sh Method is prefered
 
+# First clone this repo
+## Install git:
+
+Debian/Ubuntu:
+```
+apt install git
+```
+CentOS/Fedora:
+```
+yum install git
+```
+Arch:
+```
+pacman -S git
+```
+## Clone the Repo:
+You need to clone this repo into the same directory where your 
+
+
+
+
 
 # Install using the install.sh script
 
 As already mentioned this method does almost everything for you.
-Just run the install.sh with **bash ./install.sh** and it will ask you everything needed like IP, Port, Name, Region.
+Just run the install.sh with 
+```
+bash ./install.sh
+```
+and it will ask you everything needed like IP, Port, Name, Region.
 
 **You are done.**
-To start a new container just run the run.sh script with **bash ./run.sh**
+To start a new container just run the run.sh script with 
+```
+bash ./run.sh
+```
 Every running Container will stay on as long as you dont stop them manually. Even after reboot!
 See  at **Important Things** for more important informations
 
