@@ -136,16 +136,7 @@ They are configures in the following file
 
 
 you need to change the REGION to one of these:
-```
-"uscn", // US Central North (Chicago)
-"us-central-2", // US Central South (Texas)
-"us-central-3", // US Central South (Texas)
-"use", // US East (Virgina)
-"usw", // US West (California)
-"euw", // EU West 
-"jp", // Japan (idk)
-"sin", // Singapore oce region
-```
+
 
 If you want to allow the server instances to run on not more then X threads, you can use:
 ```
