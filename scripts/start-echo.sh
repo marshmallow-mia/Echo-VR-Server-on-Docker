@@ -10,7 +10,8 @@
 #"jp", // Japan (idk)
 #"sin", // Singapore oce region
 region='euw'
-flags="-noovr -server -headless -timestep 120 -fixedtimestep -nosymbollookup -logpath logs/$HOSTNAME -serverregion $region"
+#$port is set as an environment variable
+flags="-noovr -server -headless -timestep 120 -fixedtimestep -nosymbollookup -port $port -logpath logs/$HOSTNAME -serverregion $region"
 
 #create the Log directory 
 mkdir /ready-at-dawn-echo-arena/logs/$HOSTNAME/old 2> /dev/null

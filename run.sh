@@ -19,7 +19,7 @@ a=$startport
 		#if not in use, use this port to start the docker container
 		if [ $portcheck = 0 ]
 		then
-			docker run -d --restart unless-stopped -v $(pwd)/ready-at-dawn-echo-arena:/ready-at-dawn-echo-arena -v ./scripts:/scripts  -p $a:$a/udp ready-at-dawn-echo-arena &
+			docker run -d --restart unless-stopped -e port=$a -v $(pwd)/ready-at-dawn-echo-arena:/ready-at-dawn-echo-arena -v ./scripts:/scripts  -p $a:$a/udp ready-at-dawn-echo-arena &
 			exit
 		fi
 		((a++))
