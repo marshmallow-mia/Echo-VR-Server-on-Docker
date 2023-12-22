@@ -16,6 +16,7 @@ apt update
 apt install -y --install-recommends wine wine32 wine64 libwine libwine:i386 fonts-wine
 apt install -y winetricks
 apt install -y winbind
+apt install -y xvfb
 
 #add winhttp to our wine environment
 winetricks winhttp
