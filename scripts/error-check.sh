@@ -5,7 +5,7 @@
 errors=( "Unable to find MiniDumpWriteDump" "[TCP CLIENT] [R14NETCLIENT] connection to ws:///config closed" "[NETGAME] Service status request failed: 400 Bad Request" "[NETGAME] Service status request failed: 404 Not Found" "[TCP CLIENT] [R14NETCLIENT] connection to ws:///login" )
 
 #The delay between checks
-delayBetweenChecks=2
+delayBetweenChecks=10
 #the time to wait before the script checks if the error is still there
 timeToWaitBeforeRestart=30
 
