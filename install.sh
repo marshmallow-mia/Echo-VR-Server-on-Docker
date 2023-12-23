@@ -248,21 +248,21 @@ function startContainer {
     echo "If you want to start the containers now, enter the amount, otherwise enter 0. (They will automaticaly restart after system reboot if you dont stop them with \"docker stop <Container-ID>\")"
     read askAmount
     
-    #Make sure it is correct
-    echo "We will start $askAmount Container
-    Is that correct? Enter y/Y for Yes, anything else for No."
-    read askAmountCorrect
-    #If not correct, start again
-    if ! [ "$askAmountCorrect" == "y" ] || [ "$askAmountCorrect" == "Y" ]
-    then
-        startContainer
-        return 14         
-    fi
-    echo "We will start the Container now. This can take some time"
-    
+   
     #Start the correct amount
     if [[ "$askAmount" =~ ^[0-9]+$ ]] && ! [ "$askAmount" = 0 ]
     then
+        #Ask if it is correct
+        echo "We will start $askAmount Container
+        Is that correct? Enter y/Y for Yes, anything else for No."
+        read askAmountCorrect
+        #If not correct, start again
+        if ! [ "$askAmountCorrect" == "y" ] || [ "$askAmountCorrect" == "Y" ]
+        then
+            startContainer
+            return 14         
+        fi
+        echo "We will start the Container now. This can take some time"
         c=0
         while [ $c -lt $askAmount ]
         do
@@ -270,22 +270,39 @@ function startContainer {
             ((c++))
             sleep 2
         done
+    elif [ "$askAmount" = 0 ]
+    then
+        echo "Okay, we will not start any Container now."
+             
     else
         echo "Amount wasnt correct"
         startContainer
         return 15
     fi
-    
+    echo -e '\033[1;32m' #write in red
     echo "The installation is done. To start a new docker container, just run the \"run.sh\" and it will do everything for you
     If you want to stop a containter run \" docker ps\" to get the ID and run \"docker stop <Container-ID>\" to stop it.
     Every running Container will stay on as long as you dont stop them manually. Even after reboot!
     If you want to change the parameters for the echo server, you can change them in ./scripts/start-echo.sh
     You will need to restart the container!
     "
+    echo -e '\033[0m' # No Color
 }
 
+#This function handles the CTRL-C INT
+function ctrl_c {
+echo -e '\033[0m' # No Color
+echo "Script was interrupted by User"
+exit
+}
+
+#Hide the ^C
+stty -echoctl
+#Sigint Trap
+trap ctrl_c SIGINT
 
 
+#Start all functions
 checkForEchoFolder
 getNeededParameterFromSTDin
 getRegion
@@ -297,4 +314,4 @@ buildPackage
 startContainer
 
 
-echo -e '\033[0m' # No Color
+
