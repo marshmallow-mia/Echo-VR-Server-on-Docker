@@ -126,7 +126,7 @@ function writeConfigFile {
         -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_transactionservice_host!$transactionservice_host!g"  -e "s!_serverdb_host!$serverdb_host!g" )"
         echo "Is this config correct? If you don't Enter y/Y we will ask you the Parameters again"
         read askCorrect
-        if ! [ "$askCorrect" =~ [yY]{1} ]
+        if ! [[ "$askCorrect" =~ [yY]{1} ]]
         then
             getNeededParameterFromSTDin
             writeConfigFile
@@ -288,7 +288,7 @@ function startContainer {
         Is that correct? Enter y/Y for Yes, anything else for No."
         read askAmountCorrect
         #If not correct, start again
-        if ! [ "$askAmountCorrect" =~ [yY]{1} ] 
+        if ! [[ "$askAmountCorrect" =~ [yY]{1} ]] 
         then
             startContainer
             return 14         
@@ -343,6 +343,3 @@ checkOS
 installNeededSoftware
 buildPackage
 startContainer
-
-
-
