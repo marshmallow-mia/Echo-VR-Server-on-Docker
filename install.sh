@@ -11,17 +11,6 @@ configJson='{
   "serverdb_host": "_serverdb_host"
 }'
 
-
-#{
-#  "publisher_lock": "echovrce",
-#  "apiservice_host": "https://api.echovrce.com",
-#  "configservice_host": "ws://config.echovrce.com",
-#  "loginservice_host": "ws://login.echovrce.com",
-#  "matchingservice_host": "ws://matchmaker.echovrce.com",
-#  "transactionservice_host": "ws://transaction.echovrce.com",
-#  "serverdb_host": "ws://serverdb.echovrce.com:6789/serverdb?api_key=e8ff-2af1-47ac-bc7c-14c3a9a742a9"
-#}
-
 #This function checks if the echo folder is available
 function checkForEchoFolder {
     if ! [ -d "./ready-at-dawn-echo-arena" ]
