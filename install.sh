@@ -11,6 +11,7 @@ configJson='{
   "serverdb_host": "_serverdb_host"
 }'
 
+
 #This function checks if the echo folder is available
 function checkForEchoFolder {
     if ! [ -d "./ready-at-dawn-echo-arena" ]
@@ -23,7 +24,7 @@ function checkForEchoFolder {
 }
 
 
-
+#This function gets parameters from User
 function getNeededParameterFromSTDin {
     echo -e '\033[0;31m' #write in red
     #Get parameters:S
@@ -43,7 +44,7 @@ function getNeededParameterFromSTDin {
     echo "Please enter the serverdb_host. It should look like 'ws://69.133.74.20[:1337]' or ws://transaction.example.org[:1337]"
     read serverdb_host
     
-    if [[ $publisher_lock  == "" ]] ||  [ "$apiservice_host"  == "" ] #||  [ "$configservice_host"  == "" ] ||  [ "$loginservice_host"  == "" ] ||  [ "$matchingservice_host"  == "" ] ||  [ "$transactionservice_host"  == "" ] ||  [ "$serverdb_host"  == "" ]
+    if [[ $publisher_lock  == "" ]] ||  [ "$apiservice_host"  == "" ] ||  [ "$configservice_host"  == "" ] ||  [ "$loginservice_host"  == "" ] ||  [ "$matchingservice_host"  == "" ] ||  [ "$transactionservice_host"  == "" ] ||  [ "$serverdb_host"  == "" ]
     then        
         echo "At least one of the entered Parameters is empty"
         #If something empty, start again
@@ -60,7 +61,6 @@ function getNeededParameterFromSTDin {
     || ! [[ $transactionservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
     || ! [[ $serverdb_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]]
     then
-        
         echo "Error, at least one of the parameters syntax is wrong. Please try again"
         getNeededParameterFromSTDin
         return 15
@@ -80,11 +80,10 @@ function getNeededParameterFromSTDin {
     echo "Enter y/Y for Yes, anything else for No" 
     read answer
     #If not correct, start again
-    if ! [[ $answer == "y" ]] || [[ $answer == "Y" ]]
+    if ! [[ $answer =~ [yY]{1} ]]
     then
         getNeededParameterFromSTDin
-        return 11
-         
+        return 11      
     fi
     
 }
@@ -94,7 +93,7 @@ function getNeededParameterFromSTDin {
 
 function getRegion {
     echo -e '\033[0;31m' #write in red
-    echo 'Please enteryour Region:
+    echo 'Please enter your Region:
     "uscn", // US Central North (Chicago)
     "us-central-2", // US Central South (Texas)
     "us-central-3", // US Central South (Texas)
@@ -121,14 +120,13 @@ function writeConfigFile {
     echo -e '\033[0;31m' #write in red
     echo "Do you want to see the config.json before we write it? Enter y/Y for Yes, anything else for No."
     read askCheck
-    if [ "$askCheck" == "y" ] || [ "$askCheck" == "Y" ]
+    if [ "$askCheck" =~ [yY]{1} ]
     then
         echo "$(echo "$configJson" | sed -e "s!_publisher_lock!$publisher_lock!g" -e "s!_apiservice_host!$apiservice_host!g" -e "s!_configservice_host!$configservice_host!g" -e "s!_loginservice_host!$loginservice_host!g" \
         -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_transactionservice_host!$transactionservice_host!g"  -e "s!_serverdb_host!$serverdb_host!g" )"
-        #echo "$configJson"
         echo "Is this config correct? If you don't Enter y/Y we will ask you the Parameters again"
         read askCorrect
-        if ! [ "$askCorrect" == "y" ] || [ "$askCorrect" == "Y" ]
+        if ! [ "$askCorrect" =~ [yY]{1} ]
         then
             getNeededParameterFromSTDin
             writeConfigFile
@@ -290,7 +288,7 @@ function startContainer {
         Is that correct? Enter y/Y for Yes, anything else for No."
         read askAmountCorrect
         #If not correct, start again
-        if ! [ "$askAmountCorrect" == "y" ] || [ "$askAmountCorrect" == "Y" ]
+        if ! [ "$askAmountCorrect" =~ [yY]{1} ] 
         then
             startContainer
             return 14         
@@ -345,3 +343,6 @@ checkOS
 installNeededSoftware
 buildPackage
 startContainer
+
+
+
