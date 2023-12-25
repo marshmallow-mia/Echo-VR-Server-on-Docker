@@ -120,7 +120,7 @@ function writeConfigFile {
     echo -e '\033[0;31m' #write in red
     echo "Do you want to see the config.json before we write it? Enter y/Y for Yes, anything else for No."
     read askCheck
-    if [ "$askCheck" =~ [yY]{1} ]
+    if [[ "$askCheck" =~ [yY]{1} ]]
     then
         echo "$(echo "$configJson" | sed -e "s!_publisher_lock!$publisher_lock!g" -e "s!_apiservice_host!$apiservice_host!g" -e "s!_configservice_host!$configservice_host!g" -e "s!_loginservice_host!$loginservice_host!g" \
         -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_transactionservice_host!$transactionservice_host!g"  -e "s!_serverdb_host!$serverdb_host!g" )"
