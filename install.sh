@@ -2,15 +2,25 @@
 #This script is used to install docker, build the container and configure everything
 
 configJson='{
-  "apiservice_host": "http://_IP:_PORT/api",
-  "configservice_host": "ws://_IP:_PORT/config",
-  "loginservice_host": "ws://_IP:_PORT/login?auth=_PW&displayname=_NAME",
-  "matchingservice_host": "ws://_IP:_PORT/matching",
-  "serverdb_host": "ws://_IP:_PORT/serverdb?api_key=_API",
-  "transactionservice_host": "ws://_IP:_PORT/transaction",
-  "publisher_lock": "rad15_live"
+  "publisher_lock": "_publisher_lock",
+  "apiservice_host": "_apiservice_host",
+  "configservice_host": "_configservice_host",
+  "loginservice_host": "_loginservice_host",
+  "matchingservice_host": "_matchingservice_host",
+  "transactionservice_host": "_transactionservice_host",
+  "serverdb_host": "_serverdb_host"
 }'
 
+
+#{
+#  "publisher_lock": "echovrce",
+#  "apiservice_host": "https://api.echovrce.com",
+#  "configservice_host": "ws://config.echovrce.com",
+#  "loginservice_host": "ws://login.echovrce.com",
+#  "matchingservice_host": "ws://matchmaker.echovrce.com",
+#  "transactionservice_host": "ws://transaction.echovrce.com",
+#  "serverdb_host": "ws://serverdb.echovrce.com:6789/serverdb?api_key=e8ff-2af1-47ac-bc7c-14c3a9a742a9"
+#}
 
 #This function checks if the echo folder is available
 function checkForEchoFolder {
@@ -24,43 +34,73 @@ function checkForEchoFolder {
 }
 
 
-#This function gets the needed Input from the user per stdin and does some basic testing
+
 function getNeededParameterFromSTDin {
     echo -e '\033[0;31m' #write in red
-    #Get parameters:
-    echo "Please enter the IP-Address and Port of the Relay-Server you want to get connected to:"
-    read ip
-    echo "Please enter your username for connecting to the server:"
-    read name
-    echo "Please enter your password (hidden):"
-    read -s password
-    echo "Please enter the API-Key (hidden):"
-    read -s api
+    #Get parameters:S
+    echo "To connect to the Relay-Server we need the following Informations."
+    echo "Please enter the 'publisher_lock'. It could be something like 'echovrce' or 'rad15_live'"
+    read publisher_lock
+    echo "Please enter the 'apiservice_host'. It should look like 'http[s]://69.133.74.20[:1337]' or 'http[s]://example.org[:1337]'"
+    read apiservice_host
+    echo "Please enter the configservice_host. It should look like 'ws://69.133.74.20[:1337]' or ws://config.example.org[:1337]"
+    read configservice_host
+    echo "Please enter the loginservice_host. It should look like 'ws://69.133.74.20[:1337]' or ws://login.example.org[:1337]"
+    read loginservice_host
+    echo "Please enter the matchingservice_host. It should look like 'ws://69.133.74.20[:1337]' or ws://matchmaker.example.org[:1337]"
+    read matchingservice_host
+    echo "Please enter the transactionservice_host. It should look like 'ws://69.133.74.20[:1337]' or ws://transaction.example.org[:1337]"
+    read transactionservice_host
+    echo "Please enter the serverdb_host. It should look like 'ws://69.133.74.20[:1337]' or ws://transaction.example.org[:1337]"
+    read serverdb_host
     
-    #check if every parameter is given, if not start again
-    if [ "$ip"  == "" ] ||  [ "$name"  == "" ] ||  [ "$password"  == "" ] ||  [ "$api"  == "" ]
-    then
+    if [[ $publisher_lock  == "" ]] ||  [ "$apiservice_host"  == "" ] #||  [ "$configservice_host"  == "" ] ||  [ "$loginservice_host"  == "" ] ||  [ "$matchingservice_host"  == "" ] ||  [ "$transactionservice_host"  == "" ] ||  [ "$serverdb_host"  == "" ]
+    then        
         echo "At least one of the entered Parameters is empty"
         #If something empty, start again
         getNeededParameterFromSTDin
         return 10
     fi
     
+    #Do some Regex to check the results
+    if ! [[ $publisher_lock =~ [-A-Za-z0-9_]+ ]] \
+    || ! [[ $apiservice_host =~ http[s]?:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
+    || ! [[ $configservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
+    || ! [[ $loginservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
+    || ! [[ $matchingservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
+    || ! [[ $transactionservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
+    || ! [[ $serverdb_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]]
+    then
+        
+        echo "Error, at least one of the parameters syntax is wrong. Please try again"
+        getNeededParameterFromSTDin
+        return 15
+
+    fi
+    
+
     #Ask if the parameters are correct
     echo "Are these Parameters correct?"
-    echo "IP:Port: "$ip
-    echo "Name: "$name
-    echo "Enter y/Y for Yes, anything else for No"
+    echo "publisher_lock: "$publisher_lock
+    echo "apiservice_host: "$apiservice_host
+    echo "Configservice_host: "$configservice_host
+    echo "loginservice_host: "$loginservice_host
+    echo "matchingservice_host: "$matchingservice_host
+    echo "transactionservice_host: "$transactionservice_host
+    echo "serverdb_host: "$serverdb_host
+    echo "Enter y/Y for Yes, anything else for No" 
     read answer
-    
     #If not correct, start again
-    if ! [ "$answer" == "y" ] || [ "$answer" == "Y" ]
+    if ! [[ $answer == "y" ]] || [[ $answer == "Y" ]]
     then
         getNeededParameterFromSTDin
         return 11
          
     fi
+    
 }
+
+
 
 
 function getRegion {
@@ -90,12 +130,12 @@ function getRegion {
 #this function checks and writes the config.json
 function writeConfigFile {
     echo -e '\033[0;31m' #write in red
-    echo "Do you want to see the config.json before we write it? Password and API-Key will be visible. Enter y/Y for Yes, anything else for No."
+    echo "Do you want to see the config.json before we write it? Enter y/Y for Yes, anything else for No."
     read askCheck
     if [ "$askCheck" == "y" ] || [ "$askCheck" == "Y" ]
     then
-        
-        echo "$(echo "$configJson" | sed -e "s/_IP:_PORT/$ip/g" -e "s/_PW/$password/g" -e "s/_NAME/$name/g" -e "s/_API/$api/g")"
+        echo "$(echo "$configJson" | sed -e "s!_publisher_lock!$publisher_lock!g" -e "s!_apiservice_host!$apiservice_host!g" -e "s!_configservice_host!$configservice_host!g" -e "s!_loginservice_host!$loginservice_host!g" \
+        -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_transactionservice_host!$transactionservice_host!g"  -e "s!_serverdb_host!$serverdb_host!g" )"
         #echo "$configJson"
         echo "Is this config correct? If you don't Enter y/Y we will ask you the Parameters again"
         read askCorrect
@@ -107,10 +147,15 @@ function writeConfigFile {
         fi
     fi
     echo "The installation of Docker will now start"
-    sleep 3
+    sleep 3 
     mv ./ready-at-dawn-echo-arena/_local/config.json ./ready-at-dawn-echo-arena/_local/config.json_backup
-    echo "$(echo "$configJson" | sed -e "s/_IP:_PORT/$ip/g" -e "s/_PW/$password/g" -e "s/_NAME/$name/g" -e "s/_API/$api/g")" > ./ready-at-dawn-echo-arena/_local/config.json
+    echo "$(echo "$configJson" | sed -e "s!_publisher_lock!$publisher_lock!g" -e "s!_apiservice_host!$apiservice_host!g" -e "s!_configservice_host!$configservice_host!g" -e "s!_loginservice_host!$loginservice_host!g" \
+    -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_transactionservice_host!$transactionservice_host!g"  -e "s!_serverdb_host!$serverdb_host!g" )" > ./ready-at-dawn-echo-arena/_local/config.json
 }
+
+
+      
+
 
 
 
@@ -247,7 +292,6 @@ function startContainer {
     #Ask for the amount
     echo "If you want to start the containers now, enter the amount, otherwise enter 0. (They will automaticaly restart after system reboot if you dont stop them with \"docker stop <Container-ID>\")"
     read askAmount
-    
    
     #Start the correct amount
     if [[ "$askAmount" =~ ^[0-9]+$ ]] && ! [ "$askAmount" = 0 ]
@@ -312,6 +356,3 @@ checkOS
 installNeededSoftware
 buildPackage
 startContainer
-
-
-
