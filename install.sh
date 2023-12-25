@@ -139,7 +139,7 @@ function writeConfigFile {
     sleep 3 
     mv ./ready-at-dawn-echo-arena/_local/config.json ./ready-at-dawn-echo-arena/_local/config.json_backup
     echo "$(echo "$configJson" | sed -e "s!_publisher_lock!$publisher_lock!g" -e "s!_apiservice_host!$apiservice_host!g" -e "s!_configservice_host!$configservice_host!g" -e "s!_loginservice_host!$loginservice_host!g" \
-    -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_serverdb_host!$serverdb_host!g" e-e "s!_transactionservice_host!$transactionservice_host!g")" > ./ready-at-dawn-echo-arena/_local/config.json
+    -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_serverdb_host!$serverdb_host!g" -e "s!_transactionservice_host!$transactionservice_host!g" )" > ./ready-at-dawn-echo-arena/_local/config.json
 }
 
 
