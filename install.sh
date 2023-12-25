@@ -7,8 +7,8 @@ configJson='{
   "configservice_host": "_configservice_host",
   "loginservice_host": "_loginservice_host",
   "matchingservice_host": "_matchingservice_host",
-  "transactionservice_host": "_transactionservice_host",
-  "serverdb_host": "_serverdb_host"
+  "serverdb_host": "_serverdb_host",
+  "transactionservice_host": "_transactionservice_host"
 }'
 
 
@@ -39,12 +39,13 @@ function getNeededParameterFromSTDin {
     read loginservice_host
     echo "Please enter the matchingservice_host. It should look like 'ws://69.133.74.20[:1337]' or ws://matchmaker.example.org[:1337]"
     read matchingservice_host
-    echo "Please enter the transactionservice_host. It should look like 'ws://69.133.74.20[:1337]' or ws://transaction.example.org[:1337]"
-    read transactionservice_host
     echo "Please enter the serverdb_host. It should look like 'ws://69.133.74.20[:1337]' or ws://transaction.example.org[:1337]"
     read serverdb_host
+    echo "Please enter the transactionservice_host. It should look like 'ws://69.133.74.20[:1337]' or ws://transaction.example.org[:1337]"
+    read transactionservice_host
+
     
-    if [[ $publisher_lock  == "" ]] ||  [ "$apiservice_host"  == "" ] ||  [ "$configservice_host"  == "" ] ||  [ "$loginservice_host"  == "" ] ||  [ "$matchingservice_host"  == "" ] ||  [ "$transactionservice_host"  == "" ] ||  [ "$serverdb_host"  == "" ]
+    if [[ $publisher_lock  == "" ]] || [ "$apiservice_host"  == "" ] || [ "$configservice_host"  == "" ] || [ "$loginservice_host"  == "" ] || [ "$matchingservice_host"  == "" ] || [ "$serverdb_host"  == "" ] || [ "$transactionservice_host"  == "" ] 
     then        
         echo "At least one of the entered Parameters is empty"
         #If something empty, start again
@@ -58,8 +59,9 @@ function getNeededParameterFromSTDin {
     || ! [[ $configservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
     || ! [[ $loginservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
     || ! [[ $matchingservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
-    || ! [[ $transactionservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
-    || ! [[ $serverdb_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]]
+    || ! [[ $serverdb_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] \
+        || ! [[ $transactionservice_host =~ ws:\/\/[-\+\.A-Za-z0-9]+:?(\d*) ]] 
+
     then
         echo "Error, at least one of the parameters syntax is wrong. Please try again"
         getNeededParameterFromSTDin
@@ -75,8 +77,8 @@ function getNeededParameterFromSTDin {
     echo "Configservice_host: "$configservice_host
     echo "loginservice_host: "$loginservice_host
     echo "matchingservice_host: "$matchingservice_host
-    echo "transactionservice_host: "$transactionservice_host
     echo "serverdb_host: "$serverdb_host
+    echo "transactionservice_host: "$transactionservice_host
     echo "Enter y/Y for Yes, anything else for No" 
     read answer
     #If not correct, start again
@@ -123,7 +125,7 @@ function writeConfigFile {
     if [[ "$askCheck" =~ [yY]{1} ]]
     then
         echo "$(echo "$configJson" | sed -e "s!_publisher_lock!$publisher_lock!g" -e "s!_apiservice_host!$apiservice_host!g" -e "s!_configservice_host!$configservice_host!g" -e "s!_loginservice_host!$loginservice_host!g" \
-        -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_transactionservice_host!$transactionservice_host!g"  -e "s!_serverdb_host!$serverdb_host!g" )"
+        -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_serverdb_host!$serverdb_host!g" -e "s!_transactionservice_host!$transactionservice_host!g" )"
         echo "Is this config correct? If you don't Enter y/Y we will ask you the Parameters again"
         read askCorrect
         if ! [[ "$askCorrect" =~ [yY]{1} ]]
@@ -137,7 +139,7 @@ function writeConfigFile {
     sleep 3 
     mv ./ready-at-dawn-echo-arena/_local/config.json ./ready-at-dawn-echo-arena/_local/config.json_backup
     echo "$(echo "$configJson" | sed -e "s!_publisher_lock!$publisher_lock!g" -e "s!_apiservice_host!$apiservice_host!g" -e "s!_configservice_host!$configservice_host!g" -e "s!_loginservice_host!$loginservice_host!g" \
-    -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_transactionservice_host!$transactionservice_host!g"  -e "s!_serverdb_host!$serverdb_host!g" )" > ./ready-at-dawn-echo-arena/_local/config.json
+    -e "s!_matchingservice_host!$matchingservice_host!g" -e "s!_serverdb_host!$serverdb_host!g" e-e "s!_transactionservice_host!$transactionservice_host!g")" > ./ready-at-dawn-echo-arena/_local/config.json
 }
 
 
