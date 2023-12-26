@@ -2,7 +2,7 @@
 #This script checks for errors and restarts the echo server instance
 
 #The script checks the following errors
-errors=( "Unable to find MiniDumpWriteDump" "[TCP CLIENT] [R14NETCLIENT] connection to ws:///config closed" "[NETGAME] Service status request failed: 400 Bad Request" "[NETGAME] Service status request failed: 404 Not Found" "[TCP CLIENT] [R14NETCLIENT] connection to ws:///login" )
+errors=( "Unable to find MiniDumpWriteDump" "[NETGAME] Service status request failed: 400 Bad Request" "[NETGAME] Service status request failed: 404 Not Found" "[TCP CLIENT] [R14NETCLIENT] connection to ws:///login" "[TCP CLIENT] [R14NETCLIENT] connection to failed" "[TCP CLIENT] [R14NETCLIENT] connection to established" "[TCP CLIENT] [R14NETCLIENT] connection to closed" )
 
 #The delay between checks
 delayBetweenChecks=10 #Do not set lower then 10, otherwise it could start more then 1 instance because it could take to long to start the first one
@@ -22,7 +22,7 @@ function checkForRunningInstance {
 #this function checks for errors 
 function checkForError {
     #get the last line of the error file
-    lastLine=$(tail -1 /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log | cut -c 26- | sed -e s/"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*"//g -e s/"\?auth=.*"//g)
+    lastLine=$(tail -1 /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log | cut -c 26- | sed -e s/"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*"//g -e s/"ws://.*"//g -e s/"\?auth=.*"//g)
     #check the last line for any errors
     for error in "${errors[@]}"
     do
@@ -32,7 +32,7 @@ function checkForError {
             #wait for the configured time before recheck
             sleep $timeToWaitBeforeRestart
             #get the last line again
-            lastLineNew=$(tail -1 /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log | cut -c 26- | sed -e s/"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*"//g -e s/"\?auth=.*"//g)
+            lastLineNew=$(tail -1 /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log | cut -c 26- | sed -e s/"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*"//g -e s/"ws://.*"//g -e s/"\?auth=.*"//g)
             #compare error line and current line
             if [ "$lastLine" == "$lastLineNew" ]
             then
