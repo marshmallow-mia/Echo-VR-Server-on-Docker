@@ -23,6 +23,18 @@ function checkForEchoFolder {
     
 }
 
+#This function asks the user if he wants to 
+function checkIfUserWantsConfigure{
+    echo "Do you want to configure the config.json file? If not, you need to create one by yourself. Enter y/Y for Yes, n/N for No."
+    read askconfigure
+    if ! [[ "$askconfigure" =~ [yYnN]{1} ]]
+    then
+        echo "Wrong Input. Please try again."
+        checkIfUserWantsConfigure
+        return 16
+    fi
+
+}
 
 #This function gets parameters from User
 function getNeededParameterFromSTDin {
@@ -322,11 +334,14 @@ function startContainer {
     echo -e '\033[0m' # No Color
 }
 
+
+
+
 #This function handles the CTRL-C INT
 function ctrl_c {
-echo -e '\033[0m' # No Color
-echo "Script was interrupted by User"
-exit
+    echo -e '\033[0m' # No Color
+    echo "Script was interrupted by User"
+    exit
 }
 
 #Hide the ^C
@@ -335,11 +350,19 @@ stty -echoctl
 trap ctrl_c SIGINT
 
 
+
+
+
+
 #Start all functions
 checkForEchoFolder
-getNeededParameterFromSTDin
+checkIfUserWantsConfigure
+if [[ "$askconfigure" =~ [yY]{1} ]]
+then
+  getNeededParameterFromSTDin
+  writeConfigFile
+fi
 getRegion
-writeConfigFile
 writeRegion
 checkOS 
 installNeededSoftware
