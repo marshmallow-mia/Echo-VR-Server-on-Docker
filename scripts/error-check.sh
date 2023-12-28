@@ -22,7 +22,7 @@ function checkForRunningInstance {
 #this function checks for errors 
 function checkForError {
     #get the last line of the error file
-    lastLine=$(tail -1 /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log | cut -c 26- | sed -e s/"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*"//g -e s/"ws://.*"//g -e s/"\?auth=.*"//g)
+    lastLine=$(tail -1 /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log | cut -c 26- | sed -e s/"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*"//g -e s#"ws://.* "##g -e s/"\?auth=.*"//g)
     #check the last line for any errors
     for error in "${errors[@]}"
     do
@@ -32,7 +32,7 @@ function checkForError {
             #wait for the configured time before recheck
             sleep $timeToWaitBeforeRestart
             #get the last line again
-            lastLineNew=$(tail -1 /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log | cut -c 26- | sed -e s/"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*"//g -e s/"ws://.*"//g -e s/"\?auth=.*"//g)
+            lastLineNew=$(tail -1 /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log | cut -c 26- | sed -e s/"[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*:[0-9]*"//g -e s#"ws://.* "##g -e s/"\?auth=.*"//g)
             #compare error line and current line
             if [ "$lastLine" == "$lastLineNew" ]
             then
