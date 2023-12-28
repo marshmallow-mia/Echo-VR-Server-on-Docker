@@ -24,7 +24,7 @@ function checkForEchoFolder {
 }
 
 #This function asks the user if he wants to 
-function checkIfUserWantsConfigure{
+function checkIfUserWantsConfigure {
     echo "Do you want to configure the config.json file? If not, you need to create one by yourself. Enter y/Y for Yes, n/N for No."
     read askconfigure
     if ! [[ "$askconfigure" =~ [yYnN]{1} ]]
