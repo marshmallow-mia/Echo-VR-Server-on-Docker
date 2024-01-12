@@ -11,14 +11,12 @@
 #"sin", // Singapore oce region
 region='euw'
 #$port is set as an environment variable
-flags="-noovr -server -headless -timestep 120 -fixedtimestep -nosymbollookup -port $port -logpath logs/$HOSTNAME -serverregion $region"
+flags="-noovr -server -headless -timestep 120 -fixedtimestep -nosymbollookup -port $port -logpath logs/$HOSTNAME -noconsole -serverregion $region"
 
 #create the Log directory 
 mkdir /ready-at-dawn-echo-arena/logs/$HOSTNAME/old 2> /dev/null
 #move old log files
 mv /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log /ready-at-dawn-echo-arena/logs/$HOSTNAME/old
 
-#export the DISPLAY to a virtual display
-export DISPLAY=:0.0 # Select screen 0.0
 #start the echo server process
 nohup /usr/bin/wine /ready-at-dawn-echo-arena/bin/win10/echovr.exe $flags &
