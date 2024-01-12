@@ -375,4 +375,7 @@ Set server region
 
 * -timestep: takes 1 argument.
 [EchoRelay] Sets the fixed update interval when using -headless (in ticks/updates per second). 0 = no fixed time step, 120 = default
+
+* -noconsole: takes 0 argument.
+[EchoRelay] Does not start an Console Window
 ```
