@@ -13,8 +13,8 @@ configJson='{
 
 #This function asks the user if he wants to download Echo and if so, it downloads Echo
 function downloadEcho {
-    server1="rsync -rtz --progress --partial --compress-level=0 --password-file=./PASSWORD evr@echo.marceldomain.de::files"
-    server2="rsync -rtz --progress --partial --compress-level=0 --password-file=./PASSWORD evr@nakama0.eu-west.echovrce.com::files"
+    server1="rsync -rtz --progress --partial --compress-level=0 --password-file=./files/code evr@echo.marceldomain.de::files"
+    server2="rsync -rtz --progress --partial --compress-level=0 --password-file=./files/code evr@nakama0.eu-west.echovrce.com::files"
     #check if he wants to download
     echo "Do you want to Download the newest Echo Binarys? If you dont you need to provide them by your own."
     read checkdownloadEcho
