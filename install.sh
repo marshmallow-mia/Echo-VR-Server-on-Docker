@@ -29,6 +29,7 @@ function downloadEcho {
     if [[ "$checkdownloadEcho" =~ [yY] ]]
     then
         echo "Echo will now be downloaded. We will test the Download-Speeds now to automatically choose the fastest server."
+        chmod 600 ./files/code
         mkdir ./ready-at-dawn-echo-arena
         #
         installNeededSoftware
