@@ -11,10 +11,6 @@ There are 2 methods you can install this.
 
 I will get into both methods. The install.sh method is prefered
 
-**I will not provide the Echo-Folder that contains the binarys! You need to get it by yourself.**
-**You also NEED the latest dbgcore.dll and pnsradgameserver.dll from the EchoTools Repo. Otherwise it will not work!** 
-https://github.com/EchoTools/EchoRelay
-
 # First clone this repo
 ## Install git:
 
