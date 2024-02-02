@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 #This script is used to install docker, build the container and configure everything
 
 configJson='{
