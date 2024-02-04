@@ -1,5 +1,7 @@
-#!/bin/bash
+#!bin/bash
 #This script is used to install docker, build the container and configure everything
+dockerContainerName="ready-at-dawn-echo-arena"
+
 
 configJson='{
   "publisher_lock": "_publisher_lock",
@@ -11,10 +13,11 @@ configJson='{
   "transactionservice_host": "_transactionservice_host"
 }'
 
+
 #This function asks the user if he wants to download Echo and if so, it downloads Echo
 function downloadEcho {
-    server1="rsync -rtz --progress --partial --compress-level=0 --password-file=./files/code evr@echo.marceldomain.de::files"
-    server2="rsync -rtz --progress --partial --compress-level=0 --password-file=./files/code evr@nakama0.eu-west.echovrce.com::files"
+    server1="rsync -crtz --progress --partial --compress-level=0 evr@echo.marceldomain.de::files"
+    server2="rsync -crtz --progress --partial --compress-level=0 evr@nakama0.eu-west.echovrce.com::files"
     #check if he wants to download
     echo "Do you want to Download the newest Echo Binarys? If you dont you need to provide them by your own."
     read checkdownloadEcho
@@ -22,14 +25,13 @@ function downloadEcho {
     if ! [[ "$checkdownloadEcho" =~ [yYnN]{1} ]]
     then
         echo "Wrong Input. Please try again."
-        checkdownloadEcho
+        downloadEcho
         return 160 # I started to choose random numbers due to laziness...
     
     fi
     if [[ "$checkdownloadEcho" =~ [yY] ]]
     then
         echo "Echo will now be downloaded. We will test the Download-Speeds now to automatically choose the fastest server."
-        chmod 600 ./files/code
         mkdir ./ready-at-dawn-echo-arena
         #
         installNeededSoftware
@@ -80,7 +82,7 @@ function downloadEcho {
 
         if [[ $choosenServer == 0 ]]
         then
-            speedTestResult=$( echo "speedtest1 - speedtest2" | bc )
+            speedTestResult=$( echo "$speedtest1 - $speedtest2" | bc )
             if [[ "$speedTestResult" =~ "-.*" ]]
             then
                 choosenServer=2
@@ -90,7 +92,7 @@ function downloadEcho {
         fi
         
         echo -e '\033[0;31m' #write in red
-        echo "The download of Echo will beginn now."
+        echo "The download of Echo will begin now."
         echo -e '\033[0m' # No Color
         
         if [[ $choosenServer == 1 ]]
@@ -116,7 +118,25 @@ function checkForEchoFolder {
     
 }
 
-#This function asks the user if he wants to 
+
+#This function asks the user if he wants to get automatically updates
+function checkIfUserWantsUpdates {
+    echo "Do you want to get automatically updates of the Echo Server Files? In case of an update we will slowly close server Instances with no matches in it, update the serverfiles and restart the server instances. \
+    Files you want to be excluded will be set inside ./files/exclude.list. netconfig files and config.json will be automatically excluded. To deactivate the updates afterwards, you need to delete the line inside your crontab file. \
+    Open the crontab file with 'crontab -e' \
+    Enter y/Y for Yes, n/N for No."
+    read askUpdate
+    if ! [[ "$askUpdate" =~ [yYnN]{1} ]]
+    then
+        echo "Wrong Input. Please try again."
+        checkIfUserWantsUpdates
+        return 17
+    fi
+exit
+}
+
+
+#This function asks the user if he wants to configure the config.json
 function checkIfUserWantsConfigure {
     echo "Do you want to configure the config.json file? If not, you need to create one by yourself. Enter y/Y for Yes, n/N for No."
     read askconfigure
@@ -395,7 +415,7 @@ function installNeededSoftware {
 
 #build the container
 function buildPackage {
-    docker build -t ready-at-dawn-echo-arena .    
+    docker build -t $dockerContainerName .    
 }
 
 
@@ -467,6 +487,7 @@ trap ctrl_c SIGINT
 checkOS
 downloadEcho
 checkForEchoFolder
+checkIfUserWantsUpdates
 checkIfUserWantsConfigure
 if [[ "$askconfigure" =~ [yY]{1} ]]
 then
