@@ -121,10 +121,12 @@ function checkForEchoFolder {
 
 #This function asks the user if he wants to get automatically updates
 function checkIfUserWantsUpdates {
+    echo -e '\033[0;31m' #write in red
     echo "Do you want to get automatically updates of the Echo Server Files? In case of an update we will slowly close server Instances with no matches in it, update the serverfiles and restart the server instances. \
-    Files you want to be excluded will be set inside ./files/exclude.list. netconfig files and config.json will be automatically excluded. To deactivate the updates afterwards, you need to delete the line inside your crontab file. \
-    Open the crontab file with 'crontab -e' \
-    Enter y/Y for Yes, n/N for No."
+Files you want to be excluded will be set inside ./files/exclude.list. netconfig files and config.json will be automatically excluded. To deactivate the automatic updates afterwards, you need to delete the line inside your crontab file.
+Open the crontab file with 'crontab -e' \
+Enter y/Y for Yes, n/N for No."
+    echo -e '\033[0m' # No Color
     read askUpdate
     if ! [[ "$askUpdate" =~ [yYnN]{1} ]]
     then
@@ -132,7 +134,6 @@ function checkIfUserWantsUpdates {
         checkIfUserWantsUpdates
         return 17
     fi
-exit
 }
 
 
