@@ -1,9 +1,10 @@
 #!/bin/bash
+cd $(readlink -f $(dirname $0))
 #check which ports are configures to use and how many
 startport=$(grep -E 'port' ./ready-at-dawn-echo-arena/sourcedb/rad15/json/r14/config/netconfig_dedicatedserver.json | sed -e "s/[^0-9]//g")
 portAmount=$(grep -E 'retries' ./ready-at-dawn-echo-arena/sourcedb/rad15/json/r14/config/netconfig_dedicatedserver.json | sed -e "s/[^0-9]//g")
 maxPort=$(($startport+$portAmount))
-
+dockerContainerName="ready-at-dawn-echo-arena"
 
 #Do not change or things will break!
 logfolder="./ready-at-dawn-echo-arena/logs"
@@ -19,7 +20,7 @@ a=$startport
 		#if not in use, use this port to start the docker container
 		if [ $portcheck = 0 ]
 		then
-			docker run -d --restart unless-stopped -e port=$a -v $(pwd)/ready-at-dawn-echo-arena:/ready-at-dawn-echo-arena -v ./scripts:/scripts  -p $a:$a/udp ready-at-dawn-echo-arena &
+			docker run -d --restart unless-stopped -e port=$a -v $(pwd)/ready-at-dawn-echo-arena:/ready-at-dawn-echo-arena -v ./scripts:/scripts  -p $a:$a/udp $dockerContainerName &
 			exit
 		fi
 		((a++))
