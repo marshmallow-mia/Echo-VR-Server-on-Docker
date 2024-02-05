@@ -1,5 +1,6 @@
 # Echo-Server-on-Docker
 Docker based Echo VR Server with Error-Checking and restarts if an error occours.
+It also can autoupdate the Echo Binarys to the newest EchoTools Version, so that the server is always up to date. (You can always deactivate that) 
 
 With this Repo you can automatically install and configure everything  you need to run the Echo Server Instances in Docker Containers.
 
