@@ -21,8 +21,6 @@ function downloadEcho {
     #check if he wants to download
     echo -e "Do you want to Download the newest Echo Binarys? If you dont you need to provide them by your own. For this download to work you need to provide a file called rsyncHosts inside the same folder like this script \"$PWD.\"\
     Ask your Relay Provider for that file. If you contribute your Server to the Echo VR Lounge, you can contact me on Discord: marcel_One_ \nEnter y/Y for Yes, n/N for No."
-    #give time to read
-    sleep 5
     read checkdownloadEcho
     #checks if the answer is correct
     if ! [[ "$checkdownloadEcho" =~ [yYnN]{1} ]]
@@ -46,6 +44,8 @@ function downloadEcho {
         echo "Echo will now be downloaded. We will test the Download-Speeds now to automatically choose the fastest server.\
         Please do not abort! Depending on the connection to the server it could take like 2 min. The filesize is like 10mb btw."
         echo -e '\033[0m' # No Color
+        #give time to read
+        sleep 5
         installNeededSoftware
         serverCounter=0
 
