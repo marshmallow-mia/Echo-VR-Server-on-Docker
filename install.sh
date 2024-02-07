@@ -138,7 +138,7 @@ Enter y/Y for Yes, n/N for No."
                 echo "Cronjob is already set"
             else
                 tempCron=$(crontab -l)
-                echo -e "$tempCron\n* * * * * /bin/bash '$(echo $PWD)/scripts/echo_update.sh'" > /var/spool/cron/crontabs/$(whoami)
+                echo -e "$tempCron\n*/30 * * * * /bin/bash '$(echo $PWD)/scripts/echo_update.sh'" > /var/spool/cron/crontabs/$(whoami)
                 crontab /var/spool/cron/crontabs/$(whoami)
             fi
         else
@@ -164,7 +164,7 @@ Enter y/Y for Yes, n/N for No."
 # For more information see the manual pages of crontab(5) and cron(8)
 #
 # m h  dom mon dow   command
-* * * * * /bin/bash '$(echo $PWD)/scripts/echo_update.sh'" 
+*/30 * * * * /bin/bash '$(echo $PWD)/scripts/echo_update.sh'" 
         echo -e "$tempCron" > /var/spool/cron/crontabs/$(whoami)
         crontab /var/spool/cron/crontabs/$(whoami)
         fi
