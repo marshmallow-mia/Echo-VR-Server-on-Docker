@@ -119,7 +119,6 @@ function checkIfUserWantsUpdates {
 Files you want to be excluded will be set inside ./files/exclude.list. netconfig files and config.json will be automatically excluded. To deactivate the automatic updates afterwards, you need to delete the line inside your crontab file.
 Open the crontab file with 'crontab -e' The default check rythm is every 30min. To change that you also need to edit the crontab file.  \
 Enter y/Y for Yes, n/N for No."
-    echo -e '\033[0m' # No Color
     read askUpdate
     #check the users answer
     if ! [[ "$askUpdate" =~ [yYnN]{1} ]]
