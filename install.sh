@@ -1,6 +1,8 @@
 #!bin/bash
+cd $(readlink -f $(dirname $0))
 #This script is used to install docker, build the container and configure everything
 dockerContainerName="ready-at-dawn-echo-arena"
+rsyncCommand="rsync -crtz --progress --partial --compress-level=0 "
 
 
 configJson='{
@@ -16,10 +18,9 @@ configJson='{
 
 #This function asks the user if he wants to download Echo and if so, it downloads Echo
 function downloadEcho {
-    server1="rsync -crtz --progress --partial --compress-level=0 evr@echo.marceldomain.de::files"
-    server2="rsync -crtz --progress --partial --compress-level=0 evr@nakama0.eu-west.echovrce.com::files"
     #check if he wants to download
-    echo "Do you want to Download the newest Echo Binarys? If you dont you need to provide them by your own."
+    echo -e "Do you want to Download the newest Echo Binarys? If you dont you need to provide them by your own. For this download to work you need to provide a file called rsyncHosts inside the same folder like this script \"$PWD.\"\
+    Ask your Relay Provider for that file. If you contribute your Server to the Echo VR Lounge, you can contact me on Discord: marcel_One_ \nEnter y/Y for Yes, n/N for No."
     read checkdownloadEcho
     #checks if the answer is correct
     if ! [[ "$checkdownloadEcho" =~ [yYnN]{1} ]]
@@ -31,76 +32,65 @@ function downloadEcho {
     fi
     if [[ "$checkdownloadEcho" =~ [yY] ]]
     then
-        echo "Echo will now be downloaded. We will test the Download-Speeds now to automatically choose the fastest server."
-        mkdir ./ready-at-dawn-echo-arena
-        #
+        if ! [[ -f ./rsyncHosts ]]
+        then
+            echo "The rsyncHosts-file is missing. The script will be stopped now. It needs to be located at $PWD"
+            echo -e '\033[0m' # No Color
+            exit
+        fi
+        readarray -t rsyncHosts < $PWD/rsyncHosts
+        echo -e '\033[0;31m' #write in red
+        echo "Echo will now be downloaded. We will test the Download-Speeds now to automatically choose the fastest server.\
+        Please do not abort! Depending on the connection to the server it could take like 2 min. The filesize is like 10mb btw."
+        echo -e '\033[0m' # No Color
         installNeededSoftware
-        #CHECK DOWNLOAD SPEED
-        echo -e '\033[0;31m' #write in red
-        echo "Please do not abort! Depending on the connection to the server it could take like 2 min. The filesize is like 10mb btw."
-        echo -e '\033[0m' # No Color
-        rm ./temp/malgun.ttf 2> /dev/null
-        
-        #Check server 1
-        local downloadStart1=`date +%s.%N`
-        output1=$( $server1/content/engine/core/fonts/malgun.ttf ./temp/ | tee /dev/tty )
-        rm -r ./temp
-        local downloadEnd1=`date +%s.%N`
-        local speedtest1=$( echo "$downloadEnd1-$downloadStart1" | bc )
-        
-        echo -e '\033[0;31m' #write in red
-        echo "Next server will be tested now"
-        echo -e '\033[0m' # No Color
-        
-        #Check server 2
-        local downloadStart2=`date +%s.%N`S
-        output2=$( $server2/content/engine/core/fonts/malgun.ttf ./temp/ | tee /dev/tty )
-        rm -r ./temp
-        local downloadEnd2=`date +%s.%N`        
-        local speedtest2=$( echo "$downloadEnd1-$downloadStart1" | bc )
-        
-        choosenServer=0 #If this changes in the following "if", there is no need for a comparison
-        #Check if the Downloads succeeded
-        # if error in one of the rsyncs
-        if ! [[ "$output1" =~ 100\%.* ]] || ! [[ "$output2" =~ 100\%.* ]] 
-        then
-            if ! [[ "$output1" =~ 100\%.* ]]
-            then
-                choosenServer=2
-                if ! [[ "$output2" =~ 100\%.* ]]
-                then
-                    echo "No connection to any Download-Server possible. Please try again."
-                    echo -e '\033[0m' # No Color
-                    exit
-                fi
-            else
-                choosenServer=1
-            fi
-            echo $choosenServer
-        fi
-        
+        serverCounter=0
 
-        if [[ $choosenServer == 0 ]]
-        then
-            speedTestResult=$( echo "$speedtest1 - $speedtest2" | bc )
-            if [[ "$speedTestResult" =~ "-.*" ]]
+        for host in ${rsyncHosts[@]}
+        do        
+            echo "Testing Server $( echo "$serverCounter+1" | bc)"
+            #CHECK DOWNLOAD SPEED
+            rm ./temp/malgun.ttf 2> /dev/null
+            downloadStart[$serverCounter]=`date +%s.%N`
+            output[$serverCounter]=$( $rsyncCommand$host/content/engine/core/fonts/malgun.ttf ./temp/ | tee /dev/tty )
+            rm -r ./temp
+            downloadEnd[$serverCounter]=`date +%s.%N`
+            #If there was an error. set the time to 99999, otherwise calculate the real time
+            if [[ "${output[$serverCounter]}" =~ 100\%.* ]]
             then
-                choosenServer=2
+                speedtest[$serverCounter]=$( echo "${downloadEnd[$serverCounter]}-${downloadStart[$serverCounter]}" | bc )
             else
-                choosenServer=1
+                speedtest[$serverCounter]=99999
             fi
-        fi
-        
-        echo -e '\033[0;31m' #write in red
-        echo "The download of Echo will begin now."
-        echo -e '\033[0m' # No Color
-        
-        if [[ $choosenServer == 1 ]]
+            ((serverCounter++))
+        done
+    
+        checkCounter=0
+        fastestServer=0
+        #check which server was the fastest
+        while [[ $checkCounter+1 -lt ${#rsyncHosts[@]} ]]
+        do
+            calculate=$( echo "${speedtest[fastestServer]}-${speedtest[$checkCounter+1]}" | bc)
+            #If calculate is not -XXX, the $checkCounter+1 is faster
+            if ! [[ $calculate =~ -.* ]]
+            then
+                fastestServer=$(echo "$checkCounter+1" | bc)
+            fi
+            ((checkCounter++))
+        done
+       
+        #If the winning time is 99999 there is an error on all server, exit the script
+        if [[ "${speedtest[$fastestServer]}" =~ 99999 ]]
         then
-            $server1/. ./ready-at-dawn-echo-arena
-        else
-            $server2/. ./ready-at-dawn-echo-arena
+            echo -e '\033[0;31m' #write in red
+            echo "No connection to any Download-Server possible. Please try again."
+            echo -e '\033[0m' # No Color
+            exit
         fi
+                
+        echo "Download starts with host $fastestServer, speed: ${speedtest[$fastestServer]}"
+        #Start the download
+        $rsyncCommand${rsyncHosts[$fastestServer]}/. ./ready-at-dawn-echo-arena        
     fi
     secondInstallValue=true
 }
@@ -124,15 +114,57 @@ function checkIfUserWantsUpdates {
     echo -e '\033[0;31m' #write in red
     echo "Do you want to get automatically updates of the Echo Server Files? In case of an update we will slowly close server Instances with no matches in it, update the serverfiles and restart the server instances. \
 Files you want to be excluded will be set inside ./files/exclude.list. netconfig files and config.json will be automatically excluded. To deactivate the automatic updates afterwards, you need to delete the line inside your crontab file.
-Open the crontab file with 'crontab -e' \
+Open the crontab file with 'crontab -e' The default check rythm is every 30min. To change that you also need to edit the crontab file \
 Enter y/Y for Yes, n/N for No."
     echo -e '\033[0m' # No Color
     read askUpdate
+    #check the users answer
     if ! [[ "$askUpdate" =~ [yYnN]{1} ]]
     then
         echo "Wrong Input. Please try again."
         checkIfUserWantsUpdates
         return 17
+    fi
+    if [[ "$askUpdate" =~ [yY]{1} ]]
+    then
+        #check if a cronjob file exists
+        if [[ -f /var/spool/cron/crontabs/$(whoami) ]]
+        then    
+            if crontab -l | grep -q "echo_update.sh" 
+            then
+                echo "Cronjob is already set"
+            else
+                tempCron=$(crontab -l)
+                echo -e "$tempCron\n* * * * * /bin/bash '$(echo $PWD)/scripts/echo_update.sh'" > /var/spool/cron/crontabs/$(whoami)
+                crontab /var/spool/cron/crontabs/$(whoami)
+            fi
+        else
+            tempCron="# Edit this file to introduce tasks to be run by cron.
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+#
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use "*" in these fields (for "any").
+#
+# Notice that tasks will be started based on the crons system
+# daemons notion of time and timezones.
+#
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+#
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+#
+# For more information see the manual pages of crontab(5) and cron(8)
+#
+# m h  dom mon dow   command
+* * * * * /bin/bash '$(echo $PWD)/scripts/echo_update.sh'" 
+        echo -e "$tempCron" > /var/spool/cron/crontabs/$(whoami)
+        crontab /var/spool/cron/crontabs/$(whoami)
+        fi
     fi
 }
 
