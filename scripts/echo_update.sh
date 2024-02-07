@@ -1,10 +1,12 @@
 #!/bin/bash
+cd $(readlink -f $(dirname $0))
 shutdownMessages=('[ECHORELAY.GAMESERVER] Signaling end of session'
 '[NSLOBBY] registration successful'
 '[NETGAME] NetGame switching state (from logged in, to lobby)'
 '[TCP CLIENT] [R14NETCLIENT] connection to'
 '[LEVELLOAD] Unloading level')
-#shutdownMessages=("bla d" "blabla" "blablabla")
+rsyncCommand="rsync -crtz --exclude-from="../files/exclude.list" --progress --partial --compress-level=0 "
+rsyncUpdateCheckCommand="rsync -cnrv --exclude-from="../files/exclude.list" "
 #Path of the echo folder
 echoPath="../ready-at-dawn-echo-arena"
 #The name of the Containers
@@ -21,74 +23,61 @@ function startServer {
 }
 
 function updateEcho {
-    server1="rsync -crtz --exclude-from="../files/exclude.list" --progress --partial --compress-level=0 evr@echo.marceldomain.de::files"
-    server2="rsync -crtz --exclude-from="../files/exclude.list" --progress --partial --compress-level=0 evr@nakama0.eu-west.echovrce.com::files"
-#CHECK DOWNLOAD SPEED
-    echo -e '\033[0;31m' #write in red
-    echo "The update will now be downloaded. We will test the Download-Speeds now to automatically choose the fastest server."
-    echo "Please do not abort! Depending on the connection to the server it could take like 2 min. The filesize is like 10mb btw."
-    echo -e '\033[0m' # No Color
-    rm ./temp/malgun.ttf 2> /dev/null
-    
-    #Check server 1
-    local downloadStart1=`date +%s.%N`
-    output1=$( $server1/content/engine/core/fonts/malgun.ttf ./temp/ | tee /dev/tty )
-    rm -r ./temp
-    local downloadEnd1=`date +%s.%N`
-    local speedtest1=$( echo "$downloadEnd1-$downloadStart1" | bc )
-    
-    echo -e '\033[0;31m' #write in red
-    echo "Next server will be tested now"
-    echo -e '\033[0m' # No Color
-    
-    #Check server 2
-    local downloadStart2=`date +%s.%N`S
-    output2=$( $server2/content/engine/core/fonts/malgun.ttf ./temp/ | tee /dev/tty )
-    rm -r ./temp
-    local downloadEnd2=`date +%s.%N`        
-    local speedtest2=$( echo "$downloadEnd1-$downloadStart1" | bc )
-    
-    choosenServer=0 #If this changes in the following "if", there is no need for a comparison
-    #Check if the Downloads succeeded
-    # if error in one of the rsyncs
-    if ! [[ "$output1" =~ 100\%.* ]] || ! [[ "$output2" =~ 100\%.* ]] 
+    if ! [[ -f ../rsyncHosts ]]
     then
-        if ! [[ "$output1" =~ 100\%.* ]]
+        echo "The rsyncHosts-file is missing. The script will be stopped now. It needs to be located at $PWD"
+        echo -e '\033[0m' # No Color
+        exit
+    fi
+    readarray -t rsyncHosts < ../rsyncHosts
+    serverCounter=0
+    
+    for host in ${rsyncHosts[@]}
+    do        
+        echo "Testing Server $( echo "$serverCounter+1" | bc)"
+        #CHECK DOWNLOAD SPEED
+        rm ./temp/malgun.ttf 2> /dev/null
+        downloadStart[$serverCounter]=`date +%s.%N`
+        output[$serverCounter]=$( $rsyncCommand$host/content/engine/core/fonts/malgun.ttf ./temp/ | tee /dev/tty )
+        rm -r ./temp
+        downloadEnd[$serverCounter]=`date +%s.%N`
+        #If there was an error. set the time to 99999, otherwise calculate the real time
+        if [[ "${output[$serverCounter]}" =~ 100\%.* ]]
         then
-            choosenServer=2
-            if ! [[ "$output2" =~ 100\%.* ]]
-            then
-                echo "No connection to any Download-Server possible. Please try again."
-                echo -e '\033[0m' # No Color
-                exit
-            fi
+            speedtest[$serverCounter]=$( echo "${downloadEnd[$serverCounter]}-${downloadStart[$serverCounter]}" | bc )
         else
-            choosenServer=1
+            speedtest[$serverCounter]=99999
         fi
-    fi
+        ((serverCounter++))
+    done
     
-
-    if [[ $choosenServer == 0 ]]
-    then
-        speedTestResult=$( echo "$speedtest1 - $speedtest2" | bc )
-        if [[ "$speedTestResult" =~ "-.*" ]]
+    checkCounter=0
+    fastestServer=0
+    #check which server was the fastest
+    while [[ $checkCounter+1 -lt ${#rsyncHosts[@]} ]]
+    do
+        calculate=$( echo "${speedtest[fastestServer]}-${speedtest[$checkCounter+1]}" | bc)
+        #If calculate is not -XXX, the $checkCounter+1 is faster
+        if ! [[ $calculate =~ -.* ]]
         then
-            choosenServer=2
-        else
-            choosenServer=1
+            fastestServer=$(echo "$checkCounter+1" | bc)
         fi
-    fi
+        ((checkCounter++))
+    done
     
-    echo -e '\033[0;31m' #write in red
-    echo "The update will begin now."
-    echo -e '\033[0m' # No Color
-    
-    if [[ $choosenServer == 1 ]]
+    #If the winning time is 99999 there is an error on all server, exit the script
+    if [[ "${speedtest[$fastestServer]}" =~ 99999 ]]
     then
-        $server1/. $echoPath/
-    else
-        $server2/. $echoPath/
+        echo -e '\033[0;31m' #write in red
+        echo "No connection to any Download-Server possible. Please try again."
+        wall "No Echo-Updateserver reachable"
+        echo -e '\033[0m' # No Color
+        exit
     fi
+            
+    echo "Download starts with host $fastestServer, speed: ${speedtest[$fastestServer]}"
+    #Start the download
+    $rsyncCommand${rsyncHosts[$fastestServer]}/. ../ready-at-dawn-echo-arena       
     #start the servers back up
     startServer
 }
@@ -137,38 +126,58 @@ function slowlyCloseServers {
 
 #This function checks if an update is available
 function checkForUpdates {
-    #Check for updated files, exclude files in ../files/exclude.list
-    rsyncCheck=$(rsync -cnrv --exclude-from="../files/exclude.list" evr@echo.marceldomain.de::files/ $echoPath/  2>&1 \
-               | sed -e "/receiving/d" -e "/received.*sec/d" -e "/total size/d" -e "/^$/d" )
-    if [[ "$rsyncCheck" =~ "rsync error" ]]
+    #Check if the rsyncHosts-file exists
+    if ! [[ -f ../rsyncHosts ]]
     then
-        rsyncCheck=$(rsync -cnrv --exclude-from="../files/exclude.list" evr@nakama0.eu-west.echovrce.com::files/ .$echoPath/  2>&1 \
-                   | sed -e "/receiving/d" -e "/received.*sec/d" -e "/total size/d" -e "/^$/d" )
-    fi
-    #If both server arent reachable, send an error to wall and exit
-    if [[ "$rsyncCheck" =~ "rsync error" ]]
-    then
-        wall "Error while checking for Echo Server Updates. Unable to contact any server"
+        echo -e '\033[0;31m' #write in red
+        wall "The rsyncHosts-file is missing. The script will be stopped now. It needs to be located at $PWD"
+        echo -e '\033[0m' # No Color
         exit
     fi
+    echo -e '\033[0;31m' #write in red
+    echo "Checking for updates now"
+    echo -e '\033[0m' # No Color
+    #Check for updated files, exclude files in ../files/exclude.list
+    readarray -t rsyncHosts < ../rsyncHosts
     
-    if [[ $rsyncCheck ]]
-    then
-        echo "Updates found"
-        while [[ $( docker ps --filter "ancestor=$containerName" --format "{{.ID}}" | wc -l ) -gt 0 ]]
-        do
-            slowlyCloseServers
-        done
-        #
-        #start the Update
-        updateEcho
-    else
-        echo "no Updates found"
-    fi
+    counter=0
+    while ! [[ $rsyncCheck ]]
+    do
+        if [[ $counter -eq ${#rsyncHosts[@]} ]]
+        then
+            wall "No Echo-Updateserver reachable. Exit"
+            exit
+        fi
         
-    echo $rsyncCheck
+        rsyncCheck=$($rsyncUpdateCheckCommand${rsyncHosts[$counter]} $echoPath/  2>&1 \
+               | sed -e "/receiving/d" -e "/received.*sec/d" -e "/total size/d" -e "/^$/d" )
+        #If not set, no update
+        if ! [[ $rsyncCheck ]]
+        then
+            echo "no Update found"
+            exit
+        fi
+        #if set but containes error, continue to next server, by unsetting the var
+        if [[ "$rsyncCheck" =~ "rsync error" ]]
+        then
+            unset rsyncCheck
+        fi
+        echo $rsyncCheck
+        ((counter++))
+    done
+
+    echo "Updates found"
+    while [[ $( docker ps --filter "ancestor=$containerName" --format "{{.ID}}" | wc -l ) -gt 0 ]]
+    do
+        slowlyCloseServers
+        sleep 1
+    done
+    #start the Update
+    updateEcho
 }
 
-
-
+if [ "$(pgrep -f echo_update.sh | wc -l)" -gt 3 ]  || [ "$(pgrep -f install.sh | wc -l)" -gt 0 ]
+then
+    exit
+fi
 checkForUpdates
