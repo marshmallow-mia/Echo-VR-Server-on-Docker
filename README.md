@@ -1,5 +1,6 @@
 # Echo-Server-on-Docker
 Docker based Echo VR Server with Error-Checking and restarts if an error occours.
+It also can autoupdate the Echo Binarys to the newest EchoTools Version, so that the server is always up to date. (You can always deactivate that) 
 
 With this Repo you can automatically install and configure everything  you need to run the Echo Server Instances in Docker Containers.
 
@@ -10,10 +11,6 @@ There are 2 methods you can install this.
 2. Building and setting everything up by yourself.
 
 I will get into both methods. The install.sh method is prefered
-
-**I will not provide the Echo-Folder that contains the binarys! You need to get it by yourself.**
-**You also NEED the latest dbgcore.dll and pnsradgameserver.dll from the EchoTools Repo. Otherwise it will not work!** 
-https://github.com/EchoTools/EchoRelay
 
 # First clone this repo
 ## Install git:

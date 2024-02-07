@@ -1,0 +1,3 @@
+#This is just an example oh how the rsyncHosts-file would look like
+username@example.org::files
+username@133.7.69.42.0::files
