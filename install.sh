@@ -1,5 +1,4 @@
-#!bin/bash
-cd $(readlink -f $(dirname $0))
+#!/bin/bash
 #This script is used to install docker, build the container and configure everything
 dockerContainerName="ready-at-dawn-echo-arena"
 rsyncCommand="rsync -crtz --progress --partial --compress-level=0 "
