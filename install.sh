@@ -39,6 +39,7 @@ function downloadEcho {
             exit
         fi
         readarray -t rsyncHosts < $PWD/rsyncHosts
+        installNeededSoftware
         echo -e '\033[0;31m' #write in red
         echo "Echo will now be downloaded. We will test the Download-Speeds now to automatically choose the fastest server.\
         Please do not abort! Depending on the connection to the server it could take like 2 min. The filesize is like 10mb btw."
