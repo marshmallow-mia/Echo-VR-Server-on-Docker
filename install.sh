@@ -316,9 +316,12 @@ function writeRegion {
 #this function checks for the OS
 function checkOS {
     echo -e '\033[0;31m' #write in red
-    if [ $(grep -c Debian /etc/os-release ) -gt 0 ] || [ $(grep -c Ubuntu /etc/os-release ) -gt 0 ]
+    if [ $(grep -c Debian /etc/os-release ) -gt 0 ]
     then
         osRelease=deb
+    elif [ $(grep -c Ubuntu /etc/os-release ) -gt 0 ]
+    then
+        osRelease=ubu  
     elif [ $(grep -c Fedora /etc/os-release ) -gt 0 ]
     then
         osRelease=fed  
@@ -331,10 +334,11 @@ function checkOS {
     else
         echo "Unable to find out which Distro you use.
         Please enter one of the following numbers:
-        1. Debian/Ubuntu
+        1. Debian
         2. Fedora
         3. CentOS
         4. Arch Linux
+        5. Ubuntu
         "
         read askDistro
         if [ $askDistro -eq 1 ]
@@ -349,6 +353,9 @@ function checkOS {
         elif [ $askDistro -eq 4 ]
         then
             osRelease=arc
+        elif [ $askDistro -eq 5 ]
+        then
+            osRelease=ubu
         else
             echo "Wrong Input, try again."
             checkOS
@@ -381,6 +388,27 @@ function installNeededSoftware {
             apt update
             apt install -y lsof docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
         fi
+    elif [ "$osRelease" = "ubu" ]
+    then
+        apt update
+        if ! [[ $secondInstallValue = true ]]
+        then
+            apt install -y rsync bc
+        else
+            # Add Docker's official GPG key:
+            apt install -y ca-certificates curl gnupg
+            install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+            chmod a+r /etc/apt/keyrings/docker.asc
+            
+            # Add the repository to Apt sources:
+            echo \
+              "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+              $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+              tee /etc/apt/sources.list.d/docker.list > /dev/null
+            apt-get update
+            apt install -y lsof docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        fi        
     elif [ "$osRelease" = "fed" ]
     then
         if ! [[ $secondInstallValue = true ]]
