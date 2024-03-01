@@ -48,7 +48,7 @@ echo "Post: "$lastLine >> /scripts/test.log
 
 while :
 do
-#    checkForError
+    checkForError
     checkForRunningInstance
     sleep $delayBetweenChecks
 done
