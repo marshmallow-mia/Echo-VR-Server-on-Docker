@@ -11,7 +11,6 @@ timeToWaitBeforeRestart=30
 
 #This function checks if the process is still running
 function checkForRunningInstance {
-    #need to check for lower then 2, as the grep itself gets found as well....
     if ! [[ $(pgrep echovr.exe ) ]]
     then
         bash /scripts/start-echo.sh 
