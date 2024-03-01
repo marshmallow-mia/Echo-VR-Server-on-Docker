@@ -42,7 +42,7 @@ function checkForError {
             then
                 #kill the process and log the reason
                 pkill "echovr"
-                echo date" Process killed. Reason: "$lastLine >> /ready-at-dawn-echo-arena/logs/$HOSTNAME/errorlog
+                echo $(date)": Process killed. Reason: "$lastLine >> /ready-at-dawn-echo-arena/logs/$HOSTNAME/errorlog
             fi
         fi
     done
