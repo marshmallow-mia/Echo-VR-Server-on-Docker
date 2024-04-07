@@ -4,7 +4,7 @@ touch /scripts/test.log
 
 #The script checks the following errors
 errors=( "Unable to find MiniDumpWriteDump" "[NETGAME] Service status request failed: 400 Bad Request" "[NETGAME] Service status request failed: 404 Not Found" "[TCP CLIENT] [R14NETCLIENT] connection to ws:///login" "[TCP CLIENT] [R14NETCLIENT] connection to failed" \
-       "[TCP CLIENT] [R14NETCLIENT] connection to established" "[TCP CLIENT] [R14NETCLIENT] connection to restored" "[TCP CLIENT] [R14NETCLIENT] connection to closed" "[TCP CLIENT] [R14NETCLIENT] Lost connection (okay) to peer" "[03-31-2024] [15:42:22]: [NETGAME] Service status request failed: 502 Bad Gateway" \
+       "[TCP CLIENT] [R14NETCLIENT] connection to established" "[TCP CLIENT] [R14NETCLIENT] connection to restored" "[TCP CLIENT] [R14NETCLIENT] connection to closed" "[TCP CLIENT] [R14NETCLIENT] Lost connection (okay) to peer" "[NETGAME] Service status request failed: 502 Bad Gateway" \
        "[NETGAME] Service status request failed: 0 Unknown" )
        
 #The delay between checks
