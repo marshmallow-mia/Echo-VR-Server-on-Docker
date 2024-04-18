@@ -34,7 +34,7 @@ function checkForError {
     do
         #if an error was found
         if [[ "$error" =~ "$lastLine" ]]
-		then
+	then
             #wait for the configured time before recheck
             sleep $timeToWaitBeforeRestart
             #get the last line again
