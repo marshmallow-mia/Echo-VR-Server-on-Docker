@@ -1,4 +1,6 @@
 #!/bin/bash
+cd $(readlink -f $(dirname $0))
+
 echoPath="../ready-at-dawn-echo-arena"
 containerName=$( grep dockerContainerName= ../run.sh | sed -e "s/dockerContainerName=\"//g" -e "s/\"//g" )
 shutdownMessages=('[ECHORELAY.GAMESERVER] Signaling end of session'
