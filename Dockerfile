@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND="noninteractive"
 
 #Install some needed packages
 RUN apt-get update \
- && apt-get install -y wget software-properties-common gnupg2 cabextract procps
+ && apt-get install -y wget software-properties-common gnupg2 cabextract procps bc
 
 WORKDIR /root
 
