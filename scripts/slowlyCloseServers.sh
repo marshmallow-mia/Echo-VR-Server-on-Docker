@@ -1,6 +1,5 @@
 #!/bin/bash
 cd $(readlink -f $(dirname $0))
-
 echoPath="../ready-at-dawn-echo-arena"
 containerName=$( grep dockerContainerName= ../run.sh | sed -e "s/dockerContainerName=\"//g" -e "s/\"//g" )
 shutdownMessages=('[ECHORELAY.GAMESERVER] Signaling end of session'
@@ -51,9 +50,11 @@ function slowlyCloseServers {
 }
 
 function startServer {
+    echo $amountRunningServer
     a=0
     while [[ $a -lt $amountRunningServer ]]
     do
+        echo $ac
         bash ../run.sh
         ((a++))
         sleep 5
@@ -66,11 +67,8 @@ then
         do
                 slowlyCloseServers
                 sleep 1
-                if [[ $( docker ps --filter "ancestor=$containerName" --format "{{.ID}}" | wc -l ) -eq 0 ]] 
-                then
-                       startServer 
-                fi
         done
+        startServer
 elif ! [[ $1 ]]
 then
         while [[ $( docker ps --filter "ancestor=$containerName" --format "{{.ID}}" | wc -l ) -gt 0 ]]
