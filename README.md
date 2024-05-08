@@ -97,7 +97,7 @@ This will break it!**
 
 **Every running Container will stay on as long as you dont stop them manually. Even after reboot!**
 
-# Slowly stop or restart server Instances, by waiting for running matches to be over:
+# Slowly stop or restart all server Instances, by waiting for running matches to be over:
 Inside the scripts folder is a script called **slowlyCloseServers.sh**
 If you start it with
 ```
