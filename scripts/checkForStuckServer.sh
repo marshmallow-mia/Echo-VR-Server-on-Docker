@@ -1,8 +1,6 @@
 #!/bin/bash
-delayToKillServer=1200 #Delay before the server gets killed in seconds
+delayToKillServer=1200 #in seconds
 logPath="/ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log"
-
-#Dont change
 waitingForChange=0
 
 
@@ -28,7 +26,7 @@ function checkForStuckServer {
             systemUptime=$(awk '{print int($1)}' /proc/uptime)
 
             if [[ $totalTime -le $systemUptime ]]
-            then
+            then                
                 if [[ "$(tail -1 $logPath)" == "$lastLine" ]]
                 then
                     #kill the process and log the reason
@@ -38,11 +36,11 @@ function checkForStuckServer {
                     return
                 fi
             fi
-
+            
         fi
         sleep 2
     done
-
+    
 }
 
 while :
@@ -53,3 +51,4 @@ do
         checkForStuckServer
     fi
     sleep 2
+done
