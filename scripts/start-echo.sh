@@ -14,7 +14,7 @@ region='euw'
 flags="-noovr -server -headless -timestep 120 -fixedtimestep -nosymbollookup -port $port -logpath logs/$HOSTNAME -noconsole -serverregion $region"
 
 #create the Log directory 
-mkdir /ready-at-dawn-echo-arena/logs/$HOSTNAME/old 2> /dev/null
+mkdir -p /ready-at-dawn-echo-arena/logs/$HOSTNAME/old 2> /dev/null
 #move old log files
 mv /ready-at-dawn-echo-arena/logs/$HOSTNAME/*.log /ready-at-dawn-echo-arena/logs/$HOSTNAME/old
 
