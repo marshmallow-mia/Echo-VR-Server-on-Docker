@@ -43,7 +43,7 @@ function checkForError {
             if [[ "$lastLine" =~ "$lastLineNew" ]]
             then
                 #kill the process and log the reason
-                pkill "echovr"
+                pkill -f "echovr"
                 echo $(date)": Process killed. Reason: "$lastLine >> /ready-at-dawn-echo-arena/logs/$HOSTNAME/errorlog
             fi
         fi
