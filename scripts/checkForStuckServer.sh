@@ -30,7 +30,7 @@ function checkForStuckServer {
                 if [[ "$(tail -1 $logPath)" == "$lastLine" ]]
                 then
                     #kill the process and log the reason
-                    pkill "echovr"
+                    pkill -f "echovr"
                     echo $(date)": Process killed. Reason: Stuck Server: " $lastLine >> /ready-at-dawn-echo-arena/logs/$HOSTNAME/errorlog
                     waitingForChange=0
                     return
