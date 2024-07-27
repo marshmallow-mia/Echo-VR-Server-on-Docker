@@ -15,6 +15,20 @@ configJson='{
 }'
 
 
+
+#This function checks if it runs on ARM and changes some scripts etc..
+function checkArm {
+    if [[ "$(uname -m)" =~ ^armv5 ]] || [[ "$(uname -m)" =~ ^armv6 ]] || [[ "$(uname -m)" =~ ^armv7 ]] || [[ "$(uname -m)" =~ ^armv8 ]] || [[ "$(uname -m)" =~ ^aarch64 ]]
+    then
+        echo "arm architecture was found. Will copy and change some stuff now"
+        cp files/Dockerfile_arm ./Dockerfile
+        mv files/install-wine_arm.sh files/install-wine.sh
+        mv files/install-box_arm.sh files/install-box.sh     
+    fi
+       
+}
+
+
 #This function asks the user if he wants to download Echo and if so, it downloads Echo
 function downloadEcho {
     #check if he wants to download
@@ -546,6 +560,7 @@ trap ctrl_c SIGINT
 
 
 #Start all functions
+checkArm
 checkOS
 downloadEcho
 checkForEchoFolder
