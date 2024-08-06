@@ -18,7 +18,7 @@ RUN chmod +x /install-box.sh && /install-box.sh && rm /install-box.sh
 
 #Install some needed packages
 RUN apt-get update \
- && apt-get install -y wget software-properties-common gnupg2 cabextract procps bc htop
+ && apt-get install -y wget software-properties-common gnupg2 cabextract procps bc htop nano curl
 
 WORKDIR /root
 
