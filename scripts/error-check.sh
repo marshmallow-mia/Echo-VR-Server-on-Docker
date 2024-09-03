@@ -14,7 +14,7 @@ timeToWaitBeforeRestart=30
 
 #This function checks if the process is still running
 function checkForRunningInstance {
-    if ! [[ $(pgrep echovr.exe ) ]]
+    if ! [[ $(pgrep -f echovr.exe ) ]]
     then
         bash /scripts/start-echo.sh 
     fi
@@ -43,7 +43,7 @@ function checkForError {
             if [[ "$lastLine" =~ "$lastLineNew" ]]
             then
                 #kill the process and log the reason
-                pkill "echovr"
+                pkill -f "echovr"
                 echo $(date)": Process killed. Reason: "$lastLine >> /ready-at-dawn-echo-arena/logs/$HOSTNAME/errorlog
             fi
         fi
