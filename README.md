@@ -1,4 +1,6 @@
 # Echo-Server-on-Docker
+(Thanks to UnusualNorm for his work on the ARM Docker Container. Thanks to that this Server Monitor also runs on ARM now.)
+
 Docker based Echo VR Server with Error-Checking and restarts if an error occours.
 It also can autoupdate the Echo Binarys to the newest EchoTools Version, so that the server is always up to date. (You can always deactivate that) 
 
