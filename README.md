@@ -6,8 +6,6 @@ It also can autoupdate the Echo Binarys to the newest EchoTools Version, so that
 
 With this Repo you can automatically install and configure everything  you need to run the Echo Server Instances in Docker Containers.
 
-As the Dockerfile is based on the ARM Version of Unusual Norm, a special thanks to him!
-
 There are 2 methods you can install this. 
 1. with the install.sh: This automatically does install everything needed, builds the container and configures everything needed to get the server running
 2. Building and setting everything up by yourself.
