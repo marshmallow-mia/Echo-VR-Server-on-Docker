@@ -125,9 +125,9 @@ docker ps
 ```
 docker stop <container_id>
 ```
-- Stop all containers (Ignore the warnings):
+- Stop all containers:
 ```
-docker stop $(docker ps)
+docker stop $(docker ps -q)
 ```
 
 - Change the start parameters of the Echo Server:
