@@ -22,9 +22,9 @@ function checkArm {
     then
         echo "arm architecture was found. Will copy and change some stuff now"
         cp files/Dockerfile_arm ./Dockerfile
-        mv files/install-wine_arm.sh files/install-wine.sh
-        mv files/install-box_arm.sh files/install-box.sh  
-        mv scripts/start-echo_arm.sh scripts/start-echo.sh
+        cp files/install-wine_arm.sh files/install-wine.sh
+        cp files/install-box_arm.sh files/install-box.sh  
+        cp scripts/start-echo_arm.sh scripts/start-echo.sh
     fi
        
 }
