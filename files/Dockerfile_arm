@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim AS build
+FROM debian:bullseye-slim AS build
 
 ENV DEBIAN_FRONTEND="noninteractive"
 
