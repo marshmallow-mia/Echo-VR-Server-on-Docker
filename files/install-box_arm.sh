@@ -11,12 +11,12 @@ dpkg --add-architecture armhf && dpkg --add-architecture arm64
 apt-get update && apt-get install --no-install-recommends -y box86:armhf
 
 #wget -O /tmp/box64.deb https://raw.githubusercontent.com/BL00DY-C0D3/box64-debs/refs/heads/master/debian/box64_0.3.3%2B20250109.d55e879-1_arm64.deb
-wget -O /tmp/box64.deb https://raw.githubusercontent.com/BL00DY-C0D3/box64-debs/refs/heads/master/debian/box64_0.3.5+20250414.2191162-1_arm64.deb
+wget -O /tmp/box64.deb https://raw.githubusercontent.com/BL00DY-C0D3/box64-debs/refs/heads/master/debian/box64-rpi5arm64_0.3.5+20250414.2191162-1_arm64.deb
 
 
 
 #wget -O /tmp/box64.deb https://raw.githubusercontent.com/BL00DY-C0D3/box64-debs/refs/heads/master/debian/box64_0.3.3+20250109.6cdfa05-1_arm64.deb
-wget -O /tmp/box64.deb https://raw.githubusercontent.com/BL00DY-C0D3/box64-debs/refs/heads/master/debian/box64_0.3.5+20250415.6b2373a-1_arm64.deb
+wget -O /tmp/box64.deb https://raw.githubusercontent.com/BL00DY-C0D3/box64-debs/refs/heads/master/debian/box64-rpi5arm64_0.3.5+20250415.6b2373a-1_arm64.deb
 
 
 
