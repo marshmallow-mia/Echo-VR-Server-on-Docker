@@ -76,6 +76,9 @@ apt install -y winbind
 
 #add winhttp to our wine environment
 winetricks winhttp
+
+#wait for wineserver to exit so the registry changes are written to disk
+wineserver -w
 #winetricks corefonts vcrun6 vcrun2008
 
 

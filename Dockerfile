@@ -1,10 +1,10 @@
-FROM debian:bullseye-slim as build
+FROM debian:trixie-slim AS build
 
 ENV DEBIAN_FRONTEND="noninteractive"
 
 #Install some needed packages
 RUN apt-get update \
- && apt-get install -y wget software-properties-common gnupg2 cabextract procps bc htop nano curl
+ && apt-get install -y wget ca-certificates gnupg cabextract procps bc htop nano curl
 
 WORKDIR /root
 
@@ -22,7 +22,7 @@ RUN bash /install-wine.sh \
 # SET the Echo Folder
 VOLUME /ready-at-dawn-echo-arena
 WORKDIR /ready-at-dawn-echo-arena/bin/win10
-RUN wine wineboot
+RUN wine wineboot && wineserver -w
 
 #VOLUME /root/.wine/drive_c/users/root/AppData/Local/rad/
 ARG src="./files/demoprofile.json"
