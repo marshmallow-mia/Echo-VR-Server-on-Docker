@@ -37,6 +37,7 @@ var TUI func(ctx context.Context, dir string) error
 func Execute() int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	hostcfg.SetVersion(Version)
 	g := &globals{out: os.Stdout}
 	root := &cobra.Command{
 		Use:   "evr-docker",
