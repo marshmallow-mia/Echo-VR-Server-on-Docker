@@ -17,16 +17,19 @@ curl -fsSL https://github.com/marshmallow-mia/Echo-VR-Server-on-Docker/releases/
 
 The installer downloads a checksum-verified `evr-docker` binary to `/usr/local/bin` and opens the setup wizard. The wizard asks for:
 
-- your **EchoVRCE host account**: your Discord user ID and the server password you set with the EchoVRCE bot;
+- how the servers sign in to EchoVRCE: a **device link** (you approve a code at echovrce.com/device; no password,
+  the Discord ID comes from your account) or your Discord user ID and server password;
 - how many servers to run and their first UDP port (default 6792);
 - where the game files come from: the public mirror (about 5 GB), a folder that is already on the host, or an archive.
 
-It then checks the account, downloads and verifies the game and the runtime, and starts the servers.
+It then links or checks the account, downloads and verifies the game and the runtime, and starts the servers.
 Run `evr-docker` again at any time to open the dashboard.
 
 Unattended:
 
 ```sh
+sudo evr-docker init --servers 2 --regions euw      # prints a code to approve at echovrce.com/device
+# or with a password:
 echo "$PASSWORD" | sudo evr-docker init --discord-id 123456789012345678 --password-stdin \
     --servers 2 --regions euw
 # or: sudo evr-docker init --answers answers.yaml   (secrets may be ${ENV} references)
@@ -73,7 +76,7 @@ and how many matches and restarts it has had.
 | `a` / `e` / `d` | add servers / edit one (port, regions, guilds, tick rate, runtime pin, on/off) / delete |
 | `A` | apply the configuration (after editing `config.yaml` by hand) |
 | `u` | runtime versions: install, switch, roll back, update channel |
-| `c` | account: host guilds, servers the backend has registered, change account, link device |
+| `c` | account: sign-in state, servers the backend has registered, device link, password sign-in |
 | `D` | doctor: checks of Docker, disk, game, runtime, account, ports, public IP |
 
 ## Commands
@@ -93,7 +96,7 @@ evr-docker server apply [--force]     make containers match config.yaml
 evr-docker server rm NAME [--purge]
 evr-docker game install [--from-dir DIR | --archive FILE] / game status
 evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|channel pre|stable|pinned [TAG]
-evr-docker account set|test|servers|link
+evr-docker account link|set|test|servers   device link (no password) or password sign-in
 evr-docker agent install|run|webhook URL   metrics, Discord alerts, automatic updates
 evr-docker update check|apply
 evr-docker migrate detect|run         take over a v1 (bash run.sh) installation
