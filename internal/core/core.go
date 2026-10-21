@@ -44,6 +44,12 @@ type App struct {
 	docker  *docker.Client
 }
 
+// Repo is evr-docker's GitHub repository (releases, self-update).
+const Repo = "marshmallow-mia/Echo-VR-Server-on-Docker"
+
+// Version of evr-docker, set by the CLI.
+var Version = "dev"
+
 // Open loads the configuration in dir.
 func Open(dir string) (*App, error) {
 	cfg, err := hostcfg.Load(dir)

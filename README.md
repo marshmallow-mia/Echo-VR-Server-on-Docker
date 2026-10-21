@@ -27,9 +27,10 @@ and opens the setup wizard. The wizard asks for:
 It then links or checks the account, downloads and verifies the game and the runtime, and starts the servers.
 Run `evr-docker` again at any time to open the dashboard.
 
-To update `evr-docker`, run the installer again. Each version uses the image released with it
-(`ghcr.io/marshmallow-mia/echovr-server:<version>`), so applying the configuration (`A` in the dashboard, or
-`evr-docker server apply`) then moves the servers to the new image, each one after its current match. Set `image:` in `config.yaml` to pin a different one.
+Updates of `evr-docker` itself, the game files and nevr-runtime are under `U` in the dashboard (see
+[Updates](#updates)). Each `evr-docker` version uses the image released with it
+(`ghcr.io/marshmallow-mia/echovr-server:<version>`); after an update the servers move to it, each one after its current
+match. Set `image:` in `config.yaml` to pin a different one.
 
 Unattended:
 
@@ -81,6 +82,7 @@ and how many matches and restarts it has had.
 | `r` / `R` | restart only the game (fast) / restart the container |
 | `a` / `e` / `d` | add servers / edit one (port, regions, guilds, tick rate, runtime pin, on/off) / delete |
 | `A` | apply the configuration (after editing `config.yaml` by hand) |
+| `U` | updates of evr-docker, the game files and nevr-runtime: install, pick a version, settings |
 | `u` | runtime versions: install (`enter`), roll back (`b`), delete (`x`), check for and roll out an update (`u`), update settings (`c`) |
 | `c` | account: sign-in state and registered servers; `l` links this host at echovrce.com/device, `p` signs in with a password |
 | `D` | doctor: checks of Docker, disk, game, runtime, account, ports, public IP, with the key that fixes each |
@@ -109,7 +111,7 @@ evr-docker game install [--from-dir DIR | --archive FILE] / game status
 evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|remove TAG|channel pre|stable|pinned [TAG]
 evr-docker account link|set|test|servers   device link (no password) or password sign-in
 evr-docker agent install|uninstall|run|webhook URL   metrics, Discord alerts, automatic updates
-evr-docker update check|apply
+evr-docker update [check|ls|apply|settings]   evr-docker itself, game files, nevr-runtime
 evr-docker migrate detect|run         take over a v1 (bash run.sh) installation
 evr-docker export compose             a docker-compose.yml of the same setup
 evr-docker config show|edit
@@ -117,15 +119,34 @@ evr-docker config show|edit
 
 Changes to a server that is hosting a match are applied after the match (or now with `--force`).
 
-## Updates, alerts and metrics
+## Updates
+
+`U` in the dashboard lists every part with the installed and the available version. `enter` updates one (you can pick
+the version), `c` checks again, `s` sets how each part is updated:
+
+| Part | What an update does | Default |
+|---|---|---|
+| `evr-docker` | downloads the new release, checks it against `checksums.txt`, replaces the binary (the old one stays as `evr-docker.prev`) and restarts; servers move to the new image after their current match | notify |
+| game files | fetches missing or changed files from the mirror and verifies the build; servers use them from their next restart. Echo VR no longer changes, so this is a repair | notify |
+| nevr-runtime | installs the version of the runtime channel (`u` screen) and tries it on one idle server first; only if that server registers do the others switch, at their next match boundary. A version that fails is skipped | auto |
+
+Each part is `off`, `notify` (checked; shown in the dashboard and sent as a Discord alert) or `auto` (installed by the
+background service), optionally only inside a time window such as `04:00-06:00`. The same with commands:
+
+```
+evr-docker update                       check everything
+evr-docker update ls self|game|runtime  versions to choose from
+evr-docker update apply self|game|runtime [--version V]
+evr-docker update settings --self auto --game notify --runtime auto --window 04:00-06:00 --check-hours 6
+```
+
+Mods will be one more part here.
+
+## Alerts and metrics
 
 A small background service on the host (dashboard: `m` → Discord alerts and the background service, or
-`sudo evr-docker agent install`) does three things:
+`sudo evr-docker agent install`) runs the update checks above, and:
 
-- **Runtime updates.** It checks the runtime channel (`pre` is the default: every nevr-runtime 5.x release is a GitHub
-  pre-release). A new version is installed and tried on one idle server first. Only if that server registers does
-  `current` switch; the other servers switch at their next match boundary. A version that fails is marked bad and skipped.
-  Turn this off on the `u` screen (`c`) or with `runtime channel`, or pin a version.
 - **Discord alerts.** Enter a webhook URL in the same dashboard form (or `evr-docker agent webhook https://discord.com/api/webhooks/…`)
   and a test message is sent. You then get
   alerts when a server stops on an error (e.g. a rejected password), keeps restarting, stays down or recovers, and when

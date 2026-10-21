@@ -29,9 +29,10 @@ type legacyMsg struct {
 
 // menu lists everything that has no key of its own on the dashboard.
 func (m *model) menu() tea.Cmd {
-	choice := "runtime"
+	choice := "updates"
 	f := huh.NewForm(huh.NewGroup(huh.NewSelect[string]().Title("What do you want to do?").Options(
-		huh.NewOption("Runtime versions and updates", "runtime"),
+		huh.NewOption("Updates (evr-docker, game files, nevr-runtime)", "updates"),
+		huh.NewOption("Runtime versions", "runtime"),
 		huh.NewOption("EchoVRCE account", "account"),
 		huh.NewOption("Discord alerts and the background service", "alerts"),
 		huh.NewOption("Number of servers", "scale"),
@@ -44,6 +45,8 @@ func (m *model) menu() tea.Cmd {
 	).Value(&choice)).Title("More"))
 	return m.showForm(f, scrDashboard, func() tea.Cmd {
 		switch choice {
+		case "updates":
+			return m.openUpdates()
 		case "runtime":
 			m.screen = scrRuntime
 			return m.loadRuntimes()

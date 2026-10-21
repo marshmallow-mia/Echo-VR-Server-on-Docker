@@ -17,6 +17,7 @@ import (
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/updates"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/version"
 )
 
@@ -61,6 +62,7 @@ type Config struct {
 	Resources Resources         `yaml:"resources,omitempty"`
 	Instances []Instance        `yaml:"instances"`
 	Runtime   RuntimePolicy     `yaml:"runtime"`
+	Updates   UpdatePolicy      `yaml:"updates"`
 	Notify    Notify            `yaml:"notify,omitempty"`
 	Metrics   Metrics           `yaml:"metrics,omitempty"`
 
@@ -86,11 +88,54 @@ type Instance struct {
 type RuntimePolicy struct {
 	// Channel is "pre" (newest release, including pre-releases; every 5.x
 	// release is one), "stable" (full releases only) or "pinned".
-	Channel    string `yaml:"channel"`
-	Pinned     string `yaml:"pinned,omitempty"`
-	AutoUpdate bool   `yaml:"auto_update"`
-	// CheckHours is how often the agent looks for updates.
-	CheckHours int `yaml:"check_hours,omitempty"`
+	Channel string `yaml:"channel"`
+	Pinned  string `yaml:"pinned,omitempty"`
+	// Before updates: existed; read once and moved there.
+	AutoUpdate *bool `yaml:"auto_update,omitempty"`
+	CheckHours int   `yaml:"check_hours,omitempty"`
+}
+
+// UpdatePolicy says how each part is updated: off, notify or auto.
+type UpdatePolicy struct {
+	CheckHours int    `yaml:"check_hours,omitempty"` // default 6
+	Window     string `yaml:"window,omitempty"`      // "04:00-06:00": automatic installs only then
+	Self       string `yaml:"self"`                  // evr-docker itself
+	Game       string `yaml:"game"`
+	Runtime    string `yaml:"runtime"`
+}
+
+// Settings converts the policy for the updates package.
+func (u UpdatePolicy) Settings() updates.Settings {
+	return updates.Settings{CheckHours: u.CheckHours, Window: u.Window,
+		Modes: map[string]updates.Mode{"self": updates.Mode(u.Self), "game": updates.Mode(u.Game), "runtime": updates.Mode(u.Runtime)}}
+}
+
+// migrate moves settings from older config versions.
+func (c *Config) migrate() {
+	if c.Runtime.AutoUpdate != nil {
+		if c.Updates.Runtime == "" {
+			c.Updates.Runtime = string(updates.Notify)
+			if *c.Runtime.AutoUpdate {
+				c.Updates.Runtime = string(updates.Auto)
+			}
+		}
+		c.Runtime.AutoUpdate = nil
+	}
+	if c.Runtime.CheckHours > 0 {
+		if c.Updates.CheckHours == 0 {
+			c.Updates.CheckHours = c.Runtime.CheckHours
+		}
+		c.Runtime.CheckHours = 0
+	}
+	d := New().Updates
+	for _, f := range []struct {
+		v   *string
+		def string
+	}{{&c.Updates.Self, d.Self}, {&c.Updates.Game, d.Game}, {&c.Updates.Runtime, d.Runtime}} {
+		if *f.v == "" {
+			*f.v = f.def
+		}
+	}
 }
 
 // Notify configures Discord alerts; the webhook URL is a secret.
@@ -108,7 +153,8 @@ func New() *Config {
 	return &Config{
 		Version: 1, Project: DefaultProject, DataDir: DefaultDataDir, Image: DefaultImage, UID: DefaultUID,
 		Defaults: instance.Settings{TickRate: config.DefaultTickRate, PublisherLock: "echovrce", Runtime: "current"},
-		Runtime:  RuntimePolicy{Channel: "pre", AutoUpdate: true, CheckHours: 6},
+		Runtime:  RuntimePolicy{Channel: "pre"},
+		Updates:  UpdatePolicy{CheckHours: 6, Self: "notify", Game: "notify", Runtime: "auto"},
 		Metrics:  Metrics{Listen: "127.0.0.1:9469"},
 	}
 }
@@ -135,9 +181,11 @@ func Load(dir string) (*Config, error) {
 		return nil, err
 	}
 	c := New()
+	c.Updates = UpdatePolicy{}
 	if err := yaml.Unmarshal(b, c); err != nil {
 		return nil, fmt.Errorf("%s: %w", p, err)
 	}
+	c.migrate()
 	if c.Image == "" {
 		c.Image = DefaultImage
 	}
@@ -192,6 +240,14 @@ func (c *Config) Validate() error {
 		}
 	default:
 		errs = append(errs, fmt.Errorf("runtime.channel must be pre, stable or pinned, got %q", c.Runtime.Channel))
+	}
+	for k, m := range map[string]string{"self": c.Updates.Self, "game": c.Updates.Game, "runtime": c.Updates.Runtime} {
+		if _, err := updates.ParseMode(m, updates.Notify); err != nil {
+			errs = append(errs, fmt.Errorf("updates.%s: %w", k, err))
+		}
+	}
+	if err := updates.ValidWindow(c.Updates.Window); err != nil {
+		errs = append(errs, fmt.Errorf("updates.window: %w", err))
 	}
 	if err := c.Defaults.Validate(); err != nil {
 		errs = append(errs, fmt.Errorf("defaults: %w", err))

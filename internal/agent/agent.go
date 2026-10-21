@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -16,8 +18,10 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/metrics"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/notify"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/selfupdate"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/update"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/updates"
 )
 
 // Agent watches the servers of one evr-docker host.
@@ -69,11 +73,7 @@ func (a *Agent) Run(ctx context.Context) error {
 			a.watch(ctx, app)
 			if time.Now().After(nextUpdate) {
 				a.checkUpdates(ctx, app)
-				hours := app.Cfg.Runtime.CheckHours
-				if hours <= 0 {
-					hours = 6
-				}
-				nextUpdate = time.Now().Add(time.Duration(hours) * time.Hour)
+				nextUpdate = time.Now().Add(app.Cfg.Updates.Settings().Interval())
 			}
 		}
 		select {
@@ -122,29 +122,66 @@ func (a *Agent) watch(ctx context.Context, app *core.App) {
 }
 
 func (a *Agent) checkUpdates(ctx context.Context, app *core.App) {
-	u := Updater(app, func(s string) { a.log("%s", s) })
-	pol := update.Policy{Channel: app.Cfg.Runtime.Channel, Pinned: app.Cfg.Runtime.Pinned}
 	n := notifier(app)
-	if !app.Cfg.Runtime.AutoUpdate {
-		cur, target, available, err := u.Check(ctx, pol)
-		if err == nil && available {
-			_ = n.Send(ctx, notify.Event{Kind: notify.EventUpdateAvailable, Level: notify.Info, Host: a.host,
-				Title: "nevr-runtime " + target.Tag + " is available", Text: "Current: " + cur + ". Roll it out in evr-docker (u, then u again) or with `evr-docker update apply`."})
+	sched := &updates.Scheduler{Dir: app.Dir, Log: func(s string) { a.log("%s", s) }, Event: func(e updates.Event) {
+		_ = n.Send(ctx, UpdateEvent(e, a.host))
+	}}
+	sched.Run(ctx, Components(app, func(s string) { a.log("%s", s) }), app.Cfg.Updates.Settings())
+}
+
+// UpdateEvent turns a scheduler event into a Discord alert.
+func UpdateEvent(e updates.Event, host string) notify.Event {
+	title, st := e.Component.Title(), e.Status
+	switch e.Kind {
+	case updates.EventApplied:
+		return notify.Event{Kind: notify.EventUpdateApplied, Level: notify.Good, Host: host, Title: title + " updated to " + st.Latest,
+			Text: "Installed automatically (was " + st.Installed + ")."}
+	case updates.EventFailed:
+		return notify.Event{Kind: notify.EventUpdateRolledBack, Level: notify.Warning, Host: host, Title: title + " " + st.Latest + " was not installed",
+			Text: e.Err.Error() + "\nStaying on " + st.Installed + "."}
+	}
+	return notify.Event{Kind: notify.EventUpdateAvailable, Level: notify.Info, Host: host, Title: title + " " + st.Latest + " is available",
+		Text: "Installed: " + st.Installed + ". Install it in evr-docker (U: updates) or with `evr-docker update apply " + e.Component.Name() + "`."}
+}
+
+// Components are the parts evr-docker updates: itself, the game files and
+// nevr-runtime.
+func Components(app *core.App, log func(string)) []updates.Component {
+	self := &updates.Self{U: &selfupdate.Updater{Repo: core.Repo, Binary: "evr-docker", Current: core.Version}, After: PostUpdate(app.Dir)}
+	game := &updates.Game{In: app.Games(nil)}
+	rt := &updates.Runtime{U: Updater(app, log), Policy: func() update.Policy {
+		return update.Policy{Channel: app.Cfg.Runtime.Channel, Pinned: app.Cfg.Runtime.Pinned}
+	}}
+	return []updates.Component{self, game, rt}
+}
+
+// PostUpdate runs the new binary's post-update step and restarts the agent
+// service, so both use the new version.
+func PostUpdate(dir string) func(ctx context.Context, say func(string)) error {
+	return func(ctx context.Context, say func(string)) error {
+		exe, err := os.Executable()
+		if err != nil {
+			return err
 		}
-		return
-	}
-	res, err := u.Run(ctx, pol)
-	if err != nil {
-		a.log("update: %v", err)
-		return
-	}
-	switch res.Action {
-	case "switched":
-		_ = n.Send(ctx, notify.Event{Kind: notify.EventUpdateApplied, Level: notify.Good, Host: a.host,
-			Title: "nevr-runtime " + res.To + " rolled out", Text: fmt.Sprintf("Canary %s registered; the other servers switch at their next match boundary (was %s).", res.Canary, res.From)})
-	case "rolled_back":
-		_ = n.Send(ctx, notify.Event{Kind: notify.EventUpdateRolledBack, Level: notify.Warning, Host: a.host,
-			Title: "nevr-runtime " + res.To + " failed on " + res.Canary, Text: "Staying on " + res.From + ". " + res.Detail})
+		if exe, err = filepath.EvalSymlinks(exe); err != nil {
+			return err
+		}
+		cmd := exec.CommandContext(ctx, exe, "--config-dir", dir, "post-update")
+		out, err := cmd.CombinedOutput()
+		for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+			if l != "" {
+				say(l)
+			}
+		}
+		if err != nil {
+			return fmt.Errorf("post-update: %w", err)
+		}
+		if ServiceInstalled() {
+			// --no-block: when the agent itself runs this, it is the one restarted.
+			_ = exec.Command("systemctl", "restart", "--no-block", "evr-docker-agent.service").Run()
+			say("background service restarting with the new version")
+		}
+		return nil
 	}
 }
 

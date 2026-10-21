@@ -270,3 +270,40 @@ func lastLine(b []byte) string {
 	}
 	return s
 }
+
+// Changes compares the installed build with the mirror without changing
+// anything (rsync --dry-run) and returns the paths that would change.
+func (in Installer) Changes(ctx context.Context, mirror string) ([]string, error) {
+	if mirror == "" {
+		mirror = DefaultMirror
+	}
+	if _, err := exec.LookPath("rsync"); err != nil {
+		return nil, errors.New("rsync is not installed (apt install rsync)")
+	}
+	cur := filepath.Join(in.Dir, CurrentLink)
+	if !isDir(cur) {
+		return nil, errors.New("no game files installed")
+	}
+	cmd := exec.CommandContext(ctx, "rsync", "-rtn", "--delete", "--itemize-changes", "--no-inc-recursive", strings.TrimSuffix(mirror, "/")+"/", cur+"/")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("rsync from %s failed: %v: %s", mirror, err, strings.TrimSpace(stderr.String()))
+	}
+	return parseItemized(string(out)), nil
+}
+
+// parseItemized keeps the lines of rsync --itemize-changes that change file
+// contents or delete files; attribute-only lines start with ".".
+func parseItemized(out string) []string {
+	var paths []string
+	for _, line := range strings.Split(out, "\n") {
+		code, path, ok := strings.Cut(strings.TrimSpace(line), " ")
+		if !ok || code == "" || code[0] == '.' || (len(code) > 1 && code[1] == 'd' && code[0] == 'c') {
+			continue
+		}
+		paths = append(paths, strings.TrimSpace(path))
+	}
+	return paths
+}
