@@ -61,6 +61,9 @@ func (m *model) refreshUpdates() {
 	rec := updates.LoadRecord(m.app.Dir)
 	set := m.app.Cfg.Updates.Settings()
 	m.updComps = m.components()
+	if m.width > 0 {
+		m.updTable.SetWidth(m.width)
+	}
 	rows := make([]table.Row, 0, len(m.updComps))
 	for _, c := range m.updComps {
 		mode := set.Mode(c.Name())
