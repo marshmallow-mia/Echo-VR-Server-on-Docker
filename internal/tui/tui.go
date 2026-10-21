@@ -251,6 +251,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.table.SetWidth(msg.Width)
 		m.table.SetHeight(max(msg.Height-12, 4))
 		m.rtTable.SetWidth(msg.Width)
+		m.updTable.SetWidth(msg.Width)
+		m.updTable.SetHeight(max(min(msg.Height-12, 9), 4))
 		m.rtTable.SetHeight(max(msg.Height-14, 4))
 		m.logs.SetSize(msg.Width, msg.Height-4)
 		if m.form != nil {
