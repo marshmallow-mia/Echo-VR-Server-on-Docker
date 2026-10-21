@@ -49,12 +49,17 @@ type Session struct {
 	UserID       string
 	Username     string
 	Expires      time.Time
-	// Memberships maps guild group IDs to role bits.
-	Memberships map[string]int
+	// Memberships maps guild group IDs to role bits. Device-link tokens do
+	// not carry them; MembershipsKnown is false then.
+	Memberships      map[string]int
+	MembershipsKnown bool
+	// DiscordID is set when the token carries it (device-link tokens do).
+	DiscordID string
 }
 
 // HostGuilds returns the guilds this account may host servers for (ServerHost
-// and not suspended). A server registers even with none, but never gets matches.
+// and not suspended). A server registers even with none, but never gets
+// matches. Empty and meaningless when !MembershipsKnown.
 func (s Session) HostGuilds() []string {
 	var out []string
 	for g, bits := range s.Memberships {
@@ -101,12 +106,13 @@ func sessionFromToken(token, refresh string) (Session, error) {
 		Exp int64  `json:"exp"`
 		VRS struct {
 			Memberships json.RawMessage `json:"memberships"`
+			DiscordID   string          `json:"did"`
 		} `json:"vrs"`
 	}
 	if err := json.Unmarshal(payload, &claims); err != nil {
 		return Session{}, fmt.Errorf("token claims: %w", err)
 	}
-	s := Session{Token: token, RefreshToken: refresh, UserID: claims.UID, Username: claims.USN, Expires: time.Unix(claims.Exp, 0)}
+	s := Session{Token: token, RefreshToken: refresh, UserID: claims.UID, Username: claims.USN, Expires: time.Unix(claims.Exp, 0), DiscordID: claims.VRS.DiscordID}
 	// memberships is a JSON object encoded as a string.
 	raw := claims.VRS.Memberships
 	var asString string
@@ -117,6 +123,7 @@ func sessionFromToken(token, refresh string) (Session, error) {
 		if err := json.Unmarshal(raw, &s.Memberships); err != nil {
 			return Session{}, fmt.Errorf("token memberships: %w", err)
 		}
+		s.MembershipsKnown = true
 	}
 	return s, nil
 }
@@ -224,6 +231,9 @@ func (c *Client) Refresh(ctx context.Context, refreshToken string) (Linked, erro
 // DiscordID returns the signed-in account's Discord user ID (its Nakama
 // custom ID on EchoVRCE).
 func (c *Client) DiscordID(ctx context.Context, s Session) (string, error) {
+	if s.DiscordID != "" {
+		return s.DiscordID, nil
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.HTTPURI, "/")+"/v2/account", nil)
 	if err != nil {
 		return "", err
@@ -382,4 +392,12 @@ func (c *Client) rpc(ctx context.Context, id, bearer string, body, out any) (int
 		}
 	}
 	return resp.StatusCode, nil
+}
+
+// HostSummary describes the host role for messages.
+func (s Session) HostSummary() string {
+	if !s.MembershipsKnown {
+		return "host guilds not reported for device sign-in"
+	}
+	return fmt.Sprintf("host role in %d guild(s)", len(s.HostGuilds()))
 }

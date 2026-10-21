@@ -81,7 +81,7 @@ func TestLoginAndHostGuilds(t *testing.T) {
 	if s.UserID != "u-1" || s.Username != "operator" {
 		t.Errorf("session %+v", s)
 	}
-	if g := s.HostGuilds(); len(g) != 1 || g[0] != "g-host" {
+	if g := s.HostGuilds(); len(g) != 1 || g[0] != "g-host" || !s.MembershipsKnown {
 		t.Errorf("host guilds %v", g)
 	}
 	if _, err := c.Login(context.Background(), "1", "wrong"); !errors.Is(err, ErrBadCredentials) {
