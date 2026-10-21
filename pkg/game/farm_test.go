@@ -129,3 +129,20 @@ func TestFarmRemovesStaleLinks(t *testing.T) {
 		t.Error("config.json written without a publisher lock")
 	}
 }
+
+func TestParseRsyncProgress(t *testing.T) {
+	in := "receiving file list ... done\r      1,234,567   3%   10.50MB/s    0:07:21 (xfr#1, to-chk=600/631)\r     52,000,000  50%   11.00MB/s    0:03:40 (xfr#300, to-chk=300/631)\n"
+	var got []int
+	parseRsyncProgress(strings.NewReader(in), func(p int, d string) { got = append(got, p) })
+	if len(got) != 2 || got[0] != 3 || got[1] != 50 {
+		t.Errorf("got %v", got)
+	}
+}
+
+func TestInstallerFromDir(t *testing.T) {
+	g := fakeGame(t)
+	in := Installer{Dir: filepath.Join(t.TempDir(), "games")}
+	if _, err := in.FromDir(t.Context(), g); err == nil {
+		t.Fatal("fake exe must fail the build check")
+	}
+}

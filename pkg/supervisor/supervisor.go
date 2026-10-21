@@ -52,8 +52,11 @@ type Options struct {
 	Console io.Writer
 	// Filter decides which game lines reach Console; nil uses DefaultFilter.
 	Filter func(line string) bool
-	// Commands, when set, is read for console commands (status, restart, stop).
+	// Commands, when set, is read for console commands (status, restart, help).
 	Commands io.Reader
+	// ControlFile, when set, is polled for one-shot commands written by host
+	// tools ("restart"); it is removed after reading.
+	ControlFile string
 	// OnEvent is called for every parsed event (metrics, notifications).
 	OnEvent func(Event, status.Status)
 }
@@ -154,6 +157,9 @@ func (s *Supervisor) Run(ctx context.Context) error {
 	if s.o.Commands != nil {
 		go s.readCommands(ctx)
 	}
+	if s.o.ControlFile != "" {
+		go s.watchControl(ctx)
+	}
 	go s.heartbeat(ctx)
 	backoff := 5 * time.Second
 	for ctx.Err() == nil {
@@ -166,7 +172,7 @@ func (s *Supervisor) Run(ctx context.Context) error {
 		var wait time.Duration
 		switch {
 		case res.clean:
-			s.logf("server exited after its session (code %d); starting a new one", code)
+			s.logf("game process ended (code %d); starting a new one", code)
 			backoff = 5 * time.Second
 		case res.reason != ReasonNone && !res.reason.Retryable():
 			wait = 10 * time.Minute
@@ -319,7 +325,7 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 			if stopping {
 				killGroup("the server did not exit after Ctrl+C")
 			} else {
-				killGroup("the server did not exit after shutting down (nevr-runtime #723)")
+				killGroup("the game did not exit after shutting down (nevr-runtime #723)")
 			}
 		case <-ctxDone:
 			ctxDone = nil
@@ -476,19 +482,45 @@ func (s *Supervisor) Restart() {
 func (s *Supervisor) readCommands(ctx context.Context) {
 	sc := bufio.NewScanner(s.o.Commands)
 	for sc.Scan() && ctx.Err() == nil {
-		switch strings.ToLower(strings.TrimSpace(sc.Text())) {
-		case "":
-		case "status":
-			st := s.Status()
-			s.logf("state=%s port=%d ip=%s runtime=%s sessions=%d restarts=%d %s", st.State, st.Port, st.PublicIP, st.RuntimeVersion, st.SessionsTotal, st.Restarts, st.LastError)
-		case "restart":
-			s.logf("restart requested")
-			s.Restart()
-		case "help":
-			s.logf("commands: status, restart, help (stop with the panel's stop button or Ctrl+C)")
-		default:
-			s.logf("unknown command %q (try: status, restart, help)", sc.Text())
+		s.command(sc.Text())
+	}
+}
+
+func (s *Supervisor) watchControl(ctx context.Context) {
+	// A command left over from before this start is stale.
+	_ = os.Remove(s.o.ControlFile)
+	t := time.NewTicker(time.Second)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
 		}
+		b, err := os.ReadFile(s.o.ControlFile)
+		if err != nil {
+			continue
+		}
+		_ = os.Remove(s.o.ControlFile)
+		for _, line := range strings.Split(string(b), "\n") {
+			s.command(line)
+		}
+	}
+}
+
+func (s *Supervisor) command(text string) {
+	switch strings.ToLower(strings.TrimSpace(text)) {
+	case "":
+	case "status":
+		st := s.Status()
+		s.logf("state=%s port=%d ip=%s runtime=%s sessions=%d restarts=%d %s", st.State, st.Port, st.PublicIP, st.RuntimeVersion, st.SessionsTotal, st.Restarts, st.LastError)
+	case "restart":
+		s.logf("restart requested")
+		s.Restart()
+	case "help":
+		s.logf("commands: status, restart, help (stop with the panel's stop button or Ctrl+C)")
+	default:
+		s.logf("unknown command %q (try: status, restart, help)", strings.TrimSpace(text))
 	}
 }
 

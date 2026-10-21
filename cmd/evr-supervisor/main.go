@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -92,6 +93,7 @@ func options() (supervisor.Options, error) {
 		PrefixTemplate: env("EVR_PREFIX_TEMPLATE", "/opt/wine-template"),
 		PublisherLock:  env("NEVR_PUBLISHER_LOCK", "echovrce"),
 		Commands:       os.Stdin,
+		ControlFile:    filepath.Join(env("EVR_HOME", env("HOME", "/home/container")), "control"),
 		Env:            []string{"USER=" + env("USER", "container")},
 	}
 	var err error
