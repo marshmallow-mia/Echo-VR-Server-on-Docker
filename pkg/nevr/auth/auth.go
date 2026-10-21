@@ -221,6 +221,38 @@ func (c *Client) Refresh(ctx context.Context, refreshToken string) (Linked, erro
 	return Linked{Session: s, RefreshExpires: time.Now().Add(time.Duration(res.RefreshTokenExpiresIn) * time.Second)}, nil
 }
 
+// DiscordID returns the signed-in account's Discord user ID (its Nakama
+// custom ID on EchoVRCE).
+func (c *Client) DiscordID(ctx context.Context, s Session) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.HTTPURI, "/")+"/v2/account", nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Authorization", "Bearer "+s.Token)
+	hc := c.HTTP
+	if hc == nil {
+		hc = &http.Client{Timeout: 20 * time.Second}
+	}
+	resp, err := hc.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("backend account: %s", resp.Status)
+	}
+	var acc struct {
+		CustomID string `json:"custom_id"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&acc); err != nil {
+		return "", err
+	}
+	if acc.CustomID == "" || strings.Trim(acc.CustomID, "0123456789") != "" {
+		return "", errors.New("the backend account has no Discord ID")
+	}
+	return acc.CustomID, nil
+}
+
 // WriteCredentials stores a refresh token where the runtime looks for it
 // (<instance>/_local/.credentials.json). The runtime then signs in to ServerDB
 // with it instead of the password and keeps it rotated. The password is still
