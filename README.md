@@ -1,390 +1,207 @@
-# Echo-Server-on-Docker
-(Thanks to UnusualNorm for his work on the ARM Docker Container. Thanks to that this Server Monitor also runs on ARM now.)
+# Echo VR Server on Docker
 
-Docker based Echo VR Server with Error-Checking and restarts if an error occours.
-It also can autoupdate the Echo Binarys to the newest EchoTools Version, so that the server is always up to date. (You can always deactivate that) 
+Run Echo VR dedicated servers with [nevr-runtime](https://github.com/EchoTools/nevr-runtime) on any Linux host with Docker.
+`evr-docker` installs and manages them: a guided setup, a live dashboard in the terminal, and a command
+for everything the dashboard does.
 
-With this Repo you can automatically install and configure everything  you need to run the Echo Server Instances in Docker Containers.
+> Looking for Pterodactyl or Pelican? See [pterodactyl_Echo_Server](https://github.com/marshmallow-mia/pterodactyl_Echo_Server).
+> It uses the same image and runtime handling.
 
-There are 2 methods you can install this. 
-1. with the install.sh: This automatically does install everything needed, builds the container and configures everything needed to get the server running
-2. Building and setting everything up by yourself.
+## Quick start
 
-I will get into both methods. The install.sh method is prefered
+On a Debian/Ubuntu host:
 
-# First clone this repo
-## Install git:
-
-Debian/Ubuntu:
-```
-apt install git
-```
-CentOS/Fedora:
-CentOS doesnt seem to work for now.
-```
-yum install git
-```
-Arch:
-```
-pacman -S git
-```
-## Clone the Repo:
-Clone the Repo, good folders are /opt or /srv as an example.
-
-Clone it with:
-```
-git clone https://github.com/BL00DY-C0D3/Echo-VR-Server-on-Docker.git
-```
-**You need to have the Echo-Folder called  "ready-at-dawn-echo-arena" inside the folder you just cloned called "Echo-VR-Server-on-Docker"**
-
-cd into **Echo-VR-Server-on-Docker** with
-```
-cd ./Echo-VR-Server-on-Docker
+```sh
+curl -fsSL https://raw.githubusercontent.com/marshmallow-mia/Echo-VR-Server-on-Docker/main/install.sh | sudo sh
 ```
 
-# Install using the install.sh script
+The installer downloads a checksum-verified `evr-docker` binary of the newest release to `/usr/local/bin` (a
+pre-release while there is no stable one; `EVR_VERSION=v2.0.0` picks one), offers to install Docker if it is missing,
+and opens the setup wizard. The wizard asks for:
 
-As already mentioned this method does almost everything for you.
-Just run the install.sh with 
-```
-bash ./install.sh
-```
-and it will ask you everything needed like IP, Port, Name, Region and more.
+- how the servers sign in to EchoVRCE: a **device link** (you approve a code at echovrce.com/device; no password,
+  the Discord ID comes from your account) or your Discord user ID and server password;
+- how many servers to run and their first UDP port (default 6792);
+- where the game files come from: the public mirror (about 5 GB), a folder that is already on the host, or an archive.
 
-**You are done.**
+It then links or checks the account, downloads and verifies the game and the runtime, and starts the servers.
+Run `evr-docker` again at any time to open the dashboard.
 
-To start a new container just run the run.sh script with 
-```
-bash ./run.sh
-```
-Every running Container will stay on as long as you dont stop them manually. Even after reboot!
-See  at **Important Things** for more important informations.
+Updates of `evr-docker` itself, the game files and nevr-runtime are under `U` in the dashboard (see
+[Updates](#updates)). Each `evr-docker` version uses the image released with it
+(`ghcr.io/marshmallow-mia/echovr-server:<version>`); after an update the servers move to it, each one after its current
+match. Set `image:` in `config.yaml` to pin a different one.
 
+Unattended:
 
-# Install and configure it all by yourself
-
-1. Install Docker
-2. Install lsof (Not needed if you dont use the run.sh to start a container)
-3. Build the container with:
-  
-   ``` 
-   docker build -t ready-at-dawn-echo-arena . 
-   ```
-4. Configure the config.json at ./ready-at-dawn-echo-arena/_local/config.json
-5. Configure the $region variable at ./scripts/start-echo.sh
-
-# Start a container:
-
-**1.** To start a container you can either just use the run.sh script by:
-
-```
-bash ./run.sh
-```
-This will check for an unsused port and automaticaly uses the lowest available port that is configured in your 
-```
-./ready-at-dawn-echo-arena/sourcedb/rad15/json/r14/config/netconfig_dedicatedserver.json
-```
-It also cleans up the log-folder by moving them into ./ready-at-dawn-echo-arena/logs/old
-
-**2.**
-Or you start it with the following command:
-```
-docker run -d --restart unless-stopped -v $(pwd)/ready-at-dawn-echo-arena:/ready-at-dawn-echo-arena -v ./scripts:/scripts  -p <inner_port>:<outer_port>/udp ready-at-dawn-echo-arena &
-````
-
-**It is important that you dont use the -host flag for remove of the network isolation between host and container, as this also changes the hostname of the container.
-This will break it!**
-
-**Every running Container will stay on as long as you dont stop them manually. Even after reboot!**
-
-# Slowly stop or restart all server Instances, by waiting for running matches to be over:
-Inside the scripts folder is a script called **slowlyCloseServers.sh**
-If you start it with
-```
-bash ./slowlyCloseServers.sh
-```
-it will slowly close all server instances.
-If you want to restart all server instances use
-```
-bash ./slowlyCloseServers.sh --restart
+```sh
+sudo evr-docker init --servers 2 --regions euw      # prints a code to approve at echovrce.com/device
+# or with a password:
+echo "$PASSWORD" | sudo evr-docker init --discord-id 123456789012345678 --password-stdin \
+    --servers 2 --regions euw
+# or: sudo evr-docker init --answers answers.yaml   (secrets may be ${ENV} references)
 ```
 
-
-# Important Things:
-- Logs are located in:
-```
-./ready-at-dawn-echo-arena/logs/<container_id>
-```
-- Show running containers:
-```
-docker ps
-```
-- Stop a running container:
-```
-docker stop <container_id>
-```
-- Stop all containers:
-```
-docker stop $(docker ps -q)
-```
-
-- Change the start parameters of the Echo Server:
-They are configured in the following file
-```
-./scripts/start-echo.sh
-```
-
-- If you want to allow the server instances to run on not more then X threads, you can use the following parameter.
-Dont set this to low, as it will need enough threads to run. 2 should be the minimum.
-```
--numtaskthreads X
-```
-
-
-- Every possible Flag you could set:
+## How it works
 
 ```
-* -help: takes 0 arguments.
-Displays cmd line help information.
-
-* -crash: takes 0 arguments.
-Force .exe to crash
-
-* -crashdeferred: takes 0 arguments.
-Force .exe to crash, but defer it later to the first update loop
-
-* -level: takes 1 argument.
-Possible params:
-*  -level_name
-Load a level to run
-
-* -startlevel: takes 1 argument.
-Possible params:
-*  -level_name
-Load a level to run
-
-* -checkpoint: takes 1 argument.
-Possible params:
-*  -checkpoint_name
-Active checkpoint to load into
-
-* -startcheckpoint: takes 1 argument.
-Possible params:
-*  -checkpoint_name
-Active checkpoint to load into
-
-* -startmissioneditorcheckpoint: takes 0 arguments.
-Use checkpoint selected in Mission Script Editor
-
-* -nolevelloads: takes 0 arguments.
-Prohibit level loads
-
-* -noaudio: takes 0 arguments.
-Disable audio
-
-* -speakersetup: takes 1 argument.
-Possible params:
-*  -speaker_setup
-Speaker setup (stereo/5point1)
-
-* -panningrule: takes 1 argument.
-Possible params:
-*  -panning_rule
-Panning rule (speakers/headphones)
-
-* -defaultports: takes 0 arguments.
-Turns off dynamic ports for Wwise
-
-* -dataroot: takes 1 argument.
-Possible params:
-*  -data_root
-Set an alternative to data dir root (defaults to the project dir)
-
-* -datadir: takes 1 argument.
-Possible params:
-*  -data_dir
-Set an alternative to _data to load data from
-
-* -nosymbollookup: takes 0 arguments.
-Do not use symbol lookup
-
-* -package: takes 1 argument.
-Possible params:
-*  -package_name
-Package name to use for resource loading
-
-* -reportcrashes: takes 0 arguments.
-Report crashes
-
-* -legacyvis: takes 0 arguments.
-Use the legacy (precomputed) visibility system
-
-* -capturevideo: takes 0 arguments.
-Enable video capture, must also use -capture360
-
-* -captureaudio: takes 0 arguments.
-Enable audio capture
-
-* -fullscreen: takes 0 arguments.
-Starts the game in fullscreen mode
-
-* -display: takes 1 argument.
-Specifies the index of the display used for fullscreen mode
-
-* -adapter: takes 1 argument.
-Specifies the index of the GPU to use
-
-* -fullscreen_res: takes 2 arguments.
-Sets the target fullscreen resolution
-
-* -language: takes 1 argument.
-Command to switch the start language
-
-* -headless: takes 0 arguments.
-Run the game with no graphics
-
-* -fixedtimestep: takes 0 arguments.
-Tells the game to run at a fixed time step
-
-* -syncinterval: takes 1 argument.
-Specifies the VSYNC interval to use
-
-* -nomsaa: takes 0 arguments.
-Disable MSAA
-
-* -vrscale: takes 1 argument.
-Possible params:
-*  -vr_scale
-Scale VR resolution to improve performance
-
-* -smoothrotation: takes 0 arguments.
-Enable smooth rotation
-
-* -smoothroll: takes 0 arguments.
-Enable smooth roll
-
-* -teststart: takes 0 arguments.
-Start game then stop to test for memleaks
-
-* -msaa: takes 1 argument.
-Possible params:
-*  -msaa_mode
-The MSAA mode to use
-
-* -usetouch: takes 0 arguments.
-Use touch controls for the game
-
-* -mp: takes 0 arguments.
-Boot into multiplayer
-
-* -logpath: takes 1 argument.
-Path for the log file to go to
-
-* -uniquelogdir: takes 0 arguments.
-Write all log files to a unique directory
-
-* -usercfgpath: takes 1 argument.
-Path where the local config is located
-
-* -usevrsize: takes 0 arguments.
-Size the window to VR native resolution
-
-* -capture: takes 0 arguments.
-Run the game in a mode designed for recording with a capture device
-
-* -capturevp2: takes 0 arguments.
-Run the game in recording mode, using a second viewport.
-
-* -dumpstats: takes 0 arguments.
-Dump perfstats after 60 sec and exit for automated perf collection
-
-* -defaultsettings: takes 0 arguments.
-Force the game to auto-pick graphics settings
-
-* -lobbyid: takes 1 argument.
-ID of lobby to join on start
-
-* -lobbyteam: takes 1 argument.
-Team to join on start
-
-* -moderator: takes 0 arguments.
-Join the logged in user's lobby group as a moderator
-
-* -moderateuser: takes 1 argument.
-Join the given user's lobby as a moderator
-
-* -moderategroup: takes 1 argument.
-Join the given lobby group as a moderator
-
-* -displayname: takes 1 argument.
-Set the logged in user's display name (if allowed)
-
-* -micprovider: takes 1 argument.
-Set the desired mic provider (OVR, RAD, DMO)
-
-* -port: takes between 1 and 2 arguments.
-First port to try binding to (dedicated server only)
-
-* -mpappid: takes 1 argument.
-Override multiplayer app id
-
-* -spectatorstream: takes between 0 and 1 arguments.
-Stream spectator mode matches
-
-* -numtaskthreads: takes 1 argument.
-Change the number of task threads that startup
-
-* -httpport: takes 1 argument.
-Port for HTTP listener to use
-
-* -noovr: takes 0 arguments.
-Disable OVR platform features
-
-* -region: takes 1 argument.
-Which region to use when searching for a server
-
-* -gametype: takes 1 argument.
-Game type to create / find / join on start
-
-* -publisherlock: takes 1 argument.
-Set the publisher lock
-
-* -confighost: takes 1 argument.
-Set the config host endpoint
-
-* -loginhost: takes 1 argument.
-Set the login host endpoint
-
-* -radserverdbhost: takes 1 argument.
-Set the sdb host endpoint
-
-* -servermanagerhost: takes 1 argument.
-Set the sdb host endpoint
-
-* -servercountry: takes 1 argument.
-Set server country
-
-* -serverlocation: takes 1 argument.
-Set server location
-
-* -serverplugin: takes 1 argument.
-Set server plugin
-
-* -serverregion: takes 1 argument.
-Set server region
-
-* -server: takes 0 arguments.
-[EchoRelay] Run as a dedicated game server
-
-* -offline: takes 0 arguments.
-[EchoRelay] Run the game in offline mode
-
-* -windowed: takes 0 arguments.
-[EchoRelay] Run the game with no headset, in a window
-
-* -timestep: takes 1 argument.
-[EchoRelay] Sets the fixed update interval when using -headless (in ticks/updates per second). 0 = no fixed time step, 120 = default
-
-* -noconsole: takes 0 argument.
-[EchoRelay] Does not start an Console Window
+/srv/echovr/
+  game/34.4.631547.1/      the game, verified, shared read-only by all servers
+  game/current → …
+  nevr/v5.4.2/             nevr-runtime (BugSplat64.dll), checksum-verified
+  nevr/current → v5.4.2    switched by updates; servers follow at their next match
+  instances/<name>/        each server's own files: Wine prefix, config, logs, status.json
+/etc/evr-docker/config.yaml  settings (edit by hand or with evr-docker)
+/etc/evr-docker/secrets.env  account and webhook (mode 0600)
 ```
+
+- **One game copy for every server.** Each container mounts it read-only and gets a small writable view of its own (a
+  "symlink farm"): its own `_local/config.yaml`, credentials, logs and Wine prefix.
+- **`evr-supervisor`** runs inside each container and handles the runtime's quirks:
+  - It writes the runtime config and the port. nevr-runtime 5.4.2 ignores `-port`, so the port goes into a per-server
+    `netconfig_dedicatedserver.json`.
+  - It starts the game under Wine and follows its log. It restarts the game after every match, because the runtime
+    exits when a match ends.
+  - It detects rejected logins, unreachable ports and stuck registrations.
+  - It handles the runtime's shutdown hang (nevr-runtime #723): a stop takes about 5 seconds and the server unregisters cleanly.
+- **Ports are published 1:1**, and the game port must also be forwarded 1:1 (same number outside and inside). The
+  backend registers a server at the address it connects from and the port the game bound; a forwarded port with a
+  different number would point players at the wrong place.
+
+The measured runtime behaviour this is built on is documented in [docs/nevr-5.4.2-findings.md](docs/nevr-5.4.2-findings.md).
+
+## Dashboard
+
+`sudo evr-docker` opens the dashboard: every server with its state, the address it registered as, its runtime version,
+and how many matches and restarts it has had.
+
+| Key | Action |
+|---|---|
+| `enter` | live console (`f` follow, `a` show runtime noise, `/` filter) |
+| `s` / `x` | start / stop |
+| `r` / `R` | restart only the game (fast) / restart the container |
+| `a` / `e` / `d` | add servers / edit one (port, regions, guilds, tick rate, runtime pin, on/off) / delete |
+| `A` | apply the configuration (after editing `config.yaml` by hand) |
+| `U` | updates of evr-docker, the game files and nevr-runtime: install, pick a version, settings |
+| `u` | runtime versions: install (`enter`), roll back (`b`), delete (`x`), check for and roll out an update (`u`), update settings (`c`) |
+| `c` | account: sign-in state and registered servers; `l` links this host at echovrce.com/device, `p` signs in with a password |
+| `D` | doctor: checks of Docker, disk, game, runtime, account, ports, public IP, with the key that fixes each |
+| `g` | install the game files |
+| `m` | more: alerts and the background service, number of servers, show or edit the configuration, a compose file, moving a v1 installation |
+
+A failed device link can be retried with `l` right away; a running one can be cancelled with `esc`.
+
+## Commands
+
+Everything in the dashboard is also a command, and every command is also in the dashboard. Add `--json` for scripts and
+`-y` to skip confirmations.
+
+```
+evr-docker init                       guided setup (or --answers / flags for unattended)
+evr-docker doctor                     check everything and print fixes
+evr-docker server ls|status NAME      state of the servers
+evr-docker server create -n 2 [--regions euw]
+evr-docker server edit NAME --tick-rate 90 --regions euw,default [--disable|--enable] [--port N]
+evr-docker server start|stop|restart [--soft] NAME|--all
+evr-docker server logs NAME [-f]
+evr-docker server scale N             keep exactly N servers (removes idle ones from the end)
+evr-docker server apply [--force]     make containers match config.yaml
+evr-docker server rm NAME [--purge]
+evr-docker game install [--from-dir DIR | --archive FILE] / game status
+evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|remove TAG|channel pre|stable|pinned [TAG]
+evr-docker account link|set|test|servers   device link (no password) or password sign-in
+evr-docker agent install|uninstall|run|webhook URL   metrics, Discord alerts, automatic updates
+evr-docker update [check|ls|apply|settings]   evr-docker itself, game files, nevr-runtime
+evr-docker migrate detect|run         take over a v1 (bash run.sh) installation
+evr-docker export compose             a docker-compose.yml of the same setup
+evr-docker config show|edit
+```
+
+Changes to a server that is hosting a match are applied after the match (or now with `--force`).
+
+## Updates
+
+`U` in the dashboard lists every part with the installed and the available version. `enter` updates one (you can pick
+the version), `c` checks again, `s` sets how each part is updated:
+
+| Part | What an update does | Default |
+|---|---|---|
+| `evr-docker` | downloads the new release, checks it against `checksums.txt`, replaces the binary (the old one stays as `evr-docker.prev`) and restarts; servers move to the new image after their current match | notify |
+| game files | fetches missing or changed files from the mirror and verifies the build; servers use them from their next restart. Echo VR no longer changes, so this is a repair | notify |
+| nevr-runtime | installs the version of the runtime channel (`u` screen) and tries it on one idle server first; only if that server registers do the others switch, at their next match boundary. A version that fails is skipped | auto |
+
+Each part is `off`, `notify` (checked; shown in the dashboard and sent as a Discord alert) or `auto` (installed by the
+background service), optionally only inside a time window such as `04:00-06:00`. The same with commands:
+
+```
+evr-docker update                       check everything
+evr-docker update ls self|game|runtime  versions to choose from
+evr-docker update apply self|game|runtime [--version V]
+evr-docker update settings --self auto --game notify --runtime auto --window 04:00-06:00 --check-hours 6
+```
+
+Mods will be one more part here.
+
+## Alerts and metrics
+
+A small background service on the host (dashboard: `m` → Discord alerts and the background service, or
+`sudo evr-docker agent install`) runs the update checks above, and:
+
+- **Discord alerts.** Enter a webhook URL in the same dashboard form (or `evr-docker agent webhook https://discord.com/api/webhooks/…`)
+  and a test message is sent. You then get
+  alerts when a server stops on an error (e.g. a rejected password), keeps restarting, stays down or recovers, and when
+  an update is rolled out or rolled back.
+- **Prometheus metrics** on `127.0.0.1:9469/metrics`: `evr_server_up`, `evr_server_state`, `evr_server_sessions_total`,
+  `evr_server_restarts_total`, `evr_server_registrations_total`, `evr_server_runtime_info`.
+
+## Doing it yourself
+
+Nothing here requires `evr-docker` at run time.
+
+- `m` → Write a docker-compose file (or `evr-docker export compose`) writes a plain compose file. The image `ghcr.io/marshmallow-mia/echovr-server` is
+  configured only through environment variables (`evr-supervisor -h` lists them). Mount the game at
+  `/opt/echovr/game/current`, nevr-runtime at `/opt/echovr/nevr/<tag>/BugSplat64.dll`, and a writable directory at
+  `/home/container`.
+- `/etc/evr-docker/config.yaml` can be edited by hand. `evr-docker config edit` validates it, and `server apply` applies it.
+
+## Moving from v1
+
+The old setup (`run.sh`, `install.sh`, cron `echo_update.sh`) is kept on the [`v1`](https://github.com/marshmallow-mia/Echo-VR-Server-on-Docker/tree/v1) branch.
+
+`sudo evr-docker` finds a v1 installation on first start and offers to move it (later: `m` → Move a v1 installation).
+The same with commands:
+
+```sh
+sudo evr-docker migrate detect
+sudo evr-docker migrate run
+```
+
+This takes over the account from the old `config.json`/`config.yaml`, imports the game folder (hard-linked, so no
+second copy), and creates one server per old container on the same port. It then removes the old containers and
+disables the old update cron job. The old game folder is left alone; delete it once everything works.
+
+## Troubleshooting
+
+- The doctor (`D`, or `evr-docker doctor`) checks Docker, LXC settings, disk, the game build, the runtime, the account (and whether it has the
+  host role in any guild), port conflicts and the public IP.
+- A server in **failed** state shows the reason in the dashboard and in `server status`. Common ones:
+  - `bad_credentials`: the backend rejected the Discord ID or password.
+  - `udp_unreachable`: the backend could not reach the game port; check the 1:1 port forward.
+  - `registration_rejected`: the server did not register in time.
+- Under Proxmox LXC, Docker needs `nesting=1,keyctl=1`.
+
+## Building
+
+```sh
+go test ./...
+go build ./cmd/evr-docker ./cmd/evr-supervisor
+docker build -f image/Dockerfile -t echovr-server:dev .
+```
+
+`pkg/` holds the shared packages, which the Pterodactyl product also uses: game files, runtime releases, `config.yaml`,
+the EchoVRCE account API, the supervisor, status, metrics, alerts, updates and TUI widgets.
+
+## License
+
+GNU General Public License v3.0. Echo VR is property of Meta / Ready At Dawn and is not included; nevr-runtime is
+Apache-2.0 by EchoTools.

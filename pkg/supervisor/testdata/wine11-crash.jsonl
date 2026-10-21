@@ -1,0 +1,118 @@
+{"ts":"2026-10-21T07:48:23.568Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] boot log opened run=40-1dd61308c835b56\n"}
+{"ts":"2026-10-21T07:48:23.568Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] Initializing v5.4.2 base=0000000140000000\n"}
+{"ts":"2026-10-21T07:48:23.568Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] NEVR-BUILD 5.4.2 c4b37a28c2c26e8ed30ac4bfccfd2de5154ac0ce\n"}
+{"ts":"2026-10-21T07:48:23.572Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] host environment: wine=11.0 host_os=Linux 7.0.14-20-pve os_build=19045\n"}
+{"ts":"2026-10-21T07:48:23.572Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] function pointers resolved\n"}
+{"ts":"2026-10-21T07:48:23.572Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] initializing hooking engine...\n"}
+{"ts":"2026-10-21T07:48:23.572Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] minhook initialized\n"}
+{"ts":"2026-10-21T07:48:23.574Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.EARLYQUIT] SetEarlyQuitPenaltyLevel hook installed va=0x1401ae2e0\n"}
+{"ts":"2026-10-21T07:48:23.574Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.EARLYQUIT] EarlyQuitPenaltyExpression hook installed va=0x140d96190\n"}
+{"ts":"2026-10-21T07:48:23.575Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.EARLYQUIT] feature-flag mask 0xdd -> 0xff va=0x1401618b9\n"}
+{"ts":"2026-10-21T07:48:23.575Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] installing DLL load hooks...\n"}
+{"ts":"2026-10-21T07:48:23.577Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.DLLHOOK] info; LoadLibrary hooks OK (4/4)\n"}
+{"ts":"2026-10-21T07:48:23.577Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; dll load hooks installed\n"}
+{"ts":"2026-10-21T07:48:23.577Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] registering headless graphics hooks...\n"}
+{"ts":"2026-10-21T07:48:23.577Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.HEADLESS] graphics hooks registered\n"}
+{"ts":"2026-10-21T07:48:23.577Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] patching DSC provider strings...\n"}
+{"ts":"2026-10-21T07:48:23.577Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.XPID] DSC provider patch applied at 5 sites\n"}
+{"ts":"2026-10-21T07:48:23.578Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] detouring GetProviderPrefix → OVR-ORG...\n"}
+{"ts":"2026-10-21T07:48:23.578Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.XPID] GetProviderPrefix detour OK\n"}
+{"ts":"2026-10-21T07:48:23.578Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] installing CSysDLL hooks...\n"}
+{"ts":"2026-10-21T07:48:23.578Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.MIC] provider installed: Wine\n"}
+{"ts":"2026-10-21T07:48:23.579Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] hooked name=CSysDLL_GetSymbol\n"}
+{"ts":"2026-10-21T07:48:23.580Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] hooked name=CSysDLL_Load effect=pnsradgameserver_to_inprocess_serverlib\n"}
+{"ts":"2026-10-21T07:48:23.580Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] installing broadcaster guard...\n"}
+{"ts":"2026-10-21T07:48:23.580Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] broadcaster guard: no-op placeholder, nothing installed\n"}
+{"ts":"2026-10-21T07:48:23.580Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] initializing log filter...\n"}
+{"ts":"2026-10-21T07:48:23.585Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; hooked name=CLog::PrintfImpl va=0x1400EBE70\n"}
+{"ts":"2026-10-21T07:48:23.585Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] log filter installed\n"}
+{"ts":"2026-10-21T07:48:23.585Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] installing game function hooks...\n"}
+{"ts":"2026-10-21T07:48:23.585Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] hook name=BuildCmdLineSyntaxDefinitions result=OK\n"}
+{"ts":"2026-10-21T07:48:23.586Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] hook name=PreprocessCommandLine result=OK\n"}
+{"ts":"2026-10-21T07:48:23.590Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] game hooks installed\n"}
+{"ts":"2026-10-21T07:48:23.590Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] tls deferred=ws_bridge stage=boot\n"}
+{"ts":"2026-10-21T07:48:23.590Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] installing crash recovery hooks...\n"}
+{"ts":"2026-10-21T07:48:23.591Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; CreateProcessA hook installed (crash reporter disabled)\n"}
+{"ts":"2026-10-21T07:48:23.592Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; CreateProcessW hook installed (crash reporter disabled)\n"}
+{"ts":"2026-10-21T07:48:23.592Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; ExitProcess hook installed (prevents crash reporter termination)\n"}
+{"ts":"2026-10-21T07:48:23.593Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; TerminateProcess hook installed (prevents self-termination)\n"}
+{"ts":"2026-10-21T07:48:23.593Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.CRASH] crash recovery hooks installed\n"}
+{"ts":"2026-10-21T07:48:23.593Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] platform hooks deferred=platform_compat_module\n"}
+{"ts":"2026-10-21T07:48:23.593Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] installing server crash-recovery hooks...\n"}
+{"ts":"2026-10-21T07:48:23.594Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; game main wrapper hooked — crash recovery armed (setjmp installed; a null-deref AV in server mode will longjmp back here instead of terminating the process)\n"}
+{"ts":"2026-10-21T07:48:23.595Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; Engine entity lookup hook installed (null-pointer guard)\n"}
+{"ts":"2026-10-21T07:48:23.596Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; hooked name=CBroadcaster::ReceiveLocalEvent va=0x140F87AA0 mode=null_guard\n"}
+{"ts":"2026-10-21T07:48:23.597Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; BugSplat crash handler hook installed (server crash suppression)\n"}
+{"ts":"2026-10-21T07:48:23.597Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; InitializeGlobalGameSpace hook installed (server crash fix)\n"}
+{"ts":"2026-10-21T07:48:23.597Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] server crash-recovery hooks installed\n"}
+{"ts":"2026-10-21T07:48:23.597Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] installing exception handlers...\n"}
+{"ts":"2026-10-21T07:48:23.598Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.CRASH] info; crash record path=C:\\users\\container\\AppData\\Local\\EchoVR\\logs\\nevr-crash-40-1dd61308c835b56.txt (written only if the game crashes)\n"}
+{"ts":"2026-10-21T07:48:23.598Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.CRASH] info; hooked name=CrashExceptionFilter (crash-entry probe)\n"}
+{"ts":"2026-10-21T07:48:23.599Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.CRASH] info; hooked name=HandleCrashDump (why-did-we-crash probe)\n"}
+{"ts":"2026-10-21T07:48:23.599Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.CRASH] debug; debug; HandleCrashDump hook detail va=0x1401CEFE0 prologue=e9ae1ae2ff\n"}
+{"ts":"2026-10-21T07:48:23.599Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.CRASH] info; hooked name=CStackAllocator::DirectAlloc (out-of-memory probe)\n"}
+{"ts":"2026-10-21T07:48:23.599Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.CRASH] veh deferred reason=wine_cli_unknown\n"}
+{"ts":"2026-10-21T07:48:23.599Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] installing console ctrl handler...\n"}
+{"ts":"2026-10-21T07:48:23.601Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=GameConsoleHandlerInstall (re-arms our CTRL+C handler after the game's)\n"}
+{"ts":"2026-10-21T07:48:23.601Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; console ctrl handler installed (behind the game's handler until re-armed)\n"}
+{"ts":"2026-10-21T07:48:23.601Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] console ctrl handler installed\n"}
+{"ts":"2026-10-21T07:48:23.601Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] applying startup patches...\n"}
+{"ts":"2026-10-21T07:48:23.601Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] startup patches applied\n"}
+{"ts":"2026-10-21T07:48:23.601Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] initializing binary bug fix hooks...\n"}
+{"ts":"2026-10-21T07:48:23.601Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; qpc_freq=10000000 Hz\n"}
+{"ts":"2026-10-21T07:48:23.601Z","run":"40-1dd61308c835b56","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; timer=high_resolution\n"}
+{"ts":"2026-10-21T07:48:23.602Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=GetTimeMicroseconds va=0x1400D00C0 why=\"the microsecond timer overflows INT64 after about 10.7 days of uptime; replaced with an overflow-safe computation\"\n"}
+{"ts":"2026-10-21T07:48:23.603Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=CTimer_GetMilliSeconds va=0x1400D0110 why=\"the millisecond timer overflows the same way (CleanupPeers mass-disconnects on bad timestamps); replaced with an overflow-safe computation\"\n"}
+{"ts":"2026-10-21T07:48:23.604Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=EndMultiplayer va=0x140162450 why=\"a null pointer at arg1+0x2DA0 is dereferenced when multiplayer ends; checked before use\"\n"}
+{"ts":"2026-10-21T07:48:23.604Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=CPrecisionSleep::Wait va=0x1401CE0B0 why=\"it creates and destroys a kernel timer every frame (about 180 kernel transitions a second at 90 fps); uses one persistent high-resolution timer\"\n"}
+{"ts":"2026-10-21T07:48:23.605Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=CSpinWait::WaitForValue va=0x141500ED8 why=\"its backoff decreased (10 to 0 ms) under contention; it now increases (0 to 10 ms) and yields the hyper-thread\"\n"}
+{"ts":"2026-10-21T07:48:23.605Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; patched name=CPrecisionSleep::BusyWait va=0x1401CE4C0 why=\"its QPC + Sleep(0) spin loop starves the hyper-thread sibling; now returns immediately (costs about 250 us of frame-pacing precision)\" saved_orig_byte=0x48\n"}
+{"ts":"2026-10-21T07:48:23.606Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=HTTPListenerBringup va=0x1401F5B00 why=\"the engine only logs a failed HTTP API listener bind and keeps running, leaving a server with a dead session API; a bind failure is now fatal in server mode\"\n"}
+{"ts":"2026-10-21T07:48:23.607Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; DIAG hooked name=NetGameHostCheck va=0x140157FB0\n"}
+{"ts":"2026-10-21T07:48:23.607Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooks installed: 7 succeeded, 0 failed (failed: none); diag netgame-host-check: hooked\n"}
+{"ts":"2026-10-21T07:48:23.607Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.PATCH] binary bug fix hooks installed\n"}
+{"ts":"2026-10-21T07:48:23.607Z","run":"40-1dd61308c835b56","level":"info","src":"boot","msg":"[NEVR.BOOT] initialization complete; continuing in %LOCALAPPDATA%\\EchoVR\\logs\\nevr-<timestamp>.jsonl\n"}
+{"ts":"2026-10-21T07:48:23.608Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] boot hooks installed ok=true"}
+{"ts":"2026-10-21T07:48:23.613Z","run":"40-1dd61308c835b56","level":"info","msg":"[EVR] ==========================================================\n Echo VR\n=========================================================="}
+{"ts":"2026-10-21T07:48:23.614Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] veh installed handler=BreakpointVEH priority=1 modules_cached=37 stack_reserve_bytes=65536"}
+{"ts":"2026-10-21T07:48:23.614Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.CRASH] veh post_cli status=installed mode=server"}
+{"ts":"2026-10-21T07:48:23.615Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.CONFIG] config.yaml loaded from: Z:\\home\\container\\root\\bin\\win10\\..\\..\\_local\\config.yaml"}
+{"ts":"2026-10-21T07:48:23.615Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.BOOT] runtime bootstrap trigger=Preprocess first-call server bootstrap"}
+{"ts":"2026-10-21T07:48:23.616Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] Early config loaded from: Z:\\home\\container\\root\\bin\\win10\\..\\..\\_local\\config.json"}
+{"ts":"2026-10-21T07:48:23.616Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.RESOURCE] cache init dir=C:\\users\\container\\AppData\\Local\\nevr\\echovr\\cache entries=0 loaded=0 refused=0 missing=0 reason=no index.json"}
+{"ts":"2026-10-21T07:48:23.616Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.RESOURCE] runtime pinned for resource hook"}
+{"ts":"2026-10-21T07:48:23.617Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.RESOURCE] Registered embedded override: splash_texture (type=0xbeac1969cb7b8861 name=0x1f72c5e0fc9fc8c0, 1050548 bytes)"}
+{"ts":"2026-10-21T07:48:23.617Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.RESOURCE] init complete overrides_registered=1 overrides_failed=0"}
+{"ts":"2026-10-21T07:48:23.617Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] Fatal error handler installed — server will exit on fatal errors"}
+{"ts":"2026-10-21T07:48:23.617Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] server bring-up prologues validated queue_game_thread_call=ok begin_multiplayer_lobby=ok — the server will begin multiplayer once its login completes"}
+{"ts":"2026-10-21T07:48:23.620Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.MODULE] platform_compat initialized: 3/3 hooks installed (tls=ok createdir=ok msxml6=ok)"}
+{"ts":"2026-10-21T07:48:23.620Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.MODULE] Loaded: platform_compat (API v2, static)"}
+{"ts":"2026-10-21T07:48:23.620Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.AUTH] Server mode disables device-code authentication"}
+{"ts":"2026-10-21T07:48:23.620Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.MODULE] token_auth initialized mode=server auth=n/a"}
+{"ts":"2026-10-21T07:48:23.620Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.MODULE] Loaded: token_auth (API v2, static)"}
+{"ts":"2026-10-21T07:48:23.621Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] -headless: native echovr.exe flag; -server applies the same engine-flags mask, so this token is a harmless no-op here."}
+{"ts":"2026-10-21T07:48:23.621Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] Server mode — headless + noovr applied"}
+{"ts":"2026-10-21T07:48:23.622Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.HEADLESS] engine flags 0x00000036 -> 0x00000034 (bit0_render=CLEAR(HEADLESS))"}
+{"ts":"2026-10-21T07:48:23.623Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] pnsrad patched \"pnsovr\" -> \"pnsrad\" rva=0x16d35c4"}
+{"ts":"2026-10-21T07:48:23.623Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] pnsrad patched \"pnsdemo\" -> \"pnsrad\" rva=0x16d35e8"}
+{"ts":"2026-10-21T07:48:23.623Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] pnsrad patched OVR branch rva=0x1580e5 (bypasses OVR platform branch)"}
+{"ts":"2026-10-21T07:48:23.624Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] pnsrad init complete: 3/3 echovr.exe patches applied"}
+{"ts":"2026-10-21T07:48:23.624Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] OVR platform branch bypassed - allowing normal initialization"}
+{"ts":"2026-10-21T07:48:23.624Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] Oculus Platform SDK blocking registered with the DLL load hook"}
+{"ts":"2026-10-21T07:48:23.624Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] spectatorstream_check phase=PatchEnableServer addr=0x140116f3d expected=0f84df000000 actual=0f84df000000 result=applied"}
+{"ts":"2026-10-21T07:48:23.624Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] Disabled loading tips system for server mode"}
+{"ts":"2026-10-21T07:48:23.627Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.COOPAI] CoopAiGoalsLookup hook installed va=0x1412c10f0"}
+{"ts":"2026-10-21T07:48:23.627Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.COOPAI] CoopAiWaypointsLookup hook installed va=0x1412c13d0"}
+{"ts":"2026-10-21T07:48:23.628Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.COOPAI] CoopAiBlackboardUpdate hook installed va=0x1412c1a30"}
+{"ts":"2026-10-21T07:48:23.628Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.CONFIG] built-in defaults are not applied in server mode (config.yaml is required)"}
+{"ts":"2026-10-21T07:48:23.628Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.CONFIG] environment overrides: (none)"}
+{"ts":"2026-10-21T07:48:23.629Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.WS] network.session_router=legacy"}
+{"ts":"2026-10-21T07:48:23.630Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.WS] Proxy listening on ws://127.0.0.1:62683/ -> ws://g.echovrce.com:80/spr"}
+{"ts":"2026-10-21T07:48:23.630Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.WS] Matchmaker listener on ws://127.0.0.1:62960"}
+{"ts":"2026-10-21T07:48:23.630Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PLUGIN] no plugins configured in config.yaml — loading none"}
+{"ts":"2026-10-21T07:48:23.631Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.CRASH] module cache refreshed count=37 (post module/plugin load)"}
+{"ts":"2026-10-21T07:48:23.631Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] shutdown deps resolved ws_bridge=in-process StopWebSocketBridgeListener=direct"}
+{"ts":"2026-10-21T07:48:23.631Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.BOOT] runtime bootstrap complete early_config=true bridge=true port=62683"}
+{"ts":"2026-10-21T07:48:23.633Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] game console ctrl handler installed result=1"}
+{"ts":"2026-10-21T07:48:23.633Z","run":"40-1dd61308c835b56","level":"info","msg":"[NEVR.PATCH] console ctrl handler re-armed to front of chain (CTRL+C reaches us first; the game's handler runs behind us)"}
+{"ts":"2026-10-21T07:48:23.755Z","run":"40-1dd61308c835b56","level":"warn","msg":"[NEVR.PATCH] game loop crash recovered count=1 recovery=exhausted outcome=server_hold (game loop will not run again; broadcaster/HTTP API stay up for a supervisor to observe/restart)"}

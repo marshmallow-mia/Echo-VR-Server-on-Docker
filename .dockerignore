@@ -1,0 +1,6 @@
+.git
+**/testdata
+scripts
+files
+*.md
+!LICENSE

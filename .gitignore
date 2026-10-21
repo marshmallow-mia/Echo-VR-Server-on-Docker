@@ -1,0 +1,4 @@
+dist/
+/evr-docker
+/evr-supervisor
+*.test

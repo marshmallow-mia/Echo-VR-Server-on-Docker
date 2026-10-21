@@ -1,0 +1,618 @@
+{"ts":"2026-10-21T07:47:16.440Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] boot log opened run=20-1dd6130647bc3e6\n"}
+{"ts":"2026-10-21T07:47:16.440Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] Initializing v5.4.2 base=0000000140000000\n"}
+{"ts":"2026-10-21T07:47:16.440Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] NEVR-BUILD 5.4.2 c4b37a28c2c26e8ed30ac4bfccfd2de5154ac0ce\n"}
+{"ts":"2026-10-21T07:47:16.440Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] host environment: wine=10.0 host_os=Linux 7.0.14-20-pve os_build=19043\n"}
+{"ts":"2026-10-21T07:47:16.440Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] function pointers resolved\n"}
+{"ts":"2026-10-21T07:47:16.440Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] initializing hooking engine...\n"}
+{"ts":"2026-10-21T07:47:16.440Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] minhook initialized\n"}
+{"ts":"2026-10-21T07:47:16.442Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.EARLYQUIT] SetEarlyQuitPenaltyLevel hook installed va=0x1401ae2e0\n"}
+{"ts":"2026-10-21T07:47:16.442Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.EARLYQUIT] EarlyQuitPenaltyExpression hook installed va=0x140d96190\n"}
+{"ts":"2026-10-21T07:47:16.443Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.EARLYQUIT] feature-flag mask 0xdd -> 0xff va=0x1401618b9\n"}
+{"ts":"2026-10-21T07:47:16.443Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] installing DLL load hooks...\n"}
+{"ts":"2026-10-21T07:47:16.445Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.DLLHOOK] info; LoadLibrary hooks OK (4/4)\n"}
+{"ts":"2026-10-21T07:47:16.445Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; dll load hooks installed\n"}
+{"ts":"2026-10-21T07:47:16.445Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] registering headless graphics hooks...\n"}
+{"ts":"2026-10-21T07:47:16.445Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.HEADLESS] graphics hooks registered\n"}
+{"ts":"2026-10-21T07:47:16.445Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] patching DSC provider strings...\n"}
+{"ts":"2026-10-21T07:47:16.445Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.XPID] DSC provider patch applied at 5 sites\n"}
+{"ts":"2026-10-21T07:47:16.446Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] detouring GetProviderPrefix → OVR-ORG...\n"}
+{"ts":"2026-10-21T07:47:16.446Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.XPID] GetProviderPrefix detour OK\n"}
+{"ts":"2026-10-21T07:47:16.446Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] installing CSysDLL hooks...\n"}
+{"ts":"2026-10-21T07:47:16.446Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.MIC] provider installed: Wine\n"}
+{"ts":"2026-10-21T07:47:16.447Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] hooked name=CSysDLL_GetSymbol\n"}
+{"ts":"2026-10-21T07:47:16.447Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] hooked name=CSysDLL_Load effect=pnsradgameserver_to_inprocess_serverlib\n"}
+{"ts":"2026-10-21T07:47:16.448Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] installing broadcaster guard...\n"}
+{"ts":"2026-10-21T07:47:16.448Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] broadcaster guard: no-op placeholder, nothing installed\n"}
+{"ts":"2026-10-21T07:47:16.448Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] initializing log filter...\n"}
+{"ts":"2026-10-21T07:47:16.451Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; hooked name=CLog::PrintfImpl va=0x1400EBE70\n"}
+{"ts":"2026-10-21T07:47:16.451Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] log filter installed\n"}
+{"ts":"2026-10-21T07:47:16.451Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] installing game function hooks...\n"}
+{"ts":"2026-10-21T07:47:16.452Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] hook name=BuildCmdLineSyntaxDefinitions result=OK\n"}
+{"ts":"2026-10-21T07:47:16.453Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] hook name=PreprocessCommandLine result=OK\n"}
+{"ts":"2026-10-21T07:47:16.456Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] game hooks installed\n"}
+{"ts":"2026-10-21T07:47:16.456Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] tls deferred=ws_bridge stage=boot\n"}
+{"ts":"2026-10-21T07:47:16.456Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] installing crash recovery hooks...\n"}
+{"ts":"2026-10-21T07:47:16.457Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; CreateProcessA hook installed (crash reporter disabled)\n"}
+{"ts":"2026-10-21T07:47:16.458Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; CreateProcessW hook installed (crash reporter disabled)\n"}
+{"ts":"2026-10-21T07:47:16.458Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; ExitProcess hook installed (prevents crash reporter termination)\n"}
+{"ts":"2026-10-21T07:47:16.459Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; TerminateProcess hook installed (prevents self-termination)\n"}
+{"ts":"2026-10-21T07:47:16.459Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.CRASH] crash recovery hooks installed\n"}
+{"ts":"2026-10-21T07:47:16.459Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] platform hooks deferred=platform_compat_module\n"}
+{"ts":"2026-10-21T07:47:16.459Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] installing server crash-recovery hooks...\n"}
+{"ts":"2026-10-21T07:47:16.459Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; game main wrapper hooked — crash recovery armed (setjmp installed; a null-deref AV in server mode will longjmp back here instead of terminating the process)\n"}
+{"ts":"2026-10-21T07:47:16.460Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; Engine entity lookup hook installed (null-pointer guard)\n"}
+{"ts":"2026-10-21T07:47:16.461Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; hooked name=CBroadcaster::ReceiveLocalEvent va=0x140F87AA0 mode=null_guard\n"}
+{"ts":"2026-10-21T07:47:16.461Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; BugSplat crash handler hook installed (server crash suppression)\n"}
+{"ts":"2026-10-21T07:47:16.462Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; InitializeGlobalGameSpace hook installed (server crash fix)\n"}
+{"ts":"2026-10-21T07:47:16.462Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] server crash-recovery hooks installed\n"}
+{"ts":"2026-10-21T07:47:16.462Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] installing exception handlers...\n"}
+{"ts":"2026-10-21T07:47:16.462Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.CRASH] info; crash record path=C:\\users\\container\\AppData\\Local\\EchoVR\\logs\\nevr-crash-20-1dd6130647bc3e6.txt (written only if the game crashes)\n"}
+{"ts":"2026-10-21T07:47:16.463Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.CRASH] info; hooked name=CrashExceptionFilter (crash-entry probe)\n"}
+{"ts":"2026-10-21T07:47:16.463Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.CRASH] info; hooked name=HandleCrashDump (why-did-we-crash probe)\n"}
+{"ts":"2026-10-21T07:47:16.464Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.CRASH] debug; debug; HandleCrashDump hook detail va=0x1401CEFE0 prologue=e9ae1ae2ff\n"}
+{"ts":"2026-10-21T07:47:16.464Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.CRASH] info; hooked name=CStackAllocator::DirectAlloc (out-of-memory probe)\n"}
+{"ts":"2026-10-21T07:47:16.464Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.CRASH] veh deferred reason=wine_cli_unknown\n"}
+{"ts":"2026-10-21T07:47:16.464Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] installing console ctrl handler...\n"}
+{"ts":"2026-10-21T07:47:16.465Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=GameConsoleHandlerInstall (re-arms our CTRL+C handler after the game's)\n"}
+{"ts":"2026-10-21T07:47:16.465Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; console ctrl handler installed (behind the game's handler until re-armed)\n"}
+{"ts":"2026-10-21T07:47:16.465Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] console ctrl handler installed\n"}
+{"ts":"2026-10-21T07:47:16.465Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] applying startup patches...\n"}
+{"ts":"2026-10-21T07:47:16.465Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] startup patches applied\n"}
+{"ts":"2026-10-21T07:47:16.465Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] initializing binary bug fix hooks...\n"}
+{"ts":"2026-10-21T07:47:16.465Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; qpc_freq=10000000 Hz\n"}
+{"ts":"2026-10-21T07:47:16.465Z","run":"20-1dd6130647bc3e6","level":"debug","src":"boot","msg":"[NEVR.PATCH] debug; timer=high_resolution\n"}
+{"ts":"2026-10-21T07:47:16.466Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=GetTimeMicroseconds va=0x1400D00C0 why=\"the microsecond timer overflows INT64 after about 10.7 days of uptime; replaced with an overflow-safe computation\"\n"}
+{"ts":"2026-10-21T07:47:16.467Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=CTimer_GetMilliSeconds va=0x1400D0110 why=\"the millisecond timer overflows the same way (CleanupPeers mass-disconnects on bad timestamps); replaced with an overflow-safe computation\"\n"}
+{"ts":"2026-10-21T07:47:16.467Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=EndMultiplayer va=0x140162450 why=\"a null pointer at arg1+0x2DA0 is dereferenced when multiplayer ends; checked before use\"\n"}
+{"ts":"2026-10-21T07:47:16.468Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=CPrecisionSleep::Wait va=0x1401CE0B0 why=\"it creates and destroys a kernel timer every frame (about 180 kernel transitions a second at 90 fps); uses one persistent high-resolution timer\"\n"}
+{"ts":"2026-10-21T07:47:16.469Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=CSpinWait::WaitForValue va=0x141500ED8 why=\"its backoff decreased (10 to 0 ms) under contention; it now increases (0 to 10 ms) and yields the hyper-thread\"\n"}
+{"ts":"2026-10-21T07:47:16.469Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; patched name=CPrecisionSleep::BusyWait va=0x1401CE4C0 why=\"its QPC + Sleep(0) spin loop starves the hyper-thread sibling; now returns immediately (costs about 250 us of frame-pacing precision)\" saved_orig_byte=0x48\n"}
+{"ts":"2026-10-21T07:47:16.470Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooked name=HTTPListenerBringup va=0x1401F5B00 why=\"the engine only logs a failed HTTP API listener bind and keeps running, leaving a server with a dead session API; a bind failure is now fatal in server mode\"\n"}
+{"ts":"2026-10-21T07:47:16.470Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; DIAG hooked name=NetGameHostCheck va=0x140157FB0\n"}
+{"ts":"2026-10-21T07:47:16.470Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] info; hooks installed: 7 succeeded, 0 failed (failed: none); diag netgame-host-check: hooked\n"}
+{"ts":"2026-10-21T07:47:16.471Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.PATCH] binary bug fix hooks installed\n"}
+{"ts":"2026-10-21T07:47:16.471Z","run":"20-1dd6130647bc3e6","level":"info","src":"boot","msg":"[NEVR.BOOT] initialization complete; continuing in %LOCALAPPDATA%\\EchoVR\\logs\\nevr-<timestamp>.jsonl\n"}
+{"ts":"2026-10-21T07:47:16.471Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] boot hooks installed ok=true"}
+{"ts":"2026-10-21T07:47:16.475Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] ==========================================================\n Echo VR\n=========================================================="}
+{"ts":"2026-10-21T07:47:16.476Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] veh installed handler=BreakpointVEH priority=1 modules_cached=37 stack_reserve_bytes=65536"}
+{"ts":"2026-10-21T07:47:16.476Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.CRASH] veh post_cli status=installed mode=server"}
+{"ts":"2026-10-21T07:47:16.477Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.CONFIG] config.yaml loaded from: Z:\\home\\container\\root\\bin\\win10\\..\\..\\_local\\config.yaml"}
+{"ts":"2026-10-21T07:47:16.478Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.BOOT] runtime bootstrap trigger=Preprocess first-call server bootstrap"}
+{"ts":"2026-10-21T07:47:16.478Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] Early config loaded from: Z:\\home\\container\\root\\bin\\win10\\..\\..\\_local\\config.json"}
+{"ts":"2026-10-21T07:47:16.479Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.RESOURCE] cache init dir=C:\\users\\container\\AppData\\Local\\nevr\\echovr\\cache entries=0 loaded=0 refused=0 missing=0 reason=no index.json"}
+{"ts":"2026-10-21T07:47:16.479Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.RESOURCE] runtime pinned for resource hook"}
+{"ts":"2026-10-21T07:47:16.479Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.RESOURCE] Registered embedded override: splash_texture (type=0xbeac1969cb7b8861 name=0x1f72c5e0fc9fc8c0, 1050548 bytes)"}
+{"ts":"2026-10-21T07:47:16.480Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.RESOURCE] init complete overrides_registered=1 overrides_failed=0"}
+{"ts":"2026-10-21T07:47:16.480Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] Fatal error handler installed — server will exit on fatal errors"}
+{"ts":"2026-10-21T07:47:16.480Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] server bring-up prologues validated queue_game_thread_call=ok begin_multiplayer_lobby=ok — the server will begin multiplayer once its login completes"}
+{"ts":"2026-10-21T07:47:16.482Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.MODULE] platform_compat initialized: 3/3 hooks installed (tls=ok createdir=ok msxml6=ok)"}
+{"ts":"2026-10-21T07:47:16.482Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.MODULE] Loaded: platform_compat (API v2, static)"}
+{"ts":"2026-10-21T07:47:16.482Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.AUTH] Server mode disables device-code authentication"}
+{"ts":"2026-10-21T07:47:16.482Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.MODULE] token_auth initialized mode=server auth=n/a"}
+{"ts":"2026-10-21T07:47:16.483Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.MODULE] Loaded: token_auth (API v2, static)"}
+{"ts":"2026-10-21T07:47:16.483Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] -headless: native echovr.exe flag; -server applies the same engine-flags mask, so this token is a harmless no-op here."}
+{"ts":"2026-10-21T07:47:16.483Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] Server mode — headless + noovr applied"}
+{"ts":"2026-10-21T07:47:16.484Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.HEADLESS] engine flags 0x00000036 -> 0x00000034 (bit0_render=CLEAR(HEADLESS))"}
+{"ts":"2026-10-21T07:47:16.485Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] pnsrad patched \"pnsovr\" -> \"pnsrad\" rva=0x16d35c4"}
+{"ts":"2026-10-21T07:47:16.485Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] pnsrad patched \"pnsdemo\" -> \"pnsrad\" rva=0x16d35e8"}
+{"ts":"2026-10-21T07:47:16.485Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] pnsrad patched OVR branch rva=0x1580e5 (bypasses OVR platform branch)"}
+{"ts":"2026-10-21T07:47:16.485Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] pnsrad init complete: 3/3 echovr.exe patches applied"}
+{"ts":"2026-10-21T07:47:16.486Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] OVR platform branch bypassed - allowing normal initialization"}
+{"ts":"2026-10-21T07:47:16.486Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] Oculus Platform SDK blocking registered with the DLL load hook"}
+{"ts":"2026-10-21T07:47:16.487Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] spectatorstream_check phase=PatchEnableServer addr=0x140116f3d expected=0f84df000000 actual=0f84df000000 result=applied"}
+{"ts":"2026-10-21T07:47:16.487Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] Disabled loading tips system for server mode"}
+{"ts":"2026-10-21T07:47:16.489Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.COOPAI] CoopAiGoalsLookup hook installed va=0x1412c10f0"}
+{"ts":"2026-10-21T07:47:16.490Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.COOPAI] CoopAiWaypointsLookup hook installed va=0x1412c13d0"}
+{"ts":"2026-10-21T07:47:16.491Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.COOPAI] CoopAiBlackboardUpdate hook installed va=0x1412c1a30"}
+{"ts":"2026-10-21T07:47:16.491Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.CONFIG] built-in defaults are not applied in server mode (config.yaml is required)"}
+{"ts":"2026-10-21T07:47:16.491Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.CONFIG] environment overrides: (none)"}
+{"ts":"2026-10-21T07:47:16.491Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] network.session_router=legacy"}
+{"ts":"2026-10-21T07:47:16.493Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Proxy listening on ws://127.0.0.1:55244/ -> ws://g.echovrce.com:80/spr"}
+{"ts":"2026-10-21T07:47:16.494Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Matchmaker listener on ws://127.0.0.1:54888"}
+{"ts":"2026-10-21T07:47:16.494Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PLUGIN] no plugins configured in config.yaml — loading none"}
+{"ts":"2026-10-21T07:47:16.495Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.CRASH] module cache refreshed count=37 (post module/plugin load)"}
+{"ts":"2026-10-21T07:47:16.495Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] shutdown deps resolved ws_bridge=in-process StopWebSocketBridgeListener=direct"}
+{"ts":"2026-10-21T07:47:16.495Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.BOOT] runtime bootstrap complete early_config=true bridge=true port=55244"}
+{"ts":"2026-10-21T07:47:16.497Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] game console ctrl handler installed result=1"}
+{"ts":"2026-10-21T07:47:16.497Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] console ctrl handler re-armed to front of chain (CTRL+C reaches us first; the game's handler runs behind us)"}
+{"ts":"2026-10-21T07:47:16.870Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.PATCH] pnsrad CLog hook disabled — retaining native pnsrad output to avoid Wine stack overflow"}
+{"ts":"2026-10-21T07:47:16.870Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] per-frame tick ALIVE — plugin/module OnFrame now dispatched (host=server)"}
+{"ts":"2026-10-21T07:47:16.872Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] CL Args: \"Z:\\home\\container\\root\\bin\\win10\\echovr.exe\" -server -headless -noovr -no-console -nosymbollookup -port 6795 -httpport 6895"}
+{"ts":"2026-10-21T07:47:16.872Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] ---> Starting 7 worker threads in the scheduler."}
+{"ts":"2026-10-21T07:47:17.069Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Loading archive engine_assets"}
+{"ts":"2026-10-21T07:47:17.089Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Finished initializing engine"}
+{"ts":"2026-10-21T07:47:17.104Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Loading archive r14gamedata"}
+{"ts":"2026-10-21T07:47:17.108Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Creating DEMO provider"}
+{"ts":"2026-10-21T07:47:17.114Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] pnsrad module patches: 4 succeeded, 0 failed — social layer (friends/party/login) ENABLED"}
+{"ts":"2026-10-21T07:47:17.120Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] pnsrad DIAG party-broadcaster hook installed at +0x82d20"}
+{"ts":"2026-10-21T07:47:17.124Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] pnsrad DIAG party-send-invite hook installed at +0x86df0"}
+{"ts":"2026-10-21T07:47:17.126Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] Resetting local connection stats"}
+{"ts":"2026-10-21T07:47:17.127Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] game config.json loaded from default location"}
+{"ts":"2026-10-21T07:47:17.127Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.UPNP] config key upnp=<absent> -> enabled=false"}
+{"ts":"2026-10-21T07:47:17.127Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] server tick rate: 120 a second (step 8333 us; the game had 33333 us); source=config.yaml"}
+{"ts":"2026-10-21T07:47:17.127Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] service redirect key=config_host from=wss://config.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:55244/config"}
+{"ts":"2026-10-21T07:47:17.128Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSUSER] Setting local user data storage directory to C:\\users\\container\\AppData\\Local\\RAD\\EchoVR\\users"}
+{"ts":"2026-10-21T07:47:17.128Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] HTTP(S) connection redirected: https://graph.oculus.com/ → https://g.echovrce.com:7350/"}
+{"ts":"2026-10-21T07:47:17.128Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] party data json functions load=1 clear=1 serialize=1 memblock=1/1 (prologue checked)"}
+{"ts":"2026-10-21T07:47:17.177Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] accessor provider=pnsrad.dll provider_ptr=00006ffff9da0000 original=0000000000000000 returned=00006ffffc049580 disabled_byte=0 facade_enabled=1 call_count=1"}
+{"ts":"2026-10-21T07:47:17.177Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade initialize max_users=10 callbacks=00007ffffe1ff280 call_count=1"}
+{"ts":"2026-10-21T07:47:17.177Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=9 name=Initialize call=1 args=6ffffc049580,a,7ffffe1ff280 result=0"}
+{"ts":"2026-10-21T07:47:17.177Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] NetGame switching state (from logged out, to loading root)"}
+{"ts":"2026-10-21T07:47:17.178Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] game config.json loaded from default location"}
+{"ts":"2026-10-21T07:47:17.178Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.UPNP] config key upnp=<absent> -> enabled=false"}
+{"ts":"2026-10-21T07:47:17.178Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] server tick rate: 120 a second (step 8333 us; the game had 8333 us); source=config.yaml"}
+{"ts":"2026-10-21T07:47:17.178Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] HTTP(S) connection redirected: https://api.readyatdawn.com/ → https://g.echovrce.com:7350/"}
+{"ts":"2026-10-21T07:47:17.195Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Loading level 'mnu_master'"}
+{"ts":"2026-10-21T07:47:17.321Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Loading level 'r14_glb_global_root'"}
+{"ts":"2026-10-21T07:47:17.349Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[EVR] There are less R15NetRewardItem assignments than components (Did you get or make a change to item_assignment.json without rebuilding?)"}
+{"ts":"2026-10-21T07:47:17.351Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[EVR] [SETTINGS TRANSLATOR] removing feature 'voiploudness'"}
+{"ts":"2026-10-21T07:47:17.351Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [SETTINGS TRANSLATOR] removing page '0xFF8E6D06425ABDE3'"}
+{"ts":"2026-10-21T07:47:17.352Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Finished loading level 'r14_glb_global_root' in 30 ms"}
+{"ts":"2026-10-21T07:47:17.352Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Enabling level 'r14_glb_global_root'"}
+{"ts":"2026-10-21T07:47:17.363Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Level 'mnu_master' offset by (0.000, 0.000, 0.000)"}
+{"ts":"2026-10-21T07:47:17.371Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[EVR] [SETTINGS TRANSLATOR] removing feature 'voiploudness'"}
+{"ts":"2026-10-21T07:47:17.371Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [SETTINGS TRANSLATOR] removing page '0xFF8E6D06425ABDE3'"}
+{"ts":"2026-10-21T07:47:17.374Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [CONFIGS] RequestConfig: type=main_menu, id=main_menu"}
+{"ts":"2026-10-21T07:47:17.375Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.EARLYQUIT] lockoutcountdownactive=0 (lockoutcountdownsec=0)"}
+{"ts":"2026-10-21T07:47:17.375Z","run":"20-1dd6130647bc3e6","level":"error","msg":"[EVR] ~ Scriptnode can't find actor in gamespace ~\n\tScript Actor:     0x710CD6662636E6B8\n\tScript:           0x26EBC7ED80EBA931\n\tNode Type:        EnableComponentNode\n\tNode UUID:        c9971725\n\tTarget Actor:     Player\n\tGamespace:        \n: raduri://0x26EBC7ED80EBA931?elementname=c9971725&elementtype=scriptnodeelementtype=scriptproperty"}
+{"ts":"2026-10-21T07:47:17.377Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Finished loading level 'mnu_master' in 181 ms"}
+{"ts":"2026-10-21T07:47:17.377Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Enabling level 'mnu_master'"}
+{"ts":"2026-10-21T07:47:17.378Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.PATCH] MSXML6 XMLHTTP CLSID passed through to the system object hr=0x80040154"}
+{"ts":"2026-10-21T07:47:17.378Z","run":"20-1dd6130647bc3e6","level":"error","msg":"[EVR] CHttpRequest CoCreateInstance failed with hresult 0x80040154"}
+{"ts":"2026-10-21T07:47:17.379Z","run":"20-1dd6130647bc3e6","level":"error","msg":"[EVR]  - CErrMsg\n  - message: Win HTTP Error: 0x80040154\n  - callstack: \n  - file: d:\\projects\\rad\\dev\\src\\engine\\libs\\os\\network\\csyshttp_win_xb1.cpp\n  - line: 956\n  - errorcode: Win Http Error\n"}
+{"ts":"2026-10-21T07:47:17.383Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] service redirect key=login_host from=wss://login.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:55244/login"}
+{"ts":"2026-10-21T07:47:17.384Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSUSER] Creating user OVR-ORG-1"}
+{"ts":"2026-10-21T07:47:17.384Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] Logging in..."}
+{"ts":"2026-10-21T07:47:17.385Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] NetGame switching state (from loading root, to logging in)"}
+{"ts":"2026-10-21T07:47:17.385Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #1 id=0x84244a28bfa226bc delegate_onnetgameloggingin"}
+{"ts":"2026-10-21T07:47:17.391Z","run":"20-1dd6130647bc3e6","level":"error","msg":"[EVR] [SCRIPT] 0xEDC9026F9F7DA90C: Tried to call function Disable externally but concurrent calls were set too low. Increase on FunctionDef node."}
+{"ts":"2026-10-21T07:47:17.402Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game socket admitted conn=0 role=config basis=path listener=service target=/config has_query=false ws=00007ffffeb44ca0 path=legacy game=0"}
+{"ts":"2026-10-21T07:47:17.402Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Using nevr_discord_id from config: 100000000000000001"}
+{"ts":"2026-10-21T07:47:17.402Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.WS] remote auth: URL credentials but no server key configured — the /nevr ingress will reject the upgrade (auth.server_key, or the embedded build default)"}
+{"ts":"2026-10-21T07:47:17.403Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Proxy: game connected (conn=0, config, ws=00007ffffeb44ca0)"}
+{"ts":"2026-10-21T07:47:17.403Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Proxy remote target: ws://g.echovrce.com:80/spr"}
+{"ts":"2026-10-21T07:47:17.408Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:55244/config established"}
+{"ts":"2026-10-21T07:47:17.412Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game socket admitted conn=1 role=login basis=path listener=service target=/login has_query=false ws=00007ffffec0f670 path=legacy game=0"}
+{"ts":"2026-10-21T07:47:17.412Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Using nevr_discord_id from config: 100000000000000001"}
+{"ts":"2026-10-21T07:47:17.412Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.WS] remote auth: URL credentials but no server key configured — the /nevr ingress will reject the upgrade (auth.server_key, or the embedded build default)"}
+{"ts":"2026-10-21T07:47:17.412Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Proxy: game connected (conn=1, login, ws=00007ffffec0f670)"}
+{"ts":"2026-10-21T07:47:17.413Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Proxy remote target: ws://g.echovrce.com:80/spr"}
+{"ts":"2026-10-21T07:47:17.416Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game->server conn=0 (config) msg=0 sym=0x82869f0b37eb4378 SNSConfigRequestv2 len=39"}
+{"ts":"2026-10-21T07:47:17.416Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:55244/login established"}
+{"ts":"2026-10-21T07:47:17.603Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] CNSUser login state patched acct=0->100000000000000001 state=0x0->0x4 provider=0->4 flags=0x32->0x4 (unblocks LogInSuccessCB)"}
+{"ts":"2026-10-21T07:47:17.603Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] login hmd serial source=no-vr length=3"}
+{"ts":"2026-10-21T07:47:17.603Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] login nevr_plugins configured=0 loaded=0"}
+{"ts":"2026-10-21T07:47:17.603Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] login injected xpid=OVR-ORG-100000000000000001 platform=4 conn=1 (login) size=748"}
+{"ts":"2026-10-21T07:47:17.684Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=0 (config) msg=0 sym=0xb9cdaf586f7bd012 SNSConfigSuccessv2 len=228"}
+{"ts":"2026-10-21T07:47:17.684Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=0 (config) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:17.691Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [CONFIGS] ConfigSuccessCB: type=main_menu, id=main_menu {\"news\":{\"offseason\":{\"texture\":\"None\",\"link\":\"https://en.wikipedia.org/wiki/Lone_Echo\"},\"sentiment\":{\"texture\":\"ui_mnu_news_latest\",\"link\":\"https://en.wikipedia.org/wiki/Lone_Echo\"}},\"_ts\":0,\"help_link\":\"https://en.wikipedia.org/wiki/Lone_Echo\",\"news_link\":\"https://en.wikipedia.org/wiki/Lone_Echo\",\"discord_link\":\"https://en.wikipedia.org/wiki/Lone_Echo\",\"splash\":{\"offseason\":{\"texture\":\"ui_menu_splash_screen_poster_a_shutdown_clr\",\"l"}
+{"ts":"2026-10-21T07:47:17.939Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xa5acc1a90d0cce47 <unnamed> len=32"}
+{"ts":"2026-10-21T07:47:17.939Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:17.940Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=2 sym=0xed5be2c3632155f1 SNSLoginSettings len=202"}
+{"ts":"2026-10-21T07:47:17.940Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] LOGIN SUCCESS"}
+{"ts":"2026-10-21T07:47:17.941Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [CONFIGS] RequestConfig: type=active_battle_pass_season, id=active_battle_pass_season"}
+{"ts":"2026-10-21T07:47:17.941Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [CONFIGS] RequestConfig: type=active_store_entry, id=active_store_entry"}
+{"ts":"2026-10-21T07:47:17.941Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [CONFIGS] RequestConfig: type=active_store_featured_entry, id=active_store_featured_entry"}
+{"ts":"2026-10-21T07:47:17.941Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #2 id=0x6a4e5ebc0e3490ee delegate_onloginsettingsreceived"}
+{"ts":"2026-10-21T07:47:17.942Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [PROFILE] Getting logged in user OVR-ORG-100000000000000001's profile: {\"defaultclientprofileid\":\"default\",\"defaultserverprofileid\":\"default_new_item_types\",\"unlocksetids\":{\"all\":{}},\"statgroupids\":{\"arena\":{},\"arena_practice_ai\":{},\"daily_2026_10_20\":{},\"arena_public_ai\":{},\"weekly_2026_10_19\":{},\"combat\":{},\"active_battle_pass_se\":{}}}"}
+{"ts":"2026-10-21T07:47:17.942Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xfabf5f8719bfebf3 <unnamed> len=200"}
+{"ts":"2026-10-21T07:47:17.942Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [DOCUMENTS] Requesting document (eula)"}
+{"ts":"2026-10-21T07:47:17.942Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:17.942Z","run":"20-1dd6130647bc3e6","level":"error","msg":"[EVR] [DEBUGPRINT] [MENU_GAME_ADMINS_PAGES] EULA is missing text_ga"}
+{"ts":"2026-10-21T07:47:17.949Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game->server conn=0 (config) msg=0 sym=0x82869f0b37eb4378 SNSConfigRequestv2 len=71"}
+{"ts":"2026-10-21T07:47:17.949Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game->server conn=1 (login) msg=0 sym=0xfb772a4221fc8d70 SNSLoggedInUserProfileRequest len=301"}
+{"ts":"2026-10-21T07:47:17.949Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game->server conn=1 (login) msg=1 sym=0xfcced6f169822bb8 SNSDocumentRequestv2 len=8"}
+{"ts":"2026-10-21T07:47:17.949Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game->server conn=0 (config) msg=1 sym=0x82869f0b37eb4378 SNSConfigRequestv2 len=57"}
+{"ts":"2026-10-21T07:47:17.950Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game->server conn=0 (config) msg=2 sym=0x82869f0b37eb4378 SNSConfigRequestv2 len=75"}
+{"ts":"2026-10-21T07:47:18.037Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 FriendListResponse payload_bytes=32"}
+{"ts":"2026-10-21T07:47:18.037Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xa78aeb2a4e89b10b FriendListResponse len=32"}
+{"ts":"2026-10-21T07:47:18.037Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 FriendStatusNotify payload_bytes=24"}
+{"ts":"2026-10-21T07:47:18.037Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] game->server conn=1 SNSOtherUserProfileRequest platform=4 account=422760318867996702 payload_bytes=19"}
+{"ts":"2026-10-21T07:47:18.037Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend name lookup requested account=422760318867996702 sent=1"}
+{"ts":"2026-10-21T07:47:18.038Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 FriendStatusNotify payload_bytes=24"}
+{"ts":"2026-10-21T07:47:18.038Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] game->server conn=1 SNSOtherUserProfileRequest platform=4 account=697602460323283015 payload_bytes=19"}
+{"ts":"2026-10-21T07:47:18.038Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend name lookup requested account=697602460323283015 sent=1"}
+{"ts":"2026-10-21T07:47:18.038Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 FriendStatusNotify payload_bytes=24"}
+{"ts":"2026-10-21T07:47:18.038Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] game->server conn=1 SNSOtherUserProfileRequest platform=4 account=644235889664589845 payload_bytes=19"}
+{"ts":"2026-10-21T07:47:18.038Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend name lookup requested account=644235889664589845 sent=1"}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend presence account=422760318867996702 party=0 joinable=0 text=\"\""}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend presence account=697602460323283015 party=0 joinable=0 text=\"\""}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend presence account=644235889664589845 party=0 joinable=0 text=\"\""}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0x26a19dc4d2d5579d FriendStatusNotify len=24"}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0x26a19dc4d2d5579d FriendStatusNotify len=24"}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=2 sym=0x26a19dc4d2d5579d FriendStatusNotify len=24"}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=3 sym=0xbdd8dd00c5e97a63 <unnamed> len=34"}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=4 sym=0xbdd8dd00c5e97a63 <unnamed> len=34"}
+{"ts":"2026-10-21T07:47:18.039Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=5 sym=0xbdd8dd00c5e97a63 <unnamed> len=34"}
+{"ts":"2026-10-21T07:47:18.043Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=0 (config) msg=0 sym=0xb9cdaf586f7bd012 SNSConfigSuccessv2 len=510"}
+{"ts":"2026-10-21T07:47:18.043Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=0 (config) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:18.043Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=0 (config) msg=2 sym=0xb9cdaf586f7bd012 SNSConfigSuccessv2 len=507"}
+{"ts":"2026-10-21T07:47:18.043Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=0 (config) msg=3 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:18.043Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=0 (config) msg=4 sym=0xb9cdaf586f7bd012 SNSConfigSuccessv2 len=444"}
+{"ts":"2026-10-21T07:47:18.049Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [CONFIGS] ConfigSuccessCB: type=active_battle_pass_season, id=active_battle_pass_season {\"days_remaining_to_trigger_upsell\":0,\"offseason\":false,\"menu_link_upsell\":null,\"_ts\":0,\"description\":null,\"learn_more_link\":null,\"archives\":{\"marketing_lobby\":null,\"marketing_menu\":null},\"bp_xp_boost_reward_solo\":0,\"bp_currency_rewards\":null,\"bp_xp_boost_reward_party\":0,\"bp_xp_requirements\":{\"variable_tier_xp_requirements\":null,\"use_constant_tier_xp_requirements\":true,\"constant_tier_xp_requirements\":0}"}
+{"ts":"2026-10-21T07:47:18.050Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [CONFIGS] ConfigSuccessCB: type=active_store_entry, id=active_store_entry {\"days_remaining_to_trigger_upsell\":0,\"_ts\":0,\"entry_number\":0,\"id\":\"active_store_entry\",\"marketing\":{\"lobby_poster_start_texture\":\"ui_menu_splash_screen_poster_a_shutdown_clr\",\"lobby_poster_upsell_texture\":\"ui_menu_splash_screen_poster_a_shutdown_clr\",\"menu_store_panel_upsell_texture\":\"ui_menu_splash_screen_poster_a_shutdown_clr\",\"menu_store_panel_start_texture\":\"ui_menu_splash_screen_poster_a_shutdown_clr\"},\"type\":"}
+{"ts":"2026-10-21T07:47:18.051Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [CONFIGS] ConfigSuccessCB: type=active_store_featured_entry, id=active_store_featured_entry {\"days_remaining_to_trigger_upsell\":0,\"_ts\":0,\"entry_number\":0,\"id\":\"active_store_featured_entry\",\"marketing\":{\"lobby_poster_start_texture\":\"ui_menu_splash_screen_poster_a_shutdown_clr\",\"lobby_poster_upsell_texture\":\"ui_menu_splash_screen_poster_a_shutdown_clr\",\"menu_store_panel_upsell_texture\":\"ui_menu_splash_screen_poster_a_shutdown_clr\",\"menu_store_panel_start_texture\":\"ui_menu_splash_screen_post"}
+{"ts":"2026-10-21T07:47:18.064Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xfb763a5037fc8d77 <unnamed> len=7707"}
+{"ts":"2026-10-21T07:47:18.064Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0xd07ffd782fb7b509 SNSDocumentSuccess len=253"}
+{"ts":"2026-10-21T07:47:18.064Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=2 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:18.070Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #3 id=0xa2e48b35c7cd078f delegate_onearlyquitpenaltyupdate"}
+{"ts":"2026-10-21T07:47:18.070Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.EARLYQUIT] penalty set: incoming penaltyts=0 stored=0 now=1792568838 level=0 early_quits=9 -> lockout expiry=-1 active=0 (cleared by the game service)"}
+{"ts":"2026-10-21T07:47:18.070Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #4 id=0xa2e48b35c7cd078f delegate_onearlyquitpenaltyupdate"}
+{"ts":"2026-10-21T07:47:18.070Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade set_local_user user_index=0 call_count=1"}
+{"ts":"2026-10-21T07:47:18.070Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=14 name=SetLocalUser call=1 args=6ffffc049580,0,0"}
+{"ts":"2026-10-21T07:47:18.071Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] service redirect key=transaction_host from=wss://transaction.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:55244/"}
+{"ts":"2026-10-21T07:47:18.071Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] NetGame switching state (from logging in, to logged in)"}
+{"ts":"2026-10-21T07:47:18.071Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #5 id=0xad9f67246712e2bc delegate_onnetgameloggedin"}
+{"ts":"2026-10-21T07:47:18.071Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [DOCUMENTS] Document received (eula) {\"type\":\"eula\",\"lang\":\"en\",\"link_cc\":\"https://github.com/EchoTools\",\"mark_as_read_profile_key\":\"legal|eula_version\",\"version\":1786950021,\"link_pp\":\"https://github.com/EchoTools\",\"version_ga\":1786950021,\"mark_as_read_profile_key_ga\":\"legal|game_admin_version\",\"text\":\"Blank EULA for NoVR clients. You should only see this once.\",\"text_ga\":\"Blank EULA for NoVR clients. You should only see this once.\",\"link_ec\":\"https://github.com/EchoTools\",\"link_cp\":\"https"}
+{"ts":"2026-10-21T07:47:18.072Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[EVR] [DynLoadTexture] Element '0x82EEA8BD15A151B9' has no texture specified"}
+{"ts":"2026-10-21T07:47:18.073Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] server logged in — beginning multiplayer (no menu runs on a server to begin it)"}
+{"ts":"2026-10-21T07:47:18.073Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Beginning multiplayer"}
+{"ts":"2026-10-21T07:47:18.073Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] DIAG netgame host-authority: granted=false flags=0x01 (bit1=0 bit2=0 bit6=0)"}
+{"ts":"2026-10-21T07:47:18.074Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] service redirect key=transaction_host from=wss://transaction.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:55244/"}
+{"ts":"2026-10-21T07:47:18.078Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [SYSNET] Clearing low latency option"}
+{"ts":"2026-10-21T07:47:18.079Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Dedicated: broadcaster initialized at [172.17.0.2:6795]"}
+{"ts":"2026-10-21T07:47:18.079Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] loading server library 'pnsradgameserver' with log path 'z:\\home\\container\\root\\_local\\r14logs'"}
+{"ts":"2026-10-21T07:47:18.081Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] Initialized game server (game thread 36, broadcaster callbacks registered=15/15)"}
+{"ts":"2026-10-21T07:47:18.081Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] console ctrl handler re-armed to front of chain (CTRL+C reaches us first; the game's handler runs behind us)"}
+{"ts":"2026-10-21T07:47:18.081Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] GameServerLib started — CTRL+C now defers to the game's teardown, which exits at GameServerLib::Terminate"}
+{"ts":"2026-10-21T07:47:18.082Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] {\"message\":\"server library loaded\",\"category\":\"serverlib\",\"server_library_name\":\"pnsradgameserver\"}"}
+{"ts":"2026-10-21T07:47:18.082Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] NetGame switching state (from logged in, to loading global)"}
+{"ts":"2026-10-21T07:47:18.082Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Ending multiplayer gameplay"}
+{"ts":"2026-10-21T07:47:18.082Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #6 id=0x60433466edf3937a delegate_onnetgameloadingmultiplayer"}
+{"ts":"2026-10-21T07:47:18.082Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] Resetting local connection stats"}
+{"ts":"2026-10-21T07:47:18.082Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] AFK detection enabled (by init)"}
+{"ts":"2026-10-21T07:47:18.082Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] Initializing HTTP API"}
+{"ts":"2026-10-21T07:47:18.083Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] Bound HTTP listener to 127.0.0.1:6895, responding to /session"}
+{"ts":"2026-10-21T07:47:18.084Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Loading level 'r14_glb_global_mp'"}
+{"ts":"2026-10-21T07:47:18.084Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade update flags=0x01"}
+{"ts":"2026-10-21T07:47:18.084Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] game->server conn=1 PartyCreateRequest payload_bytes=40"}
+{"ts":"2026-10-21T07:47:18.085Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] party create (the game asked for a party): 1 request(s) sent"}
+{"ts":"2026-10-21T07:47:18.085Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade update call_count=1"}
+{"ts":"2026-10-21T07:47:18.085Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=1 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:18.085Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade query slot=0xb0 name=Joinable call_count=1 result=0"}
+{"ts":"2026-10-21T07:47:18.085Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=1 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:18.086Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=1 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:18.086Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game->server conn=1 (login) msg=0 sym=0x90758e58515724e0 SNSChannelInfoRequest len=1"}
+{"ts":"2026-10-21T07:47:18.095Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=2 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:18.095Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade query slot=0xb0 name=Joinable call_count=2 result=0"}
+{"ts":"2026-10-21T07:47:18.095Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=2 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:18.096Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=2 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:18.101Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=3 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:18.101Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade query slot=0xb0 name=Joinable call_count=3 result=0"}
+{"ts":"2026-10-21T07:47:18.101Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=3 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:18.102Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=3 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:18.196Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend name resolved account=422760318867996702 name_bytes=10"}
+{"ts":"2026-10-21T07:47:18.196Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 SNSOtherUserProfileSuccess platform=4 account=422760318867996702 payload_bytes=1280"}
+{"ts":"2026-10-21T07:47:18.196Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0x1230073227050cb5 SNSOtherUserProfileSuccess len=1280"}
+{"ts":"2026-10-21T07:47:18.210Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend name resolved account=697602460323283015 name_bytes=4"}
+{"ts":"2026-10-21T07:47:18.211Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 SNSOtherUserProfileSuccess platform=4 account=697602460323283015 payload_bytes=1169"}
+{"ts":"2026-10-21T07:47:18.211Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0x1230073227050cb5 SNSOtherUserProfileSuccess len=1169"}
+{"ts":"2026-10-21T07:47:18.220Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Level 'r14_glb_global_mp' offset by (0.000, 0.000, 0.000)"}
+{"ts":"2026-10-21T07:47:18.293Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [DEBUGPRINT]  [ARM COMPUTER] Closing social controls"}
+{"ts":"2026-10-21T07:47:18.297Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [LEVELLOAD] Finished loading level 'r14_glb_global_mp' in 212 ms"}
+{"ts":"2026-10-21T07:47:18.303Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.PATCH] Login session GUID not found in game log"}
+{"ts":"2026-10-21T07:47:18.304Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] NetGame switching state (from loading global, to lobby)"}
+{"ts":"2026-10-21T07:47:18.304Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] RequestRegistration server_id=-1970535777964507015 region=0x2fd38a995f615b9e version_lock=0x134b1272e1c4c0b7"}
+{"ts":"2026-10-21T07:47:18.336Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend name resolved account=644235889664589845 name_bytes=23"}
+{"ts":"2026-10-21T07:47:18.336Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 SNSOtherUserProfileSuccess platform=4 account=644235889664589845 payload_bytes=1408"}
+{"ts":"2026-10-21T07:47:18.336Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0x1230073227050cb5 SNSOtherUserProfileSuccess len=1408"}
+{"ts":"2026-10-21T07:47:18.337Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 PartyCreateSuccess payload_bytes=16"}
+{"ts":"2026-10-21T07:47:18.337Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0x0b7ac20124523993 <unnamed> len=16"}
+{"ts":"2026-10-21T07:47:18.338Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0x6c8f16cd9f8964c5 <unnamed> len=353"}
+{"ts":"2026-10-21T07:47:18.338Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:18.848Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] Server authenticated (token acquired)"}
+{"ts":"2026-10-21T07:47:18.848Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SERVERDB] Connecting to ServerDB at ws://g.echovrce.com:80/nevr"}
+{"ts":"2026-10-21T07:47:18.848Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.UPNP] disabled — announcing raw broadcaster port 6795, no mapping attempted (set \"upnp\" in config or pass -upnp)"}
+{"ts":"2026-10-21T07:47:18.848Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] No telemetry_uri in config — telemetry disabled"}
+{"ts":"2026-10-21T07:47:18.849Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] requested game server registration server_id=-1970535777964507015 region=0x2FD38A995F615B9E"}
+{"ts":"2026-10-21T07:47:18.849Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] Registered lobby (id: 16476208295745044601, radid: '', region: 'default', version: 1680630467, publisherlock: 'echovrce')"}
+{"ts":"2026-10-21T07:47:18.849Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #7 id=0xad9f62217b1fe5b5 delegate_onnetgamelobbying"}
+{"ts":"2026-10-21T07:47:18.849Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] party callback index=0 bound=1"}
+{"ts":"2026-10-21T07:47:18.849Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #8 id=0x0f05850278136308 delegate_onpartycreated"}
+{"ts":"2026-10-21T07:47:18.850Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] party data share scope=party party=1173 bytes=2"}
+{"ts":"2026-10-21T07:47:18.850Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] game->server conn=1 PartyDataUpdateRequest payload_bytes=50"}
+{"ts":"2026-10-21T07:47:18.850Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] party data (party): 1 request(s) sent"}
+{"ts":"2026-10-21T07:47:18.850Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] party data share scope=member party=1173 bytes=2"}
+{"ts":"2026-10-21T07:47:18.850Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] game->server conn=1 PartyDataUpdateRequest payload_bytes=50"}
+{"ts":"2026-10-21T07:47:18.850Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] party data (member): 1 request(s) sent"}
+{"ts":"2026-10-21T07:47:18.850Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #9 id=0x073df397a85670b4 delegate_onpartyjoinabilitychanged"}
+{"ts":"2026-10-21T07:47:18.851Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [SOCIALGROUPS] Social lobby group info received"}
+{"ts":"2026-10-21T07:47:18.851Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [SOCIALGROUPS] active group = Echo VR Lounge"}
+{"ts":"2026-10-21T07:47:18.851Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #10 id=0x2feb1e92e1dd5de8 delegate_onsocialgroupsupdated"}
+{"ts":"2026-10-21T07:47:18.909Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] server clock read-back tick=125 clock=present step_us=8333 mode_bits=0x18 (0x8 fixed, 0x10 paced) expected_step_us=8333 step_state=set live=true"}
+{"ts":"2026-10-21T07:47:18.943Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 PartyUpdateSuccess payload_bytes=8"}
+{"ts":"2026-10-21T07:47:18.943Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SELFCHECK] check=party_data_share pass=1 expected=\"every party data share is answered PartyUpdateSuccess (member data: PartyUpdateMemberSuccess)\" observed=\"scope=party answer=PartyUpdateSuccess ok=1 failed=0\""}
+{"ts":"2026-10-21T07:47:18.943Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SELFCHECK] check=party_data_share_totals pass=1 expected=\"no party data share was answered with a failure (failed=0)\" observed=\"answers=1 ok=1 failed=0 other=0 unmatched=0\""}
+{"ts":"2026-10-21T07:47:18.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xdee671b237a5278d <unnamed> len=8"}
+{"ts":"2026-10-21T07:47:18.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 PartyUpdateMemberSuccess payload_bytes=8"}
+{"ts":"2026-10-21T07:47:18.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SELFCHECK] check=party_data_share_totals pass=1 expected=\"no party data share was answered with a failure (failed=0)\" observed=\"answers=2 ok=2 failed=0 other=0 unmatched=0\""}
+{"ts":"2026-10-21T07:47:18.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0x4edffb9fc8cc8731 <unnamed> len=8"}
+{"ts":"2026-10-21T07:47:19.038Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SERVERDB] Connected to ServerDB reconnect_count=0"}
+{"ts":"2026-10-21T07:47:21.134Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=300 set_local_user=1 ready=0 join_policy=0 joinable=299 host=0 is_host=299 id=0 period=300"}
+{"ts":"2026-10-21T07:47:21.225Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] Received registration success via protobuf: server_id=16476208295745044601, ip=168.119.2.94"}
+{"ts":"2026-10-21T07:47:21.225Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] registration successful"}
+{"ts":"2026-10-21T07:47:21.225Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Dedicated: registered as 0xE4A74026793A4079 at [172.17.0.2/168.119.2.94:6795]"}
+{"ts":"2026-10-21T07:47:21.227Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.GAMESERVER] Unhandled WebSocket msgId: 0x43E6963AC76BEEE4 (size: 1)"}
+{"ts":"2026-10-21T07:47:23.626Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:55244/config closed"}
+{"ts":"2026-10-21T07:47:23.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=600 set_local_user=1 ready=0 join_policy=0 joinable=599 host=0 is_host=599 id=0 period=300"}
+{"ts":"2026-10-21T07:47:23.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.LOGFILTER] repeated count=21 window_s=5 msg=\"[NEVR.SOCIAL] slot=13 name=Update call=1 args=6ffffc049580,7ffffe1ffa90,0\""}
+{"ts":"2026-10-21T07:47:23.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=600 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:23.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.LOGFILTER] repeated count=21 window_s=5 msg=\"[NEVR.SOCIAL] slot=22 name=Joinable call=1 args=6ffffc049580,0,0 result=0\""}
+{"ts":"2026-10-21T07:47:23.635Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:23.635Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.LOGFILTER] repeated count=21 window_s=5 msg=\"[NEVR.SOCIAL] slot=24 name=IsHost call=1 args=6ffffc049580,0,0 result=1\""}
+{"ts":"2026-10-21T07:47:23.635Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:23.719Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Proxy: game disconnected (conn=0, config)"}
+{"ts":"2026-10-21T07:47:26.134Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=900 set_local_user=1 ready=0 join_policy=0 joinable=899 host=0 is_host=899 id=0 period=300"}
+{"ts":"2026-10-21T07:47:28.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=1200 set_local_user=1 ready=0 join_policy=0 joinable=1199 host=0 is_host=1199 id=0 period=300"}
+{"ts":"2026-10-21T07:47:28.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=1200 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:28.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=1200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:28.635Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=1200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:29.060Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] game->server conn=1 FriendListRefreshRequest payload_bytes=32"}
+{"ts":"2026-10-21T07:47:29.060Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] refresh friends: 1 request(s) sent"}
+{"ts":"2026-10-21T07:47:29.060Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=45 name=RefreshFriends call=1 args=6ffffc049580,0,0"}
+{"ts":"2026-10-21T07:47:29.084Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=1 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:29.093Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=2 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:29.101Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=3 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:29.154Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 FriendListResponse payload_bytes=32"}
+{"ts":"2026-10-21T07:47:29.155Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 FriendStatusNotify payload_bytes=24"}
+{"ts":"2026-10-21T07:47:29.155Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 FriendStatusNotify payload_bytes=24"}
+{"ts":"2026-10-21T07:47:29.155Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] server->game conn=1 FriendStatusNotify payload_bytes=24"}
+{"ts":"2026-10-21T07:47:29.155Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend presence account=422760318867996702 party=0 joinable=0 text=\"\""}
+{"ts":"2026-10-21T07:47:29.155Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xa78aeb2a4e89b10b FriendListResponse len=32"}
+{"ts":"2026-10-21T07:47:29.155Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.LOGFILTER] repeated count=6 window_s=0 msg=\"[NEVR.SOCIAL] slot=70 name=InviteCount call=1 args=6ffffc049580,0,0 result=0\""}
+{"ts":"2026-10-21T07:47:29.156Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0x26a19dc4d2d5579d FriendStatusNotify len=24"}
+{"ts":"2026-10-21T07:47:29.156Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=2 sym=0x26a19dc4d2d5579d FriendStatusNotify len=24"}
+{"ts":"2026-10-21T07:47:29.156Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=3 sym=0x26a19dc4d2d5579d FriendStatusNotify len=24"}
+{"ts":"2026-10-21T07:47:29.156Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=4 sym=0xbdd8dd00c5e97a63 <unnamed> len=34"}
+{"ts":"2026-10-21T07:47:29.156Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend presence account=697602460323283015 party=0 joinable=0 text=\"\""}
+{"ts":"2026-10-21T07:47:29.157Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xbdd8dd00c5e97a63 <unnamed> len=34"}
+{"ts":"2026-10-21T07:47:29.157Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] friend presence account=644235889664589845 party=0 joinable=0 text=\"\""}
+{"ts":"2026-10-21T07:47:29.157Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xbdd8dd00c5e97a63 <unnamed> len=34"}
+{"ts":"2026-10-21T07:47:29.160Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=10 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:29.168Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=11 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:29.176Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=12 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:31.134Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=1500 set_local_user=1 ready=0 join_policy=0 joinable=1499 host=0 is_host=1745 id=0 period=300"}
+{"ts":"2026-10-21T07:47:31.359Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=1800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:32.775Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] game->server conn=1 (login) msg=0 sym=0x244b47685187eae1 SNSRemoteLogSetv3 len=864"}
+{"ts":"2026-10-21T07:47:33.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=1800 set_local_user=1 ready=0 join_policy=0 joinable=1799 host=0 is_host=2345 id=0 period=300"}
+{"ts":"2026-10-21T07:47:33.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=1800 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:33.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=1800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:33.858Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=2400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:34.076Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.LOGFILTER] repeated count=12 window_s=5 msg=\"[NEVR.SOCIAL] slot=70 name=InviteCount call=10 args=6ffffc049580,0,0 result=0\""}
+{"ts":"2026-10-21T07:47:34.076Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=600 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:36.133Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=2100 set_local_user=1 ready=0 join_policy=0 joinable=2099 host=0 is_host=2945 id=0 period=300"}
+{"ts":"2026-10-21T07:47:36.359Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=3000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:37.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xfabf5f8719bfebf3 <unnamed> len=200"}
+{"ts":"2026-10-21T07:47:37.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:38.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=2400 set_local_user=1 ready=0 join_policy=0 joinable=2399 host=0 is_host=3545 id=0 period=300"}
+{"ts":"2026-10-21T07:47:38.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=2400 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:38.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=2400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:38.858Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=3600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:39.075Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=1200 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:41.134Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=2700 set_local_user=1 ready=0 join_policy=0 joinable=2699 host=0 is_host=4145 id=0 period=300"}
+{"ts":"2026-10-21T07:47:41.358Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=4200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:43.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=3000 set_local_user=1 ready=0 join_policy=0 joinable=2999 host=0 is_host=4745 id=0 period=300"}
+{"ts":"2026-10-21T07:47:43.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=3000 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:43.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=3000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:43.859Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=4800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:44.075Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=1800 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:46.133Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=3300 set_local_user=1 ready=0 join_policy=0 joinable=3299 host=0 is_host=5345 id=0 period=300"}
+{"ts":"2026-10-21T07:47:46.358Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=5400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:48.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=3600 set_local_user=1 ready=0 join_policy=0 joinable=3599 host=0 is_host=5945 id=0 period=300"}
+{"ts":"2026-10-21T07:47:48.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=3600 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:48.634Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=3600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:48.858Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=6000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:49.075Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=2400 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:50.700Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] hook_liveness name=GetTimeMicroseconds entries=11906 entered=yes expected=all modes at=periodic"}
+{"ts":"2026-10-21T07:47:50.701Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.PATCH] hook_liveness name=CTimer_GetMilliSeconds entries=0 entered=NO expected=all modes at=periodic"}
+{"ts":"2026-10-21T07:47:50.701Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] hook_liveness name=CPrecisionSleep::Wait skipped=server_mode_guaranteed_absent (client-only hook) — not tracked further this run"}
+{"ts":"2026-10-21T07:47:50.701Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.PATCH] hook_liveness name=EndMultiplayer entries=0 entered=NO expected=session teardown at=periodic"}
+{"ts":"2026-10-21T07:47:50.701Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.PATCH] hook_liveness name=CSpinWait::WaitForValue entries=0 entered=NO expected=under contention at=periodic"}
+{"ts":"2026-10-21T07:47:50.701Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] hook_liveness name=HTTPListenerBringup entries=1 entered=yes expected=server bringup at=periodic"}
+{"ts":"2026-10-21T07:47:50.701Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] hook_liveness name=CBroadcaster::Listen entries=82 entered=yes expected=registration + gameplay at=periodic"}
+{"ts":"2026-10-21T07:47:50.701Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.LOGFILTER] repeated count=1 window_s=33 msg=\"[NEVR.WS] server->game conn=0 (config) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1\""}
+{"ts":"2026-10-21T07:47:50.702Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] hook_liveness name=CBroadcaster::ReceiveLocalEvent entries=1 entered=yes expected=message dispatch at=periodic"}
+{"ts":"2026-10-21T07:47:51.132Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=3900 set_local_user=1 ready=0 join_policy=0 joinable=3899 host=0 is_host=6545 id=0 period=300"}
+{"ts":"2026-10-21T07:47:51.358Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=6600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:53.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=4200 set_local_user=1 ready=0 join_policy=0 joinable=4199 host=0 is_host=7145 id=0 period=300"}
+{"ts":"2026-10-21T07:47:53.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=4200 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:53.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=4200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:53.858Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=7200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:54.074Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=3000 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:56.132Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=4500 set_local_user=1 ready=0 join_policy=0 joinable=4499 host=0 is_host=7745 id=0 period=300"}
+{"ts":"2026-10-21T07:47:56.358Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=7800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:57.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xfabf5f8719bfebf3 <unnamed> len=200"}
+{"ts":"2026-10-21T07:47:57.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:47:58.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=4800 set_local_user=1 ready=0 join_policy=0 joinable=4799 host=0 is_host=8345 id=0 period=300"}
+{"ts":"2026-10-21T07:47:58.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=4800 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:47:58.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=4800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:58.857Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=8400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:47:59.074Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=3600 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:47:59.092Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=69 name=RefreshInvites call=1 args=6ffffc049580,7bd88987f708,7bd88987f700 result=0"}
+{"ts":"2026-10-21T07:47:59.099Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=68 name=RefreshingInvites call=1 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:01.133Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=5100 set_local_user=1 ready=0 join_policy=0 joinable=5099 host=0 is_host=8944 id=0 period=300"}
+{"ts":"2026-10-21T07:48:01.358Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=9000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:03.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=5400 set_local_user=1 ready=0 join_policy=0 joinable=5399 host=0 is_host=9544 id=0 period=300"}
+{"ts":"2026-10-21T07:48:03.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=5400 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:03.633Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=5400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:03.857Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=9600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:04.083Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=4200 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:06.132Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=5700 set_local_user=1 ready=0 join_policy=0 joinable=5699 host=0 is_host=10144 id=0 period=300"}
+{"ts":"2026-10-21T07:48:06.357Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=10200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:08.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=6000 set_local_user=1 ready=0 join_policy=0 joinable=5999 host=0 is_host=10744 id=0 period=300"}
+{"ts":"2026-10-21T07:48:08.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=6000 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:08.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=6000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:08.857Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=10800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:09.082Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=4800 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:11.131Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=6300 set_local_user=1 ready=0 join_policy=0 joinable=6299 host=0 is_host=11344 id=0 period=300"}
+{"ts":"2026-10-21T07:48:11.357Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=11400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:13.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=6600 set_local_user=1 ready=0 join_policy=0 joinable=6599 host=0 is_host=11944 id=0 period=300"}
+{"ts":"2026-10-21T07:48:13.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=6600 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:13.632Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=6600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:13.857Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=12000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:14.081Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=5400 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:16.007Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.LOGFILTER] health emitted=379 suppressed=256 suppression_pct=40 game_lines=179 interval_s=120"}
+{"ts":"2026-10-21T07:48:16.132Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=6900 set_local_user=1 ready=0 join_policy=0 joinable=6899 host=0 is_host=12544 id=0 period=300"}
+{"ts":"2026-10-21T07:48:16.356Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=12600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:17.944Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=0 sym=0xfabf5f8719bfebf3 <unnamed> len=128"}
+{"ts":"2026-10-21T07:48:17.945Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] server->game conn=1 (login) msg=1 sym=0x43e6963ac76beee4 <unnamed> len=1"}
+{"ts":"2026-10-21T07:48:18.631Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=7200 set_local_user=1 ready=0 join_policy=0 joinable=7199 host=0 is_host=13144 id=0 period=300"}
+{"ts":"2026-10-21T07:48:18.631Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=7200 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:18.631Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=7200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:18.857Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=13200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:19.081Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=6000 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:21.162Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=7500 set_local_user=1 ready=0 join_policy=0 joinable=7499 host=0 is_host=13744 id=0 period=300"}
+{"ts":"2026-10-21T07:48:21.407Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=13800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:23.767Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=7800 set_local_user=1 ready=0 join_policy=0 joinable=7799 host=0 is_host=14344 id=0 period=300"}
+{"ts":"2026-10-21T07:48:23.767Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=7800 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:23.767Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=7800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:23.800Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] hook_liveness name=GetTimeMicroseconds entries=23807 entered=yes expected=all modes at=periodic"}
+{"ts":"2026-10-21T07:48:23.992Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=14400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:24.217Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=6600 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:26.266Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=8100 set_local_user=1 ready=0 join_policy=0 joinable=8099 host=0 is_host=14944 id=0 period=300"}
+{"ts":"2026-10-21T07:48:26.492Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=15000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:28.766Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=8400 set_local_user=1 ready=0 join_policy=0 joinable=8399 host=0 is_host=15544 id=0 period=300"}
+{"ts":"2026-10-21T07:48:28.767Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=8400 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:28.767Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=8400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:28.992Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=15600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:29.117Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=69 name=RefreshInvites call=2 args=6ffffc049580,7bd88987f708,7bd88987f700 result=0"}
+{"ts":"2026-10-21T07:48:29.125Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=68 name=RefreshingInvites call=2 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:29.224Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=7200 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:31.266Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=8700 set_local_user=1 ready=0 join_policy=0 joinable=8699 host=0 is_host=16143 id=0 period=300"}
+{"ts":"2026-10-21T07:48:31.500Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=16200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:33.766Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=9000 set_local_user=1 ready=0 join_policy=0 joinable=8999 host=0 is_host=16743 id=0 period=300"}
+{"ts":"2026-10-21T07:48:33.766Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=9000 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:33.766Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=9000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:34.000Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=16800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:34.224Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=7800 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:36.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=9300 set_local_user=1 ready=0 join_policy=0 joinable=9299 host=0 is_host=17343 id=0 period=300"}
+{"ts":"2026-10-21T07:48:36.498Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=17400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:38.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=9600 set_local_user=1 ready=0 join_policy=0 joinable=9599 host=0 is_host=17943 id=0 period=300"}
+{"ts":"2026-10-21T07:48:38.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=9600 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:38.766Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=9600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:38.998Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=18000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:39.224Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=8400 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:41.265Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=9900 set_local_user=1 ready=0 join_policy=0 joinable=9899 host=0 is_host=18543 id=0 period=300"}
+{"ts":"2026-10-21T07:48:41.498Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=18600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:43.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=10200 set_local_user=1 ready=0 join_policy=0 joinable=10199 host=0 is_host=19143 id=0 period=300"}
+{"ts":"2026-10-21T07:48:43.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=10200 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:43.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=10200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:43.998Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=19200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:44.224Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=9000 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:46.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=10500 set_local_user=1 ready=0 join_policy=0 joinable=10499 host=0 is_host=19743 id=0 period=300"}
+{"ts":"2026-10-21T07:48:46.497Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=19800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:48.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=10800 set_local_user=1 ready=0 join_policy=0 joinable=10799 host=0 is_host=20343 id=0 period=300"}
+{"ts":"2026-10-21T07:48:48.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=10800 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:48.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=10800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:48.997Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=20400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:49.223Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=9600 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:51.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=11100 set_local_user=1 ready=0 join_policy=0 joinable=11099 host=0 is_host=20943 id=0 period=300"}
+{"ts":"2026-10-21T07:48:51.497Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=21000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:53.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=11400 set_local_user=1 ready=0 join_policy=0 joinable=11399 host=0 is_host=21543 id=0 period=300"}
+{"ts":"2026-10-21T07:48:53.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=11400 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:53.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=11400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:53.998Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=21600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:54.222Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=10200 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:56.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=11700 set_local_user=1 ready=0 join_policy=0 joinable=11699 host=0 is_host=22143 id=0 period=300"}
+{"ts":"2026-10-21T07:48:56.498Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=22200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:56.549Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] hook_liveness name=GetTimeMicroseconds entries=35630 entered=yes expected=all modes at=periodic"}
+{"ts":"2026-10-21T07:48:58.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=12000 set_local_user=1 ready=0 join_policy=0 joinable=11999 host=0 is_host=22743 id=0 period=300"}
+{"ts":"2026-10-21T07:48:58.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=12000 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:48:58.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=12000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:58.998Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=22800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:48:59.124Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=69 name=RefreshInvites call=3 args=6ffffc049580,7bd88987f708,7bd88987f700 result=0"}
+{"ts":"2026-10-21T07:48:59.132Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=68 name=RefreshingInvites call=3 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:48:59.231Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=10800 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:01.265Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=12300 set_local_user=1 ready=0 join_policy=0 joinable=12299 host=0 is_host=23342 id=0 period=300"}
+{"ts":"2026-10-21T07:49:01.498Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=23400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:03.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=12600 set_local_user=1 ready=0 join_policy=0 joinable=12599 host=0 is_host=23942 id=0 period=300"}
+{"ts":"2026-10-21T07:49:03.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=12600 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:49:03.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=12600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:03.998Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=24000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:04.231Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=11400 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:06.265Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=12900 set_local_user=1 ready=0 join_policy=0 joinable=12899 host=0 is_host=24542 id=0 period=300"}
+{"ts":"2026-10-21T07:49:06.499Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=24600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:08.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=13200 set_local_user=1 ready=0 join_policy=0 joinable=13199 host=0 is_host=25142 id=0 period=300"}
+{"ts":"2026-10-21T07:49:08.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=13200 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:49:08.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=13200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:08.998Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=25200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:09.231Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=12000 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:11.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=13500 set_local_user=1 ready=0 join_policy=0 joinable=13499 host=0 is_host=25742 id=0 period=300"}
+{"ts":"2026-10-21T07:49:11.498Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=25800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:13.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=13800 set_local_user=1 ready=0 join_policy=0 joinable=13799 host=0 is_host=26342 id=0 period=300"}
+{"ts":"2026-10-21T07:49:13.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=13800 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:49:13.765Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=13800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:13.998Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=26400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:14.231Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=12600 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:16.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=14100 set_local_user=1 ready=0 join_policy=0 joinable=14099 host=0 is_host=26942 id=0 period=300"}
+{"ts":"2026-10-21T07:49:16.497Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=27000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:18.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=14400 set_local_user=1 ready=0 join_policy=0 joinable=14399 host=0 is_host=27542 id=0 period=300"}
+{"ts":"2026-10-21T07:49:18.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=14400 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:49:18.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=14400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:18.997Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=27600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:19.231Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=13200 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:21.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=14700 set_local_user=1 ready=0 join_policy=0 joinable=14699 host=0 is_host=28142 id=0 period=300"}
+{"ts":"2026-10-21T07:49:21.497Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=28200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:23.763Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=15000 set_local_user=1 ready=0 join_policy=0 joinable=14999 host=0 is_host=28742 id=0 period=300"}
+{"ts":"2026-10-21T07:49:23.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=15000 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:49:23.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=15000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:23.997Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=28800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:24.231Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=13800 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:26.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=15300 set_local_user=1 ready=0 join_policy=0 joinable=15299 host=0 is_host=29342 id=0 period=300"}
+{"ts":"2026-10-21T07:49:26.497Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=29400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:28.763Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=15600 set_local_user=1 ready=0 join_policy=0 joinable=15599 host=0 is_host=29942 id=0 period=300"}
+{"ts":"2026-10-21T07:49:28.763Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=15600 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:49:28.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=15600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:28.997Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=30000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:29.130Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=69 name=RefreshInvites call=4 args=6ffffc049580,7bd88987f708,7bd88987f700 result=0"}
+{"ts":"2026-10-21T07:49:29.138Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=68 name=RefreshingInvites call=4 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:29.239Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=14400 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:29.489Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] hook_liveness name=GetTimeMicroseconds entries=47521 entered=yes expected=all modes at=periodic"}
+{"ts":"2026-10-21T07:49:31.264Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=15900 set_local_user=1 ready=0 join_policy=0 joinable=15899 host=0 is_host=30541 id=0 period=300"}
+{"ts":"2026-10-21T07:49:31.505Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=30600 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:33.763Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=16200 set_local_user=1 ready=0 join_policy=0 joinable=16199 host=0 is_host=31141 id=0 period=300"}
+{"ts":"2026-10-21T07:49:33.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=16200 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:49:33.764Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=16200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:34.004Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=31200 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:34.238Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=15000 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:36.263Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=16500 set_local_user=1 ready=0 join_policy=0 joinable=16499 host=0 is_host=31741 id=0 period=300"}
+{"ts":"2026-10-21T07:49:36.504Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=31800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:38.762Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=16800 set_local_user=1 ready=0 join_policy=0 joinable=16799 host=0 is_host=32341 id=0 period=300"}
+{"ts":"2026-10-21T07:49:38.763Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=13 name=Update call=16800 args=6ffffc049580,7ffffe1ffa90,0"}
+{"ts":"2026-10-21T07:49:38.763Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=22 name=Joinable call=16800 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:39.004Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=32400 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:39.238Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=70 name=InviteCount call=15600 args=6ffffc049580,0,0 result=0"}
+{"ts":"2026-10-21T07:49:41.262Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] facade calls update=17100 set_local_user=1 ready=0 join_policy=0 joinable=17099 host=0 is_host=32941 id=0 period=300"}
+{"ts":"2026-10-21T07:49:41.504Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=24 name=IsHost call=33000 args=6ffffc049580,0,0 result=1"}
+{"ts":"2026-10-21T07:49:41.955Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] shutdown signal received — console ctrl event 0 (CTRL+C; a tty SIGINT arrives here under Wine) defer_to_game=true game_handler_behind=true game_server_lib_started=true"}
+{"ts":"2026-10-21T07:49:41.955Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] shutdown watchdog armed timeout_ms=20000"}
+{"ts":"2026-10-21T07:49:41.956Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] deferring to the game's console handler for lobby unregistration and ServerDB close; clean exit follows at GameServerLib::Terminate"}
+{"ts":"2026-10-21T07:49:41.956Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Console close signal received"}
+{"ts":"2026-10-21T07:49:41.964Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] Ending multiplayer"}
+{"ts":"2026-10-21T07:49:41.964Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] EndMultiplayer"}
+{"ts":"2026-10-21T07:49:41.965Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] party leave: nothing to send in the current party state"}
+{"ts":"2026-10-21T07:49:41.965Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SOCIAL] slot=17 name=Leave call=1 args=6ffffc049580,0,0"}
+{"ts":"2026-10-21T07:49:41.965Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] LeaveGame"}
+{"ts":"2026-10-21T07:49:41.965Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] Removing all users..."}
+{"ts":"2026-10-21T07:49:41.966Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETLOBBY] Ending session"}
+{"ts":"2026-10-21T07:49:41.966Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] ending session"}
+{"ts":"2026-10-21T07:49:41.966Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] leaving session"}
+{"ts":"2026-10-21T07:49:41.966Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NETGAME] NetGame switching state (from lobby, to logged in)"}
+{"ts":"2026-10-21T07:49:41.966Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PARTY] session event #11 id=0xad9f67246712e2bc delegate_onnetgameloggedin"}
+{"ts":"2026-10-21T07:49:41.966Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] leaving session"}
+{"ts":"2026-10-21T07:49:41.966Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] ending session"}
+{"ts":"2026-10-21T07:49:41.966Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] leaving session"}
+{"ts":"2026-10-21T07:49:41.967Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[EVR] [NSLOBBY] unregistering"}
+{"ts":"2026-10-21T07:49:41.967Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] Unregistered 15 broadcaster callbacks (owner=00007bd8891db620, liveOwner=00007bd8891db620)"}
+{"ts":"2026-10-21T07:49:41.967Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SERVERDB] Disconnecting from ServerDB"}
+{"ts":"2026-10-21T07:49:42.058Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SERVERDB] Disconnected from ServerDB code=1000 reconnect_count=0"}
+{"ts":"2026-10-21T07:49:42.059Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] Unregistered game server"}
+{"ts":"2026-10-21T07:49:42.059Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] terminating game server"}
+{"ts":"2026-10-21T07:49:42.059Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.GAMESERVER] CTRL+C teardown complete (lobby unregistered, ServerDB socket closed) — exiting cleanly before the game's client-side teardown"}
+{"ts":"2026-10-21T07:49:42.060Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] Graceful shutdown initiated (code=0)"}
+{"ts":"2026-10-21T07:49:42.060Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.PATCH] ws_bridge listener stop starting (hang marker: if shutdown never logs the next line, StopWebSocketBridgeListener is stuck here)"}
+{"ts":"2026-10-21T07:49:42.152Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.WS] Remote closed (conn=1, login, ws=00007ffffec0f670): code=1000"}
+{"ts":"2026-10-21T07:49:42.152Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SELFCHECK] check=party_data_share_totals pass=1 expected=\"no party data share was answered with a failure (failed=0)\" observed=\"answers=2 ok=2 failed=0 other=0 unmatched=0\""}
+{"ts":"2026-10-21T07:49:42.153Z","run":"20-1dd6130647bc3e6","level":"info","msg":"[NEVR.SELFCHECK] check=status_redirect pass=1 expected=\"every connection the game opens to its API base is sent to the configured http service, and none to an uncovered service-domain host (passthrough=0 uncovered=0)\" observed=\"api_connects=1 redirected=1 passthrough=0 uncovered=0 graph=1 external=0\""}
+{"ts":"2026-10-21T07:50:01.956Z","run":"20-1dd6130647bc3e6","level":"warn","msg":"[NEVR.PATCH] shutdown watchdog expired after 20000 ms — the game teardown never reached GameServerLib::Terminate; forcing exit"}
+{"ts":"2026-10-21T07:50:01.956Z","run":"20-1dd6130647bc3e6","level":"error","msg":"[NEVR.PATCH] ForceFatalExit(1) — terminating process"}
