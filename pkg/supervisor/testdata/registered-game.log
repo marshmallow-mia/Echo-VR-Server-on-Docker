@@ -1,0 +1,4 @@
+[10-21-2026] [07:47:17]: ======= Build: goldmaster 631547 from //rad/rad15_live('r') =======
+[10-21-2026] [07:47:17]: [NSUSER] LoginId: A37BC78B-CD23-11F1-9F30-383EC87527A1:
+
+[10-21-2026] [07:47:17]: [NSUSER] Login settings received: {"config_data":{"active_battle_pass_season":{"id":"active_battle_pass_season","starttime":1711497600,"endtime":17911180800},"active_store_entry":{"id":"active_store_entry","starttime":1711497600,"endtime":17911180800},"active_store_featured_entry":{"id":"active_store_featured_entry","starttime":1711497600,"endtime":17911180800}},"env":"live","iap_unlocked":true,"remote_log_errors":true,"remote_log_rich_presence":true,"remote_log_metrics":true,"remote_log_warnings":true,"remote_log_social":true}
