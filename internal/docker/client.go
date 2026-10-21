@@ -202,6 +202,7 @@ type Container struct {
 	Labels  map[string]string
 	Env     []string
 	Started time.Time
+	Created time.Time
 	Ports   []Port
 }
 
@@ -214,8 +215,9 @@ func (c *Client) List(ctx context.Context, label string) ([]Container, error) {
 		Image   string
 		ImageID string
 		State   string
-		Status string
-		Labels map[string]string
+		Status  string
+		Labels  map[string]string
+		Created int64
 	}
 	if err := c.call(ctx, http.MethodGet, "/containers/json", url.Values{"all": {"1"}, "filters": {string(filters)}}, nil, &raw); err != nil {
 		return nil, err
@@ -226,7 +228,7 @@ func (c *Client) List(ctx context.Context, label string) ([]Container, error) {
 		if len(r.Names) > 0 {
 			name = strings.TrimPrefix(r.Names[0], "/")
 		}
-		out = append(out, Container{ID: r.ID, Name: name, Image: r.Image, ImageID: r.ImageID, State: r.State, Status: r.Status, Labels: r.Labels})
+		out = append(out, Container{ID: r.ID, Name: name, Image: r.Image, ImageID: r.ImageID, State: r.State, Status: r.Status, Labels: r.Labels, Created: time.Unix(r.Created, 0)})
 	}
 	return out, nil
 }

@@ -124,7 +124,8 @@ func (s Server) State() string {
 		return "not created"
 	case !s.Running():
 		return s.Container.State
-	case s.Status == nil || s.Status.Stale(time.Now(), 15*time.Second):
+	case s.Status == nil || s.Status.Stale(time.Now(), 15*time.Second) || s.Status.UpdatedAt.Before(s.Container.Created):
+		// no fresh status from this container yet
 		return "starting"
 	default:
 		return string(s.Status.State)
@@ -244,8 +245,10 @@ func (a *App) Apply(ctx context.Context, force bool, progress func(string)) ([]s
 	if err != nil {
 		return nil, err
 	}
-	if err := a.ensureImage(ctx, progress); err != nil {
-		return nil, err
+	if len(a.Cfg.Instances) > 0 {
+		if err := a.ensureImage(ctx, progress); err != nil {
+			return nil, err
+		}
 	}
 	if m := a.Secrets.Missing(); len(m) > 0 && len(a.Cfg.Instances) > 0 {
 		return nil, fmt.Errorf("account not configured: %v missing (run: evr-docker account set)", m)
