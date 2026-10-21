@@ -47,6 +47,10 @@ type Config struct {
 	Guilds    List       `yaml:"guilds,omitempty,flow"`
 	Telemetry *Telemetry `yaml:"telemetry,omitempty"`
 	Arena     *Arena     `yaml:"arena,omitempty"`
+
+	// DeviceLinked means the instance has a device-link refresh token in
+	// _local/.credentials.json, so a missing password is not rejected here.
+	DeviceLinked bool `yaml:"-"`
 }
 
 type Services struct {
@@ -150,9 +154,10 @@ func (c Config) Validate() error {
 		errs = append(errs, errors.New("auth.http_uri and auth.http_key are required for ServerDB sign-in"))
 	}
 	// The /spr login a server needs before it can begin multiplayer only accepts
-	// URL credentials; a device-link refresh token alone is not enough (tested
-	// with v5.4.2: login answers HTTP 400 and the server never registers).
-	if c.Auth.Password == "" && !c.Services.AllowOfflineServer {
+	// URL credentials; a device-link refresh token alone was not enough when
+	// tested with v5.4.2 (login answered HTTP 400). Device-only setups are
+	// allowed so this can be re-tested and works once the backend accepts it.
+	if c.Auth.Password == "" && !c.Services.AllowOfflineServer && !c.DeviceLinked {
 		errs = append(errs, errors.New("auth.password is required for a dedicated server"))
 	}
 	if r := c.Network.TickRateHz; r != 0 && (r < 10 || r > 1000) {
