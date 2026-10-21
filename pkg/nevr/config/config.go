@@ -158,10 +158,9 @@ func (c Config) Validate() error {
 	if c.Auth.HTTPURI == "" || c.Auth.HTTPKey == "" {
 		errs = append(errs, errors.New("auth.http_uri and auth.http_key are required for ServerDB sign-in"))
 	}
-	// The /spr login a server needs before it can begin multiplayer only accepts
-	// URL credentials; a device-link refresh token alone was not enough when
-	// tested with v5.4.2 (login answered HTTP 400). Device-only setups are
-	// allowed so this can be re-tested and works once the backend accepts it.
+	// Without a password the server signs in with the device link
+	// (_local/.credentials.json). That works for accounts without a password;
+	// with one set, the /spr login answered HTTP 400 (tested with v5.4.2).
 	if c.Auth.Password == "" && !c.Services.AllowOfflineServer && !c.DeviceLinked {
 		errs = append(errs, errors.New("auth.password is required for a dedicated server"))
 	}
