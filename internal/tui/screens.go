@@ -12,12 +12,14 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"
 
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/agent"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/update"
 )
 
 // showForm opens a huh form; onSubmit runs when it is completed.
@@ -141,14 +143,18 @@ func (m *model) startWizard() {
 			an.Game.Source = "skip"
 		}
 		var app *core.App
-		return m.run("Setting up evr-docker", func(ctx context.Context, say func(string)) error {
-			a, err := core.Init(ctx, m.dir, *an, func(step, detail string) { say(step + ": " + detail) })
-			app = a
-			return err
-		}, func() tea.Cmd {
-			m.app = app
-			return m.loadServers()
-		})
+		start := func() tea.Cmd {
+			return m.run("Setting up evr-docker", func(ctx context.Context, say func(string)) error {
+				a, err := core.Init(ctx, m.dir, *an, func(step, detail string) { say(step + ": " + detail) })
+				app = a
+				return err
+			}, func() tea.Cmd {
+				m.app = app
+				return m.loadServers()
+			})
+		}
+		m.wizardRetry = start
+		return start()
 	}
 }
 
@@ -342,6 +348,38 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 			say("now current: servers switch to it at their next match boundary")
 			return nil
 		}, func() tea.Cmd { m.screen = scrRuntime; return m.loadRuntimes() })
+	case "x":
+		if sel == nil || !sel.Installed {
+			return m, nil
+		}
+		tag := sel.Tag
+		m.ask("Delete "+tag+" from this host?", func() tea.Cmd {
+			return func() tea.Msg {
+				if err := app.Store().Remove(tag); err != nil {
+					return flashMsg{err.Error(), true}
+				}
+				return tea.Batch(func() tea.Msg { return flashMsg{tag + " deleted", false} }, m.loadRuntimes())()
+			}
+		})
+	case "u":
+		pol := update.Policy{Channel: app.Cfg.Runtime.Channel, Pinned: app.Cfg.Runtime.Pinned}
+		return m, m.run("Checking for a newer nevr-runtime", func(ctx context.Context, say func(string)) error {
+			cur, target, available, err := agent.Updater(app, nil).Check(ctx, pol)
+			if err != nil {
+				return err
+			}
+			if !available {
+				say("up to date (" + cur + ", channel " + pol.Channel + ")")
+				return nil
+			}
+			say(fmt.Sprintf("%s is available (current %s): trying it on an idle server first", target.Tag, cur))
+			res, err := agent.Updater(app, say).Run(ctx, pol)
+			if err != nil {
+				return err
+			}
+			say(fmt.Sprintf("%s: %s → %s %s", res.Action, res.From, res.To, res.Detail))
+			return nil
+		}, func() tea.Cmd { m.screen = scrRuntime; return m.loadRuntimes() })
 	case "b":
 		return m, func() tea.Msg {
 			tag, err := app.Store().Rollback()
@@ -360,7 +398,7 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 				huh.NewOption("pinned: stay on one version", "pinned"),
 			).Value(&channel),
 			huh.NewInput().Title("Pinned version").Description("Only for the pinned channel, e.g. v5.4.2.").Value(&pinned),
-			huh.NewConfirm().Title("Update automatically (evr-docker agent)?").Value(&auto),
+			huh.NewConfirm().Title("Update automatically?").Description("Needs the background service (More → Discord alerts and the background service).").Value(&auto),
 		).Title("Runtime updates"))
 		return m, m.showForm(f, scrRuntime, func() tea.Cmd {
 			app.Cfg.Runtime.Channel, app.Cfg.Runtime.Pinned, app.Cfg.Runtime.AutoUpdate = channel, pinned, auto
@@ -386,8 +424,10 @@ func (m *model) renderRuntime() string {
 	if cfg.Channel == "pinned" {
 		policy += " (" + cfg.Pinned + ")"
 	}
-	if cfg.AutoUpdate {
+	if cfg.AutoUpdate && agent.ServiceInstalled() {
 		policy += ", automatic updates on"
+	} else if cfg.AutoUpdate {
+		policy += ", automatic updates need the background service (More → Discord alerts and the background service)"
 	} else {
 		policy += ", automatic updates off"
 	}
@@ -397,17 +437,26 @@ func (m *model) renderRuntime() string {
 	}
 	return m.header() + "  " + ui.Bold.Render("nevr-runtime") + "\n\n" + body + "\n\n" + ui.Subtle.Render(policy) + "\n" +
 		ui.Subtle.Render("Servers pick up a new current version at their next match boundary, so no match is cut short.") + "\n" +
-		m.footer(ui.K("enter", "install & use"), ui.K("b", "rollback"), ui.K("c", "channel"), ui.K("esc", "back"))
+		m.footer(ui.K("enter", "install & use"), ui.K("b", "rollback"), ui.K("x", "delete"), ui.K("u", "check for updates"), ui.K("c", "update settings"), ui.K("esc", "back"))
 }
 
 // Account screen.
 
+func (m *model) openAccount() tea.Cmd {
+	m.screen, m.account = scrAccount, nil
+	return m.loadAccount()
+}
+
 func (m *model) loadAccount() tea.Cmd {
 	app := m.app
 	return func() tea.Msg {
+		info := &accountInfo{}
+		if !app.HasAccount() {
+			info.err = core.ErrNoAccount
+			return accountMsg(info)
+		}
 		ctx, cancel := context.WithTimeout(m.ctx, 20*time.Second)
 		defer cancel()
-		info := &accountInfo{}
 		info.session, info.err = app.Login(ctx)
 		if info.err == nil {
 			info.servers, _ = app.Auth().MyServers(ctx, info.session)
@@ -421,64 +470,52 @@ func (m *model) updateAccount(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if !ok {
 		return m, nil
 	}
-	app := m.app
 	switch k.String() {
 	case "esc", "q":
 		m.screen = scrDashboard
+		return m, m.loadServers()
 	case "r":
-		m.account = nil
-		return m, m.loadAccount()
+		return m, m.openAccount()
 	case "p":
-		discord, password, key := app.Secrets[config.EnvDiscordID], "", app.Secrets[config.EnvHTTPKey]
-		f := huh.NewForm(huh.NewGroup(
-			huh.NewInput().Title("Discord user ID").Value(&discord).Validate(digits),
-			huh.NewInput().Title("Server password").Description("Leave empty to keep the current one.").EchoMode(huh.EchoModePassword).Value(&password),
-		).Title("EchoVRCE account"))
-		return m, m.showForm(f, scrAccount, func() tea.Cmd {
-			old := map[string]string{}
-			for k, v := range app.Secrets {
-				old[k] = v
-			}
-			app.Secrets[config.EnvDiscordID] = discord
-			if key != "" {
-				app.Secrets[config.EnvHTTPKey] = key
-			}
-			if password != "" {
-				app.Secrets[config.EnvPassword] = password
-			}
-			return m.run("Checking the account", func(ctx context.Context, say func(string)) error {
-				s, err := app.Login(ctx)
-				if err != nil {
-					for k, v := range old {
-						app.Secrets[k] = v
-					}
-					return err
-				}
-				say(fmt.Sprintf("signed in as %s, %s", s.Username, s.HostSummary()))
-				if err := app.Secrets.Save(app.Dir); err != nil {
-					return err
-				}
-				say("saved; recreating servers with the new account")
-				_, err = app.Apply(ctx, false, say)
-				return err
-			}, func() tea.Cmd { m.screen, m.account = scrAccount, nil; return m.loadAccount() })
-		})
+		return m, m.passwordForm()
 	case "l":
-		return m, m.run("Linking at echovrce.com/device", func(ctx context.Context, say func(string)) error {
-			say(core.ResetPasswordNote)
-			s, err := app.LinkDevice(ctx, func(url, code string, expires time.Time) {
-				say("Open " + url)
-				say("and approve the code " + code + " (valid until " + expires.Local().Format(time.TimeOnly) + ")")
-				say("waiting …")
-			})
-			if err != nil {
-				return err
-			}
-			say(fmt.Sprintf("linked as %s; link given to %d server(s) (apply the configuration to restart them with it)", s.Username, len(app.Cfg.Instances)))
-			return nil
-		}, func() tea.Cmd { m.screen, m.account = scrAccount, nil; return m.loadAccount() })
+		return m, m.linkDevice()
 	}
 	return m, nil
+}
+
+// linkDevice links this host at echovrce.com/device and recreates the servers with it.
+func (m *model) linkDevice() tea.Cmd {
+	app := m.app
+	cmd := m.run("Linking this host at echovrce.com/device", func(ctx context.Context, say func(string)) error {
+		say(core.ResetPasswordNote)
+		say("")
+		_, err := app.UseDeviceLink(ctx, func(url, code string, expires time.Time) {
+			say("Open " + url)
+			say("and approve the code " + code + " (valid until " + expires.Local().Format(time.TimeOnly) + ")")
+			say("waiting …")
+		}, say)
+		return err
+	}, func() tea.Cmd { return m.openAccount() })
+	m.busyCanCancel = true
+	return cmd
+}
+
+func (m *model) passwordForm() tea.Cmd {
+	app := m.app
+	discord, password := app.Secrets[config.EnvDiscordID], ""
+	f := huh.NewForm(huh.NewGroup(
+		huh.NewNote().Title("Password sign-in").Description("Use this if your EchoVRCE account has a server password.\n"+
+			"Without one, go back and press l to link this host instead."),
+		huh.NewInput().Title("Discord user ID").Description("Discord → Settings → Advanced → Developer mode, then copy your ID.").Value(&discord).Validate(digits),
+		huh.NewInput().Title("Server password").Description("The password you set for hosting with the EchoVRCE bot.").EchoMode(huh.EchoModePassword).Value(&password).Validate(notEmpty("the password")),
+	).Title("EchoVRCE account"))
+	return m.showForm(f, scrAccount, func() tea.Cmd {
+		return m.run("Signing in", func(ctx context.Context, say func(string)) error {
+			_, err := app.UsePassword(ctx, discord, password, say)
+			return err
+		}, func() tea.Cmd { return m.openAccount() })
+	})
 }
 
 func (m *model) renderAccount() string {
@@ -488,10 +525,20 @@ func (m *model) renderAccount() string {
 	switch {
 	case a == nil:
 		b.WriteString(m.spin.View() + " signing in …\n")
+	case errors.Is(a.err, core.ErrNoAccount):
+		b.WriteString(ui.Warning.Render("Not signed in yet: the servers cannot register with EchoVRCE.") + "\n\n")
+		b.WriteString("Press " + ui.KeyStyle.Render("l") + " to link this host at echovrce.com/device (recommended, no password).\n")
+		b.WriteString(ui.Subtle.Render(m.wrap(core.ResetPasswordNote, 0)) + "\n\n")
+		b.WriteString("Or press " + ui.KeyStyle.Render("p") + " to sign in with your Discord ID and server password.\n")
 	case a.err != nil:
-		b.WriteString(ui.Error.Render(a.err.Error()) + "\n")
+		b.WriteString(ui.Error.Render(m.wrap(a.err.Error(), 0)) + "\n\n")
+		b.WriteString(ui.Subtle.Render("Press l to link this host again, or p to use a password.") + "\n")
 	default:
-		fmt.Fprintf(&b, "Signed in as %s  %s\n\n", ui.Bold.Render(a.session.Username), ui.Subtle.Render(a.session.UserID))
+		method := "device link"
+		if m.app.Secrets[config.EnvPassword] != "" {
+			method = "password"
+		}
+		fmt.Fprintf(&b, "Signed in as %s  %s\n\n", ui.Bold.Render(a.session.Username), ui.Subtle.Render(fmt.Sprintf("Discord ID %s, %s", m.app.Secrets[config.EnvDiscordID], method)))
 		guilds := a.session.HostGuilds()
 		if !a.session.MembershipsKnown {
 			b.WriteString(ui.Subtle.Render("Signed in with the device link; "+a.session.HostSummary()+".") + "\n")
@@ -508,8 +555,7 @@ func (m *model) renderAccount() string {
 			fmt.Fprintf(&b, "  %s  %-12s %-11s players %d\n", s.CreatedAt.Local().Format(time.DateTime), s.Region, s.LobbyType, s.Players)
 		}
 	}
-	b.WriteString("\n" + ui.Subtle.Render("Sign in without a password with l (device link).") + "\n")
-	b.WriteString(m.footer(ui.K("p", "change account"), ui.K("l", "link device"), ui.K("r", "refresh"), ui.K("esc", "back")))
+	b.WriteString(m.footer(ui.K("l", "link this host"), ui.K("p", "password sign-in"), ui.K("r", "refresh"), ui.K("esc", "back")))
 	return b.String()
 }
 
@@ -529,9 +575,27 @@ func (m *model) renderDoctor() string {
 	if m.checks != nil {
 		var cs []ui.Check
 		for _, c := range m.checks {
-			cs = append(cs, ui.Check{Name: c.Name, Level: c.Result, Detail: c.Detail, Fix: c.Fix})
+			fix := c.Fix
+			if key, ok := doctorKeys[c.Name]; ok && strings.HasPrefix(fix, "evr-docker ") {
+				fix = key
+			}
+			cs = append(cs, ui.Check{Name: c.Name, Level: c.Result, Detail: c.Detail, Fix: fix})
 		}
 		body = ui.Checks(cs)
 	}
-	return m.header() + "  " + ui.Bold.Render("doctor") + "\n\n" + body + "\n" + m.footer(ui.K("r", "run again"), ui.K("g", "(dashboard) install game"), ui.K("esc", "back"))
+	return m.header() + "  " + ui.Bold.Render("doctor") + "\n\n" + body + "\n" + m.footer(ui.K("r", "run again"), ui.K("g", "install game"), ui.K("u", "runtime"), ui.K("c", "account"), ui.K("esc", "back"))
+}
+
+// doctorKeys replace the CLI fixes of some checks with what to press here.
+var doctorKeys = map[string]string{
+	"game":    "press g to install the game files",
+	"runtime": "press u and install a version",
+	"account": "press c to sign in",
+}
+
+func (m *model) installGameTask() tea.Cmd {
+	app := m.app
+	return m.run("Installing the game files", func(ctx context.Context, say func(string)) error {
+		return installGame(ctx, app, say)
+	}, nil)
 }

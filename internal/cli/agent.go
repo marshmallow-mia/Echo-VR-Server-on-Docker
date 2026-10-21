@@ -1,13 +1,10 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -17,8 +14,6 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/notify"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/update"
 )
-
-const unitPath = "/etc/systemd/system/evr-docker-agent.service"
 
 func agentCmd(g *globals) *cobra.Command {
 	cmd := &cobra.Command{Use: "agent", Short: "Background service: metrics, Discord alerts and automatic updates"}
@@ -32,50 +27,19 @@ func agentCmd(g *globals) *cobra.Command {
 	cmd.AddCommand(&cobra.Command{
 		Use: "install", Short: "Install and start the agent as a systemd service",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if _, err := hostcfg.Load(g.configDir); err != nil {
+			if err := agent.InstallService(g.configDir); err != nil {
 				return err
 			}
-			exe, err := os.Executable()
-			if err != nil {
-				return err
-			}
-			if exe, err = filepath.EvalSymlinks(exe); err != nil {
-				return err
-			}
-			unit := fmt.Sprintf(`[Unit]
-Description=evr-docker agent (Echo VR server metrics, alerts, updates)
-After=docker.service network-online.target
-Wants=network-online.target
-Requires=docker.service
-
-[Service]
-ExecStart=%s --config-dir %s agent run
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-`, exe, g.configDir)
-			if err := os.WriteFile(unitPath, []byte(unit), 0o644); err != nil {
-				return err
-			}
-			for _, args := range [][]string{{"daemon-reload"}, {"enable", "evr-docker-agent.service"}, {"restart", "evr-docker-agent.service"}} {
-				if out, err := exec.Command("systemctl", args...).CombinedOutput(); err != nil {
-					return fmt.Errorf("systemctl %s: %v: %s", strings.Join(args, " "), err, out)
-				}
-			}
-			g.say("installed %s and started evr-docker-agent", unitPath)
+			g.say("installed %s and started evr-docker-agent", agent.UnitPath)
 			return nil
 		},
 	})
 	cmd.AddCommand(&cobra.Command{
 		Use: "uninstall", Short: "Stop and remove the agent service",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			_ = exec.Command("systemctl", "disable", "--now", "evr-docker-agent.service").Run()
-			if err := os.Remove(unitPath); err != nil && !os.IsNotExist(err) {
+			if err := agent.RemoveService(); err != nil {
 				return err
 			}
-			_ = exec.Command("systemctl", "daemon-reload").Run()
 			g.say("agent removed")
 			return nil
 		},
@@ -89,29 +53,30 @@ WantedBy=multi-user.target
 			if err != nil {
 				return err
 			}
-			if len(args) == 1 {
-				if args[0] == "off" {
-					delete(a.Secrets, hostcfg.SecretWebhook)
-				} else if !strings.HasPrefix(args[0], "https://") {
-					return errors.New("the webhook URL must start with https://")
-				} else {
-					a.Secrets[hostcfg.SecretWebhook] = args[0]
-				}
-			}
 			if cmd.Flags().Changed("events") {
 				a.Cfg.Notify.Events = splitList(events)
+				if err := a.Save(); err != nil {
+					return err
+				}
 			}
-			if err := a.Save(); err != nil {
-				return err
+			if len(args) == 1 {
+				url := args[0]
+				if url == "off" {
+					url = ""
+				}
+				if err := agent.SetWebhook(cmd.Context(), a, url); err != nil {
+					return err
+				}
+				if url != "" {
+					g.say("saved; test message sent")
+					return nil
+				}
 			}
 			if a.Secrets[hostcfg.SecretWebhook] == "" {
 				g.say("Discord alerts are off")
 				return nil
 			}
-			host, _ := os.Hostname()
-			n := &notify.Notifier{URL: a.Secrets[hostcfg.SecretWebhook]}
-			if err := n.Send(cmd.Context(), notify.Event{Kind: "test", Level: notify.Info, Host: host, Title: "evr-docker alerts are set up",
-				Text: "This channel will get alerts about the Echo VR servers on this host."}); err != nil {
+			if err := agent.TestWebhook(cmd.Context(), a.Secrets[hostcfg.SecretWebhook]); err != nil {
 				return err
 			}
 			g.say("test message sent")

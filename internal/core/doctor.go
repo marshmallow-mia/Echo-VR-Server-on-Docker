@@ -84,7 +84,7 @@ func Doctor(ctx context.Context, a *App) []Check {
 	if dc != "" {
 		if d, err := a.Docker(); err == nil {
 			if _, err := d.ImageID(ctx, cfg.Image); err != nil {
-				out = append(out, check("image", Warn, cfg.Image+" is not pulled yet", "it is pulled on the next `server apply`"))
+				out = append(out, check("image", Warn, cfg.Image+" is not pulled yet", "it is pulled when the servers are next applied"))
 			} else {
 				out = append(out, check("image", OK, cfg.Image, ""))
 			}

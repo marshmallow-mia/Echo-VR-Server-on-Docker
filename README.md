@@ -28,8 +28,8 @@ It then links or checks the account, downloads and verifies the game and the run
 Run `evr-docker` again at any time to open the dashboard.
 
 To update `evr-docker`, run the installer again. Each version uses the image released with it
-(`ghcr.io/marshmallow-mia/echovr-server:<version>`), so `evr-docker server apply` then moves the servers to the new
-image, each one after its current match. Set `image:` in `config.yaml` to pin a different one.
+(`ghcr.io/marshmallow-mia/echovr-server:<version>`), so applying the configuration (`A` in the dashboard, or
+`evr-docker server apply`) then moves the servers to the new image, each one after its current match. Set `image:` in `config.yaml` to pin a different one.
 
 Unattended:
 
@@ -81,13 +81,18 @@ and how many matches and restarts it has had.
 | `r` / `R` | restart only the game (fast) / restart the container |
 | `a` / `e` / `d` | add servers / edit one (port, regions, guilds, tick rate, runtime pin, on/off) / delete |
 | `A` | apply the configuration (after editing `config.yaml` by hand) |
-| `u` | runtime versions: install, switch, roll back, update channel |
-| `c` | account: sign-in state, servers the backend has registered, device link, password sign-in |
-| `D` | doctor: checks of Docker, disk, game, runtime, account, ports, public IP |
+| `u` | runtime versions: install (`enter`), roll back (`b`), delete (`x`), check for and roll out an update (`u`), update settings (`c`) |
+| `c` | account: sign-in state and registered servers; `l` links this host at echovrce.com/device, `p` signs in with a password |
+| `D` | doctor: checks of Docker, disk, game, runtime, account, ports, public IP, with the key that fixes each |
+| `g` | install the game files |
+| `m` | more: alerts and the background service, number of servers, show or edit the configuration, a compose file, moving a v1 installation |
+
+A failed device link can be retried with `l` right away; a running one can be cancelled with `esc`.
 
 ## Commands
 
-Everything in the dashboard is also a command. Add `--json` for scripts and `-y` to skip confirmations.
+Everything in the dashboard is also a command, and every command is also in the dashboard. Add `--json` for scripts and
+`-y` to skip confirmations.
 
 ```
 evr-docker init                       guided setup (or --answers / flags for unattended)
@@ -101,9 +106,9 @@ evr-docker server scale N             keep exactly N servers (removes idle ones 
 evr-docker server apply [--force]     make containers match config.yaml
 evr-docker server rm NAME [--purge]
 evr-docker game install [--from-dir DIR | --archive FILE] / game status
-evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|channel pre|stable|pinned [TAG]
+evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|remove TAG|channel pre|stable|pinned [TAG]
 evr-docker account link|set|test|servers   device link (no password) or password sign-in
-evr-docker agent install|run|webhook URL   metrics, Discord alerts, automatic updates
+evr-docker agent install|uninstall|run|webhook URL   metrics, Discord alerts, automatic updates
 evr-docker update check|apply
 evr-docker migrate detect|run         take over a v1 (bash run.sh) installation
 evr-docker export compose             a docker-compose.yml of the same setup
@@ -114,13 +119,15 @@ Changes to a server that is hosting a match are applied after the match (or now 
 
 ## Updates, alerts and metrics
 
-`sudo evr-docker agent install` runs a small background service:
+A small background service on the host (dashboard: `m` → Discord alerts and the background service, or
+`sudo evr-docker agent install`) does three things:
 
 - **Runtime updates.** It checks the runtime channel (`pre` is the default: every nevr-runtime 5.x release is a GitHub
   pre-release). A new version is installed and tried on one idle server first. Only if that server registers does
   `current` switch; the other servers switch at their next match boundary. A version that fails is marked bad and skipped.
-  Turn this off with `runtime channel` / the `u` screen, or pin a version.
-- **Discord alerts.** `evr-docker agent webhook https://discord.com/api/webhooks/…` sends a test message. You then get
+  Turn this off on the `u` screen (`c`) or with `runtime channel`, or pin a version.
+- **Discord alerts.** Enter a webhook URL in the same dashboard form (or `evr-docker agent webhook https://discord.com/api/webhooks/…`)
+  and a test message is sent. You then get
   alerts when a server stops on an error (e.g. a rejected password), keeps restarting, stays down or recovers, and when
   an update is rolled out or rolled back.
 - **Prometheus metrics** on `127.0.0.1:9469/metrics`: `evr_server_up`, `evr_server_state`, `evr_server_sessions_total`,
@@ -130,7 +137,7 @@ Changes to a server that is hosting a match are applied after the match (or now 
 
 Nothing here requires `evr-docker` at run time.
 
-- `evr-docker export compose` writes a plain `docker-compose.yml`. The image `ghcr.io/marshmallow-mia/echovr-server` is
+- `m` → Write a docker-compose file (or `evr-docker export compose`) writes a plain compose file. The image `ghcr.io/marshmallow-mia/echovr-server` is
   configured only through environment variables (`evr-supervisor -h` lists them). Mount the game at
   `/opt/echovr/game/current`, nevr-runtime at `/opt/echovr/nevr/<tag>/BugSplat64.dll`, and a writable directory at
   `/home/container`.
@@ -139,6 +146,9 @@ Nothing here requires `evr-docker` at run time.
 ## Moving from v1
 
 The old setup (`run.sh`, `install.sh`, cron `echo_update.sh`) is kept on the [`v1`](https://github.com/marshmallow-mia/Echo-VR-Server-on-Docker/tree/v1) branch.
+
+`sudo evr-docker` finds a v1 installation on first start and offers to move it (later: `m` → Move a v1 installation).
+The same with commands:
 
 ```sh
 sudo evr-docker migrate detect
@@ -151,7 +161,7 @@ disables the old update cron job. The old game folder is left alone; delete it o
 
 ## Troubleshooting
 
-- `evr-docker doctor` checks Docker, LXC settings, disk, the game build, the runtime, the account (and whether it has the
+- The doctor (`D`, or `evr-docker doctor`) checks Docker, LXC settings, disk, the game build, the runtime, the account (and whether it has the
   host role in any guild), port conflicts and the public IP.
 - A server in **failed** state shows the reason in the dashboard and in `server status`. Common ones:
   - `bad_credentials`: the backend rejected the Discord ID or password.

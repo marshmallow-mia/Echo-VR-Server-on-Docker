@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,13 @@ import (
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
+)
+
+var (
+	// ErrNoAccount means the servers have no way to sign in to EchoVRCE yet.
+	ErrNoAccount = errors.New("the servers have no EchoVRCE sign-in yet")
+	// ErrDeviceLink marks a device link that did not complete.
+	ErrDeviceLink = errors.New("device link failed")
 )
 
 // DeviceFile holds the echovrce.com device link (refresh token), 0600.
@@ -24,7 +32,10 @@ const ResetPasswordHint = "device sign-in only works when the EchoVRCE account h
 
 func (a *App) devicePath() string { return filepath.Join(a.Dir, DeviceFile) }
 
-// DeviceLinked reports whether `account link` stored a device link.
+// HasAccount reports whether the servers can sign in.
+func (a *App) HasAccount() bool { return len(a.Secrets.Missing(a.DeviceLinked())) == 0 }
+
+// DeviceLinked reports whether a device link is stored.
 func (a *App) DeviceLinked() bool {
 	_, err := os.Stat(a.devicePath())
 	return err == nil
@@ -79,7 +90,7 @@ func (a *App) fillDiscordID(ctx context.Context, s auth.Session) error {
 func (a *App) refreshDevice(ctx context.Context) (auth.Session, error) {
 	b, err := os.ReadFile(a.devicePath())
 	if err != nil {
-		return auth.Session{}, fmt.Errorf("no password and no device link (run: evr-docker account link): %w", err)
+		return auth.Session{}, fmt.Errorf("%w: %v", ErrNoAccount, err)
 	}
 	var cred struct {
 		RefreshToken string `json:"refresh_token"`
@@ -124,4 +135,46 @@ func (a *App) installDeviceLink(name string, overwrite bool) error {
 		}
 	}
 	return nil
+}
+
+// UseDeviceLink links this host at echovrce.com/device, drops a stored
+// password (device sign-in needs an account without one) and recreates the
+// servers with the link.
+func (a *App) UseDeviceLink(ctx context.Context, show func(url, code string, expires time.Time), say func(string)) (auth.Session, error) {
+	s, err := a.LinkDevice(ctx, show)
+	if err != nil {
+		return s, fmt.Errorf("%w: %w", ErrDeviceLink, err)
+	}
+	delete(a.Secrets, config.EnvPassword)
+	if err := a.Secrets.Save(a.Dir); err != nil {
+		return s, err
+	}
+	say(fmt.Sprintf("Linked as %s (Discord ID %s); %s", s.Username, a.Secrets[config.EnvDiscordID], s.HostSummary()))
+	_, err = a.Apply(ctx, false, say)
+	return s, err
+}
+
+// UsePassword signs in with a Discord ID and server password, stores them
+// only if that works, removes the device link and recreates the servers.
+func (a *App) UsePassword(ctx context.Context, discordID, password string, say func(string)) (auth.Session, error) {
+	s, err := a.Auth().Login(ctx, discordID, password)
+	if err != nil {
+		return s, err
+	}
+	a.Secrets[config.EnvDiscordID], a.Secrets[config.EnvPassword] = discordID, password
+	if err := a.Secrets.Save(a.Dir); err != nil {
+		return s, err
+	}
+	if err := os.Remove(a.devicePath()); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return s, err
+	}
+	for _, in := range a.Cfg.Instances {
+		err := os.Remove(filepath.Join(a.Cfg.InstanceDir(in.Name), "root", "_local", ".credentials.json"))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return s, err
+		}
+	}
+	say(fmt.Sprintf("Signed in as %s; %s", s.Username, s.HostSummary()))
+	_, err = a.Apply(ctx, false, say)
+	return s, err
 }

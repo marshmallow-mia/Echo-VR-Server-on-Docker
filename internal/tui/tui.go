@@ -43,6 +43,7 @@ const (
 	scrRuntime
 	scrAccount
 	scrDoctor
+	scrInfo
 )
 
 type model struct {
@@ -69,7 +70,16 @@ type model struct {
 	busyDone  bool
 	busyErr   error
 	afterBusy func() tea.Cmd
-	spin      spinner.Model
+	// busyRetry is offered with l when a device link failed.
+	busyRetry func() tea.Cmd
+	// busyCancel stops the task on esc when busyCanCancel is set.
+	busyCancel    context.CancelFunc
+	busyCanCancel bool
+	// wizardRetry runs the setup again with the same answers.
+	wizardRetry func() tea.Cmd
+	spin        spinner.Model
+
+	infoTitle, infoText string
 
 	runtimes []core.RuntimeInfo
 	rtTable  table.Model
@@ -101,7 +111,15 @@ func newModel(ctx context.Context, dir string) *model {
 	case err == nil:
 		m.app = app
 	case errors.Is(err, hostcfg.ErrNotInitialized):
-		m.startWizard()
+		// A v1 installation is offered for migration first.
+		dctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		l, lerr := core.DetectLegacy(dctx, "")
+		cancel()
+		if lerr == nil && l.Found() {
+			m.migrateForm(legacyMsg{l: l})
+		} else {
+			m.startWizard()
+		}
 	default:
 		m.loadErr = err
 	}
@@ -172,9 +190,13 @@ func (m *model) setFlash(text string, bad bool) { m.flash, m.flashBad = text, ba
 // run executes a long task on the busy screen, showing its progress lines.
 func (m *model) run(title string, task func(ctx context.Context, say func(string)) error, after func() tea.Cmd) tea.Cmd {
 	m.screen, m.busyTitle, m.busyLines, m.busyDone, m.busyErr, m.afterBusy = scrBusy, title, nil, false, nil, after
+	m.busyRetry, m.busyCanCancel = nil, false
+	ctx, cancel := context.WithCancel(m.ctx)
+	m.busyCancel = cancel
 	ch := make(chan tea.Msg, 64)
 	go func() {
-		err := task(m.ctx, func(s string) { ch <- busyLineMsg{s} })
+		defer cancel()
+		err := task(ctx, func(s string) { ch <- busyLineMsg{s} })
 		ch <- busyDoneMsg{err}
 		close(ch)
 	}()
@@ -216,6 +238,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.table.SetWidth(msg.Width)
 		m.table.SetHeight(max(msg.Height-12, 4))
 		m.rtTable.SetWidth(msg.Width)
+		m.rtTable.SetHeight(max(msg.Height-14, 4))
 		m.logs.SetSize(msg.Width, msg.Height-4)
 		if m.form != nil {
 			m.form = m.form.WithWidth(min(msg.Width-4, 90))
@@ -241,7 +264,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case busyDoneMsg:
 		m.busyDone, m.busyErr = true, msg.err
+		if errors.Is(msg.err, core.ErrDeviceLink) {
+			if m.app != nil {
+				m.busyRetry = m.linkDevice
+			} else {
+				m.busyRetry = m.wizardRetry
+			}
+		}
 		return m, nil
+	case legacyMsg:
+		return m, m.migrateForm(msg)
+	case editedMsg:
+		return m, m.afterEdit(msg)
 	case runtimesMsg:
 		m.runtimes = msg.list
 		if msg.err != nil {
@@ -287,10 +321,27 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case scrForm:
 		return m.updateForm(msg)
 	case scrBusy:
-		if k, ok := msg.(tea.KeyPressMsg); ok && m.busyDone && (k.String() == "enter" || k.String() == "esc" || k.String() == "q") {
+		k, ok := msg.(tea.KeyPressMsg)
+		if ok && !m.busyDone && k.String() == "esc" && m.busyCanCancel {
+			m.busyCancel()
+			return m, nil
+		}
+		if ok && m.busyDone && m.busyErr != nil && m.busyRetry != nil && k.String() == "l" {
+			return m, m.busyRetry()
+		}
+		if ok && m.busyDone && (k.String() == "enter" || k.String() == "esc" || k.String() == "q") {
 			m.screen = scrDashboard
 			if m.afterBusy != nil && m.busyErr == nil {
 				return m, m.afterBusy()
+			}
+			if m.app == nil {
+				// The setup stopped early: open what it saved, or ask again.
+				if app, err := core.Open(m.dir); err == nil {
+					m.app = app
+				} else {
+					m.startWizard()
+					return m, m.form.Init()
+				}
 			}
 			return m, m.loadServers()
 		}
@@ -316,7 +367,20 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "r":
 				m.checks = nil
 				return m, m.loadChecks()
+			case "g":
+				return m, m.installGameTask()
+			case "u":
+				m.screen = scrRuntime
+				return m, m.loadRuntimes()
+			case "c":
+				return m, m.openAccount()
 			}
+		}
+		return m, nil
+	case scrInfo:
+		if k, ok := msg.(tea.KeyPressMsg); ok && (k.String() == "esc" || k.String() == "q" || k.String() == "enter") {
+			m.screen = scrDashboard
+			return m, m.loadServers()
 		}
 		return m, nil
 	}
@@ -397,7 +461,13 @@ func (m *model) updateDashboard(msg tea.Msg) (tea.Model, tea.Cmd) {
 			})
 		}
 	case "a":
+		if !app.HasAccount() {
+			m.setFlash("Sign in first: l links this host (no password), p uses a password.", true)
+			return m, m.openAccount()
+		}
 		return m, m.addForm()
+	case "m":
+		return m, m.menu()
 	case "e":
 		if hasSel {
 			if _, ok := app.Cfg.Instance(name); ok {
@@ -431,15 +501,12 @@ func (m *model) updateDashboard(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.screen = scrRuntime
 		return m, m.loadRuntimes()
 	case "c":
-		m.screen, m.account = scrAccount, nil
-		return m, m.loadAccount()
+		return m, m.openAccount()
 	case "D":
 		m.screen, m.checks = scrDoctor, nil
 		return m, m.loadChecks()
 	case "g":
-		return m, m.run("Installing the game files", func(ctx context.Context, say func(string)) error {
-			return installGame(ctx, app, say)
-		}, nil)
+		return m, m.installGameTask()
 	}
 	var cmd tea.Cmd
 	m.table, cmd = m.table.Update(msg)
@@ -524,6 +591,8 @@ func (m *model) render() string {
 		return m.renderAccount()
 	case scrDoctor:
 		return m.renderDoctor()
+	case scrInfo:
+		return m.header() + "  " + ui.Bold.Render(m.infoTitle) + "\n\n" + m.infoText + "\n" + ui.HelpBar(ui.K("esc", "back"))
 	}
 	if m.app == nil {
 		msg := "Not set up."
@@ -543,37 +612,59 @@ func (m *model) render() string {
 	if s, ok := m.selected(); ok && s.Status != nil && s.Status.LastError != "" {
 		detail = "\n" + ui.Subtle.Render(ui.Truncate("last error: "+s.Status.LastError, m.width-2))
 	}
+	if !m.app.HasAccount() {
+		detail += "\n" + ui.Warning.Render("The servers have no EchoVRCE sign-in yet: press ") + ui.KeyStyle.Render("c") + ui.Warning.Render(" to link this host.")
+	}
 	return m.header() + "\n\n" + body + detail + "\n" + m.footer(
-		ui.K("enter", "logs"), ui.K("s", "start"), ui.K("x", "stop"), ui.K("r/R", "restart game/container"),
+		ui.K("enter", "logs"), ui.K("s", "start"), ui.K("x", "stop"), ui.K("r/R", "restart"),
 		ui.K("a", "add"), ui.K("e", "edit"), ui.K("d", "delete"), ui.K("A", "apply"),
-		ui.K("u", "runtime"), ui.K("c", "account"), ui.K("D", "doctor"), ui.K("q", "quit"))
+		ui.K("u", "runtime"), ui.K("c", "account"), ui.K("m", "more"), ui.K("q", "quit"))
 }
 
 func (m *model) renderBusy() string {
 	var b strings.Builder
+	cancelled := errors.Is(m.busyErr, context.Canceled)
 	head := m.spin.View() + " " + ui.Bold.Render(m.busyTitle)
-	if m.busyDone {
-		if m.busyErr != nil {
-			head = ui.Error.Render("✘ " + m.busyTitle + " failed")
-		} else {
-			head = ui.Success.Render("✔ " + m.busyTitle)
-		}
+	switch {
+	case m.busyDone && cancelled:
+		head = ui.Warning.Render("✘ " + m.busyTitle + ": cancelled")
+	case m.busyDone && m.busyErr != nil:
+		head = ui.Error.Render("✘ " + m.busyTitle + " failed")
+	case m.busyDone:
+		head = ui.Success.Render("✔ " + m.busyTitle)
 	}
 	b.WriteString(head + "\n\n")
-	lines := m.busyLines
+	var lines []string
+	for _, l := range m.busyLines {
+		lines = append(lines, strings.Split(m.wrap(l, 4), "\n")...)
+	}
 	if n := m.height - 9; n > 0 && len(lines) > n {
 		lines = lines[len(lines)-n:]
 	}
 	for _, l := range lines {
-		b.WriteString("  " + ui.Truncate(l, m.width-4) + "\n")
+		b.WriteString("  " + l + "\n")
 	}
-	if m.busyErr != nil {
-		b.WriteString("\n" + ui.Error.Render(m.busyErr.Error()) + "\n")
+	if m.busyErr != nil && !cancelled {
+		b.WriteString("\n" + ui.Error.Render(m.wrap(m.busyErr.Error(), 0)) + "\n")
 	}
-	if m.busyDone {
+	switch {
+	case m.busyDone && m.busyErr != nil && m.busyRetry != nil:
+		b.WriteString("\n" + ui.HelpBar(ui.K("l", "link again"), ui.K("enter", "continue")))
+	case m.busyDone:
 		b.WriteString("\n" + ui.HelpBar(ui.K("enter", "continue")))
+	case m.busyCanCancel:
+		b.WriteString("\n" + ui.HelpBar(ui.K("esc", "cancel")))
 	}
 	return b.String()
+}
+
+// wrap breaks s to the terminal width minus indent.
+func (m *model) wrap(s string, indent int) string {
+	w := m.width - indent
+	if w < 20 {
+		w = 76
+	}
+	return lipgloss.NewStyle().Width(w).Render(s)
 }
 
 func orDash(s string) string {

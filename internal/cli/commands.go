@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 	"gopkg.in/yaml.v3"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
@@ -345,39 +346,37 @@ func accountCmd(g *globals) *cobra.Command {
 	var discordID, httpKey string
 	var passwordStdin bool
 	set := &cobra.Command{
-		Use: "set", Short: "Store the Discord ID and server password",
+		Use: "set", Short: "Sign in with a Discord ID and server password, and recreate the servers with it",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			a, err := g.app()
 			if err != nil {
 				return err
 			}
-			if discordID != "" {
-				a.Secrets[config.EnvDiscordID] = discordID
-			}
 			if httpKey != "" {
 				a.Secrets[config.EnvHTTPKey] = httpKey
 			}
-			if passwordStdin || a.Secrets[config.EnvPassword] == "" {
-				p, err := readSecret("EchoVRCE server password: ")
-				if err != nil {
-					return err
-				}
-				a.Secrets[config.EnvPassword] = p
+			if discordID == "" {
+				discordID = a.Secrets[config.EnvDiscordID]
 			}
-			s, err := a.Login(cmd.Context())
+			if discordID == "" && term.IsTerminal(int(os.Stdin.Fd())) {
+				fmt.Fprint(os.Stderr, "Discord user ID of the EchoVRCE host account: ")
+				fmt.Scanln(&discordID)
+				discordID = strings.TrimSpace(discordID)
+			}
+			if discordID == "" {
+				return errors.New("--discord-id is required")
+			}
+			p, err := readSecret("EchoVRCE server password: ")
 			if err != nil {
 				return err
 			}
-			if err := a.Secrets.Save(a.Dir); err != nil {
-				return err
-			}
-			g.say("saved; signed in as %s, %s. Run `evr-docker server apply` to restart servers with it.", s.Username, s.HostSummary())
-			return nil
+			_, err = a.UsePassword(cmd.Context(), discordID, p, func(s string) { g.say("%s", s) })
+			return err
 		},
 	}
 	set.Flags().StringVar(&discordID, "discord-id", "", "Discord user ID")
 	set.Flags().StringVar(&httpKey, "http-key", "", "backend HTTP key (default: the public key)")
-	set.Flags().BoolVar(&passwordStdin, "password-stdin", false, "read the password from stdin")
+	set.Flags().BoolVar(&passwordStdin, "password-stdin", false, "read the password from stdin (also when stdin is not a terminal)")
 	cmd.AddCommand(set)
 
 	cmd.AddCommand(&cobra.Command{
@@ -440,21 +439,17 @@ func accountCmd(g *globals) *cobra.Command {
 		Use: "link", Short: "Sign in at echovrce.com/device instead of with a password",
 		Long: `Shows a code to approve at echovrce.com/device, stores the link in
 /etc/evr-docker/device.json, takes the Discord ID from the backend and gives
-every server the link. No password is needed.`,
+every server the link (a stored password is removed). No password is needed.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			a, err := g.app()
 			if err != nil {
 				return err
 			}
 			g.say("%s\n", core.ResetPasswordNote)
-			s, err := a.LinkDevice(cmd.Context(), func(url, code string, expires time.Time) {
+			_, err = a.UseDeviceLink(cmd.Context(), func(url, code string, expires time.Time) {
 				g.say("Open %s and approve the code %s (valid until %s).", url, code, expires.Local().Format(time.TimeOnly))
-			})
-			if err != nil {
-				return err
-			}
-			g.say("Linked as %s (Discord ID %s); link given to %d server(s). Run `evr-docker server apply` to restart them with it.", s.Username, a.Secrets[config.EnvDiscordID], len(a.Cfg.Instances))
-			return nil
+			}, func(s string) { g.say("%s", s) })
+			return err
 		},
 	})
 	return cmd

@@ -156,7 +156,7 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 			say("Account", "open "+url+" and approve the code "+code+" (valid until "+expires.Local().Format(time.TimeOnly)+")")
 		})
 		if err != nil {
-			return nil, fmt.Errorf("device link: %w", err)
+			return nil, fmt.Errorf("%w: %w", ErrDeviceLink, err)
 		}
 	} else {
 		say("Account", "checking the EchoVRCE login")
@@ -190,7 +190,7 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	if _, err := games.Current(); err != nil || an.Game.Source == "dir" || an.Game.Source == "archive" {
 		switch an.Game.Source {
 		case "skip":
-			say("Game", "skipped; install it later with `evr-docker game install`")
+			say("Game", "skipped; install it later (key g in the dashboard, or evr-docker game install)")
 		case "dir":
 			_, err = games.FromDir(ctx, an.Game.Path)
 		case "archive":

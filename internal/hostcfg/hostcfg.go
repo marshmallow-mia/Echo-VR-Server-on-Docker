@@ -122,7 +122,7 @@ func Dir() string {
 }
 
 // ErrNotInitialized means there is no config yet.
-var ErrNotInitialized = errors.New("evr-docker is not set up yet (run: evr-docker init)")
+var ErrNotInitialized = errors.New("evr-docker is not set up yet")
 
 // Load reads <dir>/config.yaml.
 func Load(dir string) (*Config, error) {

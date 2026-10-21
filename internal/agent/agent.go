@@ -129,7 +129,7 @@ func (a *Agent) checkUpdates(ctx context.Context, app *core.App) {
 		cur, target, available, err := u.Check(ctx, pol)
 		if err == nil && available {
 			_ = n.Send(ctx, notify.Event{Kind: notify.EventUpdateAvailable, Level: notify.Info, Host: a.host,
-				Title: "nevr-runtime " + target.Tag + " is available", Text: "Current: " + cur + ". Install it with `evr-docker update apply`."})
+				Title: "nevr-runtime " + target.Tag + " is available", Text: "Current: " + cur + ". Roll it out in evr-docker (u, then u again) or with `evr-docker update apply`."})
 		}
 		return
 	}
