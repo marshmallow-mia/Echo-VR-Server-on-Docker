@@ -154,9 +154,6 @@ func Migrate(ctx context.Context, dir string, l Legacy, httpKey, image, dataDir,
 	if _, err := (game.Installer{Dir: filepath.Join(dataDir, "game")}).Current(); err == nil {
 		an.Game.Source = "skip" // a verified build is already installed there
 	}
-	if an.Account.HTTPKey == "" {
-		return nil, errors.New("the old setup has no backend HTTP key; pass --http-key")
-	}
 	// Stop the old servers first so their ports are free.
 	d, err := docker.New()
 	if err != nil {

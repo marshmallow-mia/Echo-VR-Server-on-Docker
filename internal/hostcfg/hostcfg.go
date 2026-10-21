@@ -302,7 +302,7 @@ func (s Secrets) Save(dir string) error {
 // Missing lists the account secrets that are not set.
 func (s Secrets) Missing() []string {
 	var out []string
-	for _, k := range []string{config.EnvDiscordID, config.EnvPassword, config.EnvHTTPKey} {
+	for _, k := range []string{config.EnvDiscordID, config.EnvPassword} {
 		if s[k] == "" {
 			out = append(out, k)
 		}

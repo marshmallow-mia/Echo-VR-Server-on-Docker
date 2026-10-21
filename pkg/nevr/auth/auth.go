@@ -18,6 +18,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
 
 // Role bits in the token's vrs.memberships (EchoTools/nakama evr_guild_group_roles.go).
@@ -301,10 +303,11 @@ func (c *Client) rpc(ctx context.Context, id, bearer string, body, out any) (int
 	}
 	q := url.Values{}
 	if bearer == "" {
-		if c.HTTPKey == "" {
-			return 0, errors.New("no backend HTTP key configured")
+		key := c.HTTPKey
+		if key == "" {
+			key = config.DefaultHTTPKey
 		}
-		q.Set("http_key", c.HTTPKey)
+		q.Set("http_key", key)
 	}
 	u := strings.TrimRight(c.HTTPURI, "/") + "/v2/rpc/" + id + "?" + q.Encode()
 	if q.Encode() == "" {

@@ -99,8 +99,6 @@ func (m *model) startWizard() {
 				Value(&an.Account.DiscordID).Validate(digits),
 			huh.NewInput().Title("Server password").Description("The password you set for hosting with the EchoVRCE bot.").
 				EchoMode(huh.EchoModePassword).Value(&an.Account.Password).Validate(notEmpty("the password")),
-			huh.NewInput().Title("Backend HTTP key").Description("The http_key for g.echovrce.com:7350, from the EchoVRCE server-host instructions.").
-				EchoMode(huh.EchoModePassword).Value(&an.Account.HTTPKey).Validate(notEmpty("the HTTP key")),
 		).Title("EchoVRCE account"),
 		huh.NewGroup(
 			huh.NewInput().Title("How many servers?").Value(&servers).Validate(intRange(0, 64)),
@@ -425,14 +423,16 @@ func (m *model) updateAccount(msg tea.Msg) (tea.Model, tea.Cmd) {
 		f := huh.NewForm(huh.NewGroup(
 			huh.NewInput().Title("Discord user ID").Value(&discord).Validate(digits),
 			huh.NewInput().Title("Server password").Description("Leave empty to keep the current one.").EchoMode(huh.EchoModePassword).Value(&password),
-			huh.NewInput().Title("Backend HTTP key").EchoMode(huh.EchoModePassword).Value(&key).Validate(notEmpty("the HTTP key")),
 		).Title("EchoVRCE account"))
 		return m, m.showForm(f, scrAccount, func() tea.Cmd {
 			old := map[string]string{}
 			for k, v := range app.Secrets {
 				old[k] = v
 			}
-			app.Secrets[config.EnvDiscordID], app.Secrets[config.EnvHTTPKey] = discord, key
+			app.Secrets[config.EnvDiscordID] = discord
+			if key != "" {
+				app.Secrets[config.EnvHTTPKey] = key
+			}
 			if password != "" {
 				app.Secrets[config.EnvPassword] = password
 			}

@@ -32,7 +32,7 @@ func initCmd(g *globals) *cobra.Command {
 For unattended installs pass --answers FILE (secrets may be ${ENV} references) or flags.
 
 Example:
-  echo "$PASSWORD" | evr-docker init --discord-id 1234 --password-stdin --http-key KEY --servers 2 --start`,
+  echo "$PASSWORD" | evr-docker init --discord-id 1234 --password-stdin --servers 2 --start`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if answersFile == "" && cmd.Flags().NFlag() == 0 && TUI != nil && isTerminal() {
 				return TUI(cmd.Context(), g.configDir)
@@ -86,7 +86,7 @@ Example:
 	f.StringVar(&answersFile, "answers", "", "YAML answers file for an unattended setup")
 	f.StringVar(&discordID, "discord-id", "", "your Discord user ID (the EchoVRCE host account)")
 	f.BoolVar(&passwordStdin, "password-stdin", false, "read the server password from stdin")
-	f.StringVar(&httpKey, "http-key", "", "EchoVRCE backend HTTP key")
+	f.StringVar(&httpKey, "http-key", "", "EchoVRCE backend HTTP key (default: the public key nevr-runtime embeds)")
 	f.StringVar(&an.DataDir, "data-dir", "", "where game files and server data go (default /srv/echovr)")
 	f.StringVar(&an.Project, "project", "", "container name prefix (default evr; only for several setups on one host)")
 	f.StringVar(&an.Image, "image", "", "server image (default "+hostcfg.DefaultImage+")")
@@ -344,7 +344,7 @@ func accountCmd(g *globals) *cobra.Command {
 	var discordID, httpKey string
 	var passwordStdin bool
 	set := &cobra.Command{
-		Use: "set", Short: "Store the Discord ID, server password and HTTP key",
+		Use: "set", Short: "Store the Discord ID and server password",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			a, err := g.app()
 			if err != nil {
@@ -375,7 +375,7 @@ func accountCmd(g *globals) *cobra.Command {
 		},
 	}
 	set.Flags().StringVar(&discordID, "discord-id", "", "Discord user ID")
-	set.Flags().StringVar(&httpKey, "http-key", "", "backend HTTP key")
+	set.Flags().StringVar(&httpKey, "http-key", "", "backend HTTP key (default: the public key)")
 	set.Flags().BoolVar(&passwordStdin, "password-stdin", false, "read the password from stdin")
 	cmd.AddCommand(set)
 

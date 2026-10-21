@@ -8,7 +8,7 @@ identity:
   discord_id: ${NEVR_DISCORD_ID:?NEVR_DISCORD_ID is not set}
 auth:
   http_uri: https://g.echovrce.com:7350
-  http_key: ${NEVR_HTTP_KEY:?NEVR_HTTP_KEY is not set}
+  http_key: 1c65a082-6712-4a02-8c6d-23d5c32f7409
   password: ${NEVR_PASSWORD:?NEVR_PASSWORD is not set}
 network:
   regions: [euw, default]
