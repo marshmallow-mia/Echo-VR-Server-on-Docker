@@ -24,7 +24,7 @@ const (
 	DefaultDir     = "/etc/evr-docker"
 	DefaultDataDir = "/srv/echovr"
 	DefaultProject = "evr"
-	DefaultImage   = "ghcr.io/marshmallow-mia/echovr-server:2"
+	DefaultImage   = "ghcr.io/marshmallow-mia/echovr-server:edge" // switch to :2 with the v2.0.0 release
 	DefaultUID     = 999
 	FirstPort      = 6792
 )
