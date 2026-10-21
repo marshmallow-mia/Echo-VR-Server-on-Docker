@@ -49,6 +49,9 @@ func fakeNakama(t *testing.T) *httptest.Server {
 		}
 		json.NewEncoder(w).Encode(map[string]any{"status": "verified", "access_token": tok, "refresh_token": "r-2", "refresh_token_expires_in": 2592000})
 	})
+	mux.HandleFunc("/v2/rpc/device/auth/refresh", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{"access_token": tok, "refresh_token": "r-3", "refresh_token_expires_in": 2592000})
+	})
 	mux.HandleFunc("/v2/rpc/match", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Has("http_key") || r.Header.Get("Authorization") != "Bearer "+tok {
 			w.WriteHeader(http.StatusUnauthorized)
@@ -106,5 +109,13 @@ func TestDeviceLink(t *testing.T) {
 	json.Unmarshal(b, &got)
 	if fi.Mode().Perm() != 0o600 || got["refresh_token"] != "r-2" || got["user_id"] != "u-1" {
 		t.Errorf("credentials %v mode %v", got, fi.Mode())
+	}
+}
+
+func TestRefresh(t *testing.T) {
+	c := &Client{HTTPURI: fakeNakama(t).URL, HTTPKey: "key"}
+	l, err := c.Refresh(context.Background(), "r-2")
+	if err != nil || l.Session.RefreshToken != "r-3" || l.Session.UserID != "u-1" || len(l.Session.HostGuilds()) != 1 {
+		t.Fatalf("%+v %v", l, err)
 	}
 }

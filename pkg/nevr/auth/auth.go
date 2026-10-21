@@ -189,6 +189,36 @@ func (c *Client) WaitDevice(ctx context.Context, code DeviceCode, every time.Dur
 	}
 }
 
+// Refresh exchanges a device-link refresh token for a new session and a
+// rotated refresh token (RPC device/auth/refresh).
+func (c *Client) Refresh(ctx context.Context, refreshToken string) (Linked, error) {
+	var res struct {
+		AccessToken           string `json:"access_token"`
+		Token                 string `json:"token"`
+		RefreshToken          string `json:"refresh_token"`
+		RefreshTokenExpiresIn int64  `json:"refresh_token_expires_in"`
+	}
+	status, err := c.rpc(ctx, "device/auth/refresh", "", map[string]string{"refresh_token": refreshToken}, &res)
+	if status == http.StatusUnauthorized || (err != nil && strings.Contains(err.Error(), "Unauthenticated")) {
+		return Linked{}, errors.New("the device link was rejected or has expired (run the link again)")
+	}
+	if err != nil {
+		return Linked{}, err
+	}
+	tok := res.AccessToken
+	if tok == "" {
+		tok = res.Token
+	}
+	if res.RefreshToken == "" {
+		res.RefreshToken = refreshToken
+	}
+	s, err := sessionFromToken(tok, res.RefreshToken)
+	if err != nil {
+		return Linked{}, err
+	}
+	return Linked{Session: s, RefreshExpires: time.Now().Add(time.Duration(res.RefreshTokenExpiresIn) * time.Second)}, nil
+}
+
 // WriteCredentials stores a refresh token where the runtime looks for it
 // (<instance>/_local/.credentials.json). The runtime then signs in to ServerDB
 // with it instead of the password and keeps it rotated. The password is still
