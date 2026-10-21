@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
 
 // Compose renders a docker-compose file equivalent to what evr-docker runs,

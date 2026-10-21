@@ -12,13 +12,13 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/huh/v2"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/core"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/game"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/instance"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/auth"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/config"
-	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/tui"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
+	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
 )
 
 // showForm opens a huh form; onSubmit runs when it is completed.

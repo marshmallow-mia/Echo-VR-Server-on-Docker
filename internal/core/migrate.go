@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/docker"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/game"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/docker"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
 
 // LegacyImage is the image name the v1 run.sh built.

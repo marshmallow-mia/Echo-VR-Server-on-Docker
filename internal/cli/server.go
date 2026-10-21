@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/core"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/instance"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
 )
 
 // settingsFlags binds instance settings to flags; only changed flags apply.

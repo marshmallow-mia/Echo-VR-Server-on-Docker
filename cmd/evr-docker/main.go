@@ -4,8 +4,8 @@ package main
 import (
 	"os"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/cli"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/tui"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/cli"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/tui"
 )
 
 var version = "dev"

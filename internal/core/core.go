@@ -15,14 +15,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/docker"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/game"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/instance"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/auth"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/config"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/status"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/docker"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 )
 
 // Container labels.

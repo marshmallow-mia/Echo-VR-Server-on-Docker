@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/auth"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 )
 
 // Level of a check result.

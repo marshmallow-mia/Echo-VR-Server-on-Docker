@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/core"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
 )
 
 func migrateCmd(g *globals) *cobra.Command {

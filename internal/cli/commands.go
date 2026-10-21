@@ -14,11 +14,11 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/core"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/game"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/auth"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
 
 func initCmd(g *globals) *cobra.Command {

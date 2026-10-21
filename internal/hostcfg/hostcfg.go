@@ -15,8 +15,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/instance"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
 
 // Default locations.

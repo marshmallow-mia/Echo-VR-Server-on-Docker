@@ -1,4 +1,4 @@
-module github.com/marshmallow-mia/Echo-VR-Server-on-Docker
+module github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2
 
 go 1.27.2
 

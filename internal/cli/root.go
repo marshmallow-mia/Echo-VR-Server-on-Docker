@@ -16,8 +16,8 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/core"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 )
 
 // Version is set at build time.

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/status"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 )
 
 // Fleet is how the updater sees the servers; each product implements it.
