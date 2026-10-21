@@ -88,6 +88,7 @@ Example:
 	f.BoolVar(&passwordStdin, "password-stdin", false, "read the server password from stdin")
 	f.StringVar(&httpKey, "http-key", "", "EchoVRCE backend HTTP key")
 	f.StringVar(&an.DataDir, "data-dir", "", "where game files and server data go (default /srv/echovr)")
+	f.StringVar(&an.Project, "project", "", "container name prefix (default evr; only for several setups on one host)")
 	f.StringVar(&an.Image, "image", "", "server image (default "+hostcfg.DefaultImage+")")
 	f.StringVar(&an.BindIP, "bind-ip", "", "host address to publish game ports on (default: all)")
 	f.StringVar(&an.PublicIP, "public-ip", "auto", `expected public IP ("auto" detects it)`)

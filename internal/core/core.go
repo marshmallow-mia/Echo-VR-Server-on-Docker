@@ -28,6 +28,7 @@ import (
 // Container labels.
 const (
 	LabelManaged  = "evr.managed-by"
+	LabelProject  = "evr.project"
 	LabelInstance = "evr.instance"
 	LabelSpec     = "evr.spec"
 	ManagedBy     = "evr-docker"
@@ -138,7 +139,8 @@ func (a *App) Servers(ctx context.Context) ([]Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	conts, err := d.List(ctx, LabelManaged+"="+ManagedBy)
+	// Only this config's containers: several configs can share one Docker host.
+	conts, err := d.List(ctx, LabelProject+"="+a.Cfg.Project)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +187,7 @@ func (a *App) Server(ctx context.Context, name string) (Server, error) {
 	return Server{}, fmt.Errorf("no server named %q", name)
 }
 
-func containerName(instance string) string { return "evr-" + instance }
+func (a *App) containerName(instance string) string { return a.Cfg.Project + "-" + instance }
 
 // spec builds the container for an instance.
 func (a *App) spec(in hostcfg.Instance) docker.ContainerSpec {
@@ -203,12 +205,12 @@ func (a *App) spec(in hostcfg.Instance) docker.ContainerSpec {
 		ports = append(ports, docker.Port{Port: in.Port, Proto: proto, HostIP: a.Cfg.BindIP})
 	}
 	return docker.ContainerSpec{
-		Name:  containerName(in.Name),
+		Name:  a.containerName(in.Name),
 		Image: a.Cfg.Image,
 		User:  fmt.Sprintf("%d:%d", a.Cfg.UID, a.Cfg.UID),
 		Env:   env,
 		Labels: map[string]string{
-			LabelManaged: ManagedBy, LabelInstance: in.Name,
+			LabelManaged: ManagedBy, LabelProject: a.Cfg.Project, LabelInstance: in.Name,
 		},
 		Binds: []string{
 			a.Cfg.InstanceDir(in.Name) + ":/home/container",
@@ -414,7 +416,7 @@ func (a *App) Logs(ctx context.Context, name string, tail int, follow bool, line
 	if err != nil {
 		return err
 	}
-	return d.Logs(ctx, containerName(name), tail, follow, line)
+	return d.Logs(ctx, a.containerName(name), tail, follow, line)
 }
 
 // AddInstances appends n instances on the next free ports.

@@ -23,6 +23,7 @@ import (
 const (
 	DefaultDir     = "/etc/evr-docker"
 	DefaultDataDir = "/srv/echovr"
+	DefaultProject = "evr"
 	DefaultImage   = "ghcr.io/marshmallow-mia/echovr-server:2"
 	DefaultUID     = 999
 	FirstPort      = 6792
@@ -35,7 +36,10 @@ const (
 
 // Config is the host configuration.
 type Config struct {
-	Version  int    `yaml:"version"`
+	Version int `yaml:"version"`
+	// Project names this setup's containers (<project>-<instance>); change it
+	// only to run several independent setups on one Docker host.
+	Project  string `yaml:"project"`
 	DataDir  string `yaml:"data_dir"`
 	Image    string `yaml:"image"`
 	BindIP   string `yaml:"bind_ip,omitempty"`   // host address ports are published on; empty = all
@@ -91,7 +95,7 @@ type Metrics struct {
 // New returns a config with defaults.
 func New() *Config {
 	return &Config{
-		Version: 1, DataDir: DefaultDataDir, Image: DefaultImage, UID: DefaultUID,
+		Version: 1, Project: DefaultProject, DataDir: DefaultDataDir, Image: DefaultImage, UID: DefaultUID,
 		Defaults: instance.Settings{TickRate: config.DefaultTickRate, PublisherLock: "echovrce", Runtime: "current"},
 		Runtime:  RuntimePolicy{Channel: "pre", AutoUpdate: true, CheckHours: 6},
 		Metrics:  Metrics{Listen: "127.0.0.1:9469"},
@@ -150,6 +154,9 @@ func (c *Config) Save(dir string) error {
 // Validate checks the whole config.
 func (c *Config) Validate() error {
 	var errs []error
+	if err := instance.ValidName(c.Project); err != nil {
+		errs = append(errs, fmt.Errorf("project: %w", err))
+	}
 	if !filepath.IsAbs(c.DataDir) {
 		errs = append(errs, fmt.Errorf("data_dir must be absolute, got %q", c.DataDir))
 	}

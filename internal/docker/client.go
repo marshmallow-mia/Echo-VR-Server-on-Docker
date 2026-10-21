@@ -204,11 +204,26 @@ type Container struct {
 	Started time.Time
 	Created time.Time
 	Ports   []Port
+	Mounts  []Mount
 }
+
+// Mount is a container mount.
+type Mount struct{ Source, Destination string }
+
+// ListAll returns every container on the host.
+func (c *Client) ListAll(ctx context.Context) ([]Container, error) { return c.list(ctx, "") }
 
 // List returns containers that carry label=value (all states).
 func (c *Client) List(ctx context.Context, label string) ([]Container, error) {
-	filters, _ := json.Marshal(map[string][]string{"label": {label}})
+	return c.list(ctx, label)
+}
+
+func (c *Client) list(ctx context.Context, label string) ([]Container, error) {
+	q := url.Values{"all": {"1"}}
+	if label != "" {
+		filters, _ := json.Marshal(map[string][]string{"label": {label}})
+		q.Set("filters", string(filters))
+	}
 	var raw []struct {
 		ID      string `json:"Id"`
 		Names   []string
@@ -219,7 +234,7 @@ func (c *Client) List(ctx context.Context, label string) ([]Container, error) {
 		Labels  map[string]string
 		Created int64
 	}
-	if err := c.call(ctx, http.MethodGet, "/containers/json", url.Values{"all": {"1"}, "filters": {string(filters)}}, nil, &raw); err != nil {
+	if err := c.call(ctx, http.MethodGet, "/containers/json", q, nil, &raw); err != nil {
 		return nil, err
 	}
 	out := make([]Container, 0, len(raw))
@@ -248,12 +263,13 @@ func (c *Client) Inspect(ctx context.Context, id string) (Container, error) {
 			Status    string
 			StartedAt time.Time
 		}
+		Mounts []Mount
 	}
 	if err := c.call(ctx, http.MethodGet, "/containers/"+id+"/json", nil, nil, &raw); err != nil {
 		return Container{}, err
 	}
 	return Container{ID: raw.ID, Name: strings.TrimPrefix(raw.Name, "/"), Image: raw.Config.Image, ImageID: raw.Image,
-		State: raw.State.Status, Labels: raw.Config.Labels, Env: raw.Config.Env, Started: raw.State.StartedAt}, nil
+		State: raw.State.Status, Labels: raw.Config.Labels, Env: raw.Config.Env, Started: raw.State.StartedAt, Mounts: raw.Mounts}, nil
 }
 
 // ImageID returns the local image ID for a reference, or ErrNotFound.
