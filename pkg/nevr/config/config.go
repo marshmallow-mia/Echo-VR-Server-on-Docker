@@ -66,12 +66,12 @@ type Auth struct {
 }
 
 type Network struct {
-	Regions               List     `yaml:"regions,omitempty,flow"`
-	InternalIP            string   `yaml:"internal_ip,omitempty"`
-	ExternalIP            string   `yaml:"external_ip,omitempty"`
-	TickRateHz            int      `yaml:"tick_rate_hz,omitempty"`
-	EmptyServerTTLSeconds int      `yaml:"empty_server_ttl_seconds,omitempty"`
-	SessionRouter         string   `yaml:"session_router,omitempty"`
+	Regions               List   `yaml:"regions,omitempty,flow"`
+	InternalIP            string `yaml:"internal_ip,omitempty"`
+	ExternalIP            string `yaml:"external_ip,omitempty"`
+	TickRateHz            int    `yaml:"tick_rate_hz,omitempty"`
+	EmptyServerTTLSeconds int    `yaml:"empty_server_ttl_seconds,omitempty"`
+	SessionRouter         string `yaml:"session_router,omitempty"`
 }
 
 type Telemetry struct {
