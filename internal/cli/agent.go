@@ -12,10 +12,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/agent"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/notify"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/update"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/agent"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/notify"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/update"
 )
 
 const unitPath = "/etc/systemd/system/evr-docker-agent.service"

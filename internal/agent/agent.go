@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/core"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/metrics"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/notify"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/status"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/update"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/metrics"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/notify"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/update"
 )
 
 // Agent watches the servers of one evr-docker host.

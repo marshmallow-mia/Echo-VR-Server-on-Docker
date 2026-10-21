@@ -17,8 +17,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/game"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/status"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 )
 
 // ReadyMarker starts the line printed once the server is registered; the

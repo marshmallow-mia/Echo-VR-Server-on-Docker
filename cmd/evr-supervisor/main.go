@@ -15,8 +15,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/config"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/supervisor"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/supervisor"
 )
 
 var version = "dev"

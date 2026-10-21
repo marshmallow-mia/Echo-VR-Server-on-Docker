@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
 )
 
 // RuntimeInfo combines upstream releases with what is installed.

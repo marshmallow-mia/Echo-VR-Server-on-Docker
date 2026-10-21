@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/status"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 )
 
 type syncBuf struct {

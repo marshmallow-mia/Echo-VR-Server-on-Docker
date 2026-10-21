@@ -16,11 +16,11 @@ import (
 	"charm.land/huh/v2"
 	"charm.land/lipgloss/v2"
 
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/core"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/internal/hostcfg"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/nevr/auth"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/supervisor"
-	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/pkg/tui"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/supervisor"
+	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
 )
 
 // Run starts the TUI. Without a configuration it opens the setup wizard.
