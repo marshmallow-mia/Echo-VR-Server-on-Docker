@@ -142,6 +142,7 @@ func options() (supervisor.Options, error) {
 	c := config.Default()
 	if strings.TrimSpace(os.Getenv(config.EnvPassword)) == "" {
 		c.Auth.Password, c.DeviceLinked = "", true
+		o.DeviceLinked = true
 		fmt.Println("[evr] no password set: signing in with the device link in _local/.credentials.json")
 	}
 	c.Services.SocketURI = env("NEVR_SOCKET_URI", c.Services.SocketURI)

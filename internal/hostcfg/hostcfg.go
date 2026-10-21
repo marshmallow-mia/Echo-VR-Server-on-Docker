@@ -299,8 +299,12 @@ func (s Secrets) Save(dir string) error {
 	return writeAtomic(filepath.Join(dir, "secrets.env"), []byte(b.String()), 0o600)
 }
 
-// Missing lists the account secrets that are not set.
-func (s Secrets) Missing() []string {
+// Missing lists the account secrets that are not set. With a device link
+// neither the password nor the Discord ID (taken from the backend) is needed.
+func (s Secrets) Missing(deviceLinked bool) []string {
+	if deviceLinked {
+		return nil
+	}
 	var out []string
 	for _, k := range []string{config.EnvDiscordID, config.EnvPassword} {
 		if s[k] == "" {

@@ -96,7 +96,10 @@ func (a *App) Auth() *auth.Client {
 
 // Login checks the configured account.
 func (a *App) Login(ctx context.Context) (auth.Session, error) {
-	if m := a.Secrets.Missing(); len(m) > 0 {
+	if a.Secrets[config.EnvPassword] == "" && a.DeviceLinked() {
+		return a.refreshDevice(ctx)
+	}
+	if m := a.Secrets.Missing(a.DeviceLinked()); len(m) > 0 {
 		return auth.Session{}, fmt.Errorf("account not configured: %v missing (run: evr-docker account set)", m)
 	}
 	return a.Auth().Login(ctx, a.Secrets[config.EnvDiscordID], a.Secrets[config.EnvPassword])
@@ -252,7 +255,12 @@ func (a *App) Apply(ctx context.Context, force bool, progress func(string)) ([]s
 			return nil, err
 		}
 	}
-	if m := a.Secrets.Missing(); len(m) > 0 && len(a.Cfg.Instances) > 0 {
+	if a.Secrets[config.EnvDiscordID] == "" && a.DeviceLinked() && len(a.Cfg.Instances) > 0 {
+		if _, err := a.Login(ctx); err != nil { // fills in the Discord ID
+			return nil, err
+		}
+	}
+	if m := a.Secrets.Missing(a.DeviceLinked()); len(m) > 0 && len(a.Cfg.Instances) > 0 {
 		return nil, fmt.Errorf("account not configured: %v missing (run: evr-docker account set)", m)
 	}
 	servers, err := a.Servers(ctx)
@@ -344,7 +352,7 @@ func (a *App) prepareInstanceDir(name string) error {
 	if err := os.Chown(dir, a.Cfg.UID, a.Cfg.UID); err != nil && os.Geteuid() == 0 {
 		return err
 	}
-	return nil
+	return a.installDeviceLink(name, false)
 }
 
 func (a *App) ensureImage(ctx context.Context, progress func(string)) error {

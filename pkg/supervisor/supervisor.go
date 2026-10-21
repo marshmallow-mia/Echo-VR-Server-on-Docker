@@ -40,6 +40,7 @@ type Options struct {
 	ConfigYAML     []byte
 	Wine           string   // default "wine"
 	ExtraArgs      []string // appended to the game's command line
+	DeviceLinked   bool     // signs in with _local/.credentials.json instead of a password
 	Env            []string // added to the game's environment
 
 	RegisterTimeout time.Duration // start → registered; default 180s
@@ -403,7 +404,11 @@ func (s *Supervisor) handle(ev Event, res *result, register *time.Timer, schedul
 		res.clean = false
 		if ev.Kind == KindLoginFailed {
 			// The server stays up but never registers; no point waiting.
-			killGroup("login was rejected (check the Discord ID and password)")
+			if s.o.DeviceLinked {
+				killGroup("login was rejected: device sign-in only works when the EchoVRCE account has no password; run /reset-password in the Echo VR Lounge Discord, then restart")
+			} else {
+				killGroup("login was rejected (check the Discord ID and password)")
+			}
 		}
 	}
 	if s.o.OnEvent != nil {

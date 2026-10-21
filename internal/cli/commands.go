@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -17,7 +16,6 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
 
@@ -31,7 +29,10 @@ func initCmd(g *globals) *cobra.Command {
 		Long: `Sets up everything in one go. Without flags in a terminal, the TUI wizard opens.
 For unattended installs pass --answers FILE (secrets may be ${ENV} references) or flags.
 
+Without a password the host is linked at echovrce.com/device during setup.
+
 Example:
+  evr-docker init --servers 2 --start
   echo "$PASSWORD" | evr-docker init --discord-id 1234 --password-stdin --servers 2 --start`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if answersFile == "" && cmd.Flags().NFlag() == 0 && TUI != nil && isTerminal() {
@@ -370,7 +371,7 @@ func accountCmd(g *globals) *cobra.Command {
 			if err := a.Secrets.Save(a.Dir); err != nil {
 				return err
 			}
-			g.say("saved; signed in as %s, host role in %d guild(s). Run `evr-docker server apply` to restart servers with it.", s.Username, len(s.HostGuilds()))
+			g.say("saved; signed in as %s, %s. Run `evr-docker server apply` to restart servers with it.", s.Username, s.HostSummary())
 			return nil
 		},
 	}
@@ -393,6 +394,10 @@ func accountCmd(g *globals) *cobra.Command {
 			out := map[string]any{"username": s.Username, "user_id": s.UserID, "host_guilds": s.HostGuilds()}
 			return g.print(out, func(w io.Writer) {
 				fmt.Fprintf(w, "Signed in as %s (%s)\n", s.Username, s.UserID)
+				if !s.MembershipsKnown {
+					fmt.Fprintf(w, "Signed in with the device link; %s.\n", s.HostSummary())
+					return
+				}
 				if len(s.HostGuilds()) == 0 {
 					fmt.Fprintln(w, "This account has the server host role in no guild: servers register but get no matches.")
 					return
@@ -432,43 +437,27 @@ func accountCmd(g *globals) *cobra.Command {
 	})
 
 	cmd.AddCommand(&cobra.Command{
-		Use: "link", Short: "Link this host at echovrce.com/device (optional; stores a refresh token per server)",
-		Long: `Runs the echovrce.com device-code flow and stores the refresh token in every
-server's _local/.credentials.json. Servers then sign in to ServerDB with it.
-The password is still required: nevr-runtime 5.4.2 needs it for the login connection.`,
+		Use: "link", Short: "Sign in at echovrce.com/device instead of with a password",
+		Long: `Shows a code to approve at echovrce.com/device, stores the link in
+/etc/evr-docker/device.json, takes the Discord ID from the backend and gives
+every server the link. No password is needed.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			a, err := g.app()
 			if err != nil {
 				return err
 			}
-			c := a.Auth()
-			code, err := c.RequestDevice(cmd.Context())
+			g.say("%s\n", core.ResetPasswordNote)
+			s, err := a.LinkDevice(cmd.Context(), func(url, code string, expires time.Time) {
+				g.say("Open %s and approve the code %s (valid until %s).", url, code, expires.Local().Format(time.TimeOnly))
+			})
 			if err != nil {
 				return err
 			}
-			g.say("Open %s and approve the code %s (valid until %s).", code.URL(), code.Code, code.Expires.Local().Format(time.TimeOnly))
-			ctx, cancel := context.WithDeadline(cmd.Context(), code.Expires)
-			defer cancel()
-			linked, err := c.WaitDevice(ctx, code, 0)
-			if err != nil {
-				return err
-			}
-			for _, in := range a.Cfg.Instances {
-				p := a.Cfg.InstanceDir(in.Name) + "/root/_local/.credentials.json"
-				if err := auth.WriteCredentials(p, linked); err != nil {
-					return err
-				}
-				_ = chownR(a.Cfg.InstanceDir(in.Name)+"/root", a.Cfg.UID)
-			}
-			g.say("Linked as %s; credentials stored for %d server(s).", linked.Session.Username, len(a.Cfg.Instances))
+			g.say("Linked as %s (Discord ID %s); link given to %d server(s). Run `evr-docker server apply` to restart them with it.", s.Username, a.Secrets[config.EnvDiscordID], len(a.Cfg.Instances))
 			return nil
 		},
 	})
 	return cmd
-}
-
-func chownR(dir string, uid int) error {
-	return exec.Command("chown", "-R", fmt.Sprintf("%d:%d", uid, uid), dir).Run()
 }
 
 func configCmd(g *globals) *cobra.Command {
