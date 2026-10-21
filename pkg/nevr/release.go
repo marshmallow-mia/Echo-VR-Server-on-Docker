@@ -59,7 +59,7 @@ func (c *Client) httpClient() *http.Client {
 	if c.HTTP != nil {
 		return c.HTTP
 	}
-	return &http.Client{Timeout: 60 * time.Second}
+	return &http.Client{Timeout: 30 * time.Second}
 }
 
 type ghRelease struct {
@@ -96,9 +96,25 @@ func (c *Client) List(ctx context.Context) ([]Release, error) {
 	if c.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
 	}
-	resp, err := c.httpClient().Do(req)
-	if err != nil {
-		return nil, err
+	// GitHub occasionally times out; retry network errors and 5xx.
+	var resp *http.Response
+	for attempt := 0; ; attempt++ {
+		resp, err = c.httpClient().Do(req)
+		if err == nil && resp.StatusCode < 500 {
+			break
+		}
+		if err == nil {
+			resp.Body.Close()
+			err = fmt.Errorf("GitHub releases: %s", resp.Status)
+		}
+		if attempt == 3 || ctx.Err() != nil {
+			return nil, err
+		}
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(time.Duration(attempt+1) * 3 * time.Second):
+		}
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
