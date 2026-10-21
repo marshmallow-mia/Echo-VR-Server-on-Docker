@@ -100,7 +100,7 @@ func (a *App) Login(ctx context.Context) (auth.Session, error) {
 		return a.refreshDevice(ctx)
 	}
 	if m := a.Secrets.Missing(a.DeviceLinked()); len(m) > 0 {
-		return auth.Session{}, fmt.Errorf("account not configured: %v missing (run: evr-docker account set)", m)
+		return auth.Session{}, fmt.Errorf("%w (%v missing)", ErrNoAccount, m)
 	}
 	return a.Auth().Login(ctx, a.Secrets[config.EnvDiscordID], a.Secrets[config.EnvPassword])
 }
@@ -261,7 +261,7 @@ func (a *App) Apply(ctx context.Context, force bool, progress func(string)) ([]s
 		}
 	}
 	if m := a.Secrets.Missing(a.DeviceLinked()); len(m) > 0 && len(a.Cfg.Instances) > 0 {
-		return nil, fmt.Errorf("account not configured: %v missing (run: evr-docker account set)", m)
+		return nil, fmt.Errorf("%w (%v missing)", ErrNoAccount, m)
 	}
 	servers, err := a.Servers(ctx)
 	if err != nil {

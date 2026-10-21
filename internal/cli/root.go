@@ -5,6 +5,7 @@ package cli
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -64,12 +65,26 @@ runtimes and per-server data in /srv/echovr.`,
 		configCmd(g), exportCmd(g), agentCmd(g), updateCmd(g), migrateCmd(g))
 	if err := root.ExecuteContext(ctx); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
+		if hint := hintFor(err); hint != "" {
+			fmt.Fprintln(os.Stderr, hint)
+		}
 		return 1
 	}
 	return 0
 }
 
 func (g *globals) app() (*core.App, error) { return core.Open(g.configDir) }
+
+// hintFor names the command that fixes err; the TUI shows keys instead.
+func hintFor(err error) string {
+	switch {
+	case errors.Is(err, hostcfg.ErrNotInitialized):
+		return "Set up with: evr-docker (the wizard) or evr-docker init --help"
+	case errors.Is(err, core.ErrNoAccount), errors.Is(err, core.ErrDeviceLink):
+		return "Sign in with: evr-docker account link (no password), or evr-docker account set (Discord ID and password)"
+	}
+	return ""
+}
 
 // print writes v as JSON with --json, otherwise calls text.
 func (g *globals) print(v any, text func(w io.Writer)) error {
