@@ -17,14 +17,25 @@ import (
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/version"
 )
+
+// ImageRepo is where the server image is published.
+const ImageRepo = "ghcr.io/marshmallow-mia/echovr-server"
+
+// DefaultImage is the server image released with this build (see SetVersion).
+// It is not written to config.yaml, so updating evr-docker also moves the
+// servers to the matching image; set image there to pin another one.
+var DefaultImage = ImageRepo + ":edge"
+
+// SetVersion selects the image released with tool version v.
+func SetVersion(v string) { DefaultImage = ImageRepo + ":" + version.ImageTag(v) }
 
 // Default locations.
 const (
 	DefaultDir     = "/etc/evr-docker"
 	DefaultDataDir = "/srv/echovr"
 	DefaultProject = "evr"
-	DefaultImage   = "ghcr.io/marshmallow-mia/echovr-server:edge" // switch to :2 with the v2.0.0 release
 	DefaultUID     = 999
 	FirstPort      = 6792
 )
@@ -41,7 +52,7 @@ type Config struct {
 	// only to run several independent setups on one Docker host.
 	Project  string `yaml:"project"`
 	DataDir  string `yaml:"data_dir"`
-	Image    string `yaml:"image"`
+	Image    string `yaml:"image,omitempty"`     // empty = DefaultImage
 	BindIP   string `yaml:"bind_ip,omitempty"`   // host address ports are published on; empty = all
 	PublicIP string `yaml:"public_ip,omitempty"` // expected registration address, for checks
 	UID      int    `yaml:"uid"`                 // user the containers run as
@@ -127,6 +138,9 @@ func Load(dir string) (*Config, error) {
 	if err := yaml.Unmarshal(b, c); err != nil {
 		return nil, fmt.Errorf("%s: %w", p, err)
 	}
+	if c.Image == "" {
+		c.Image = DefaultImage
+	}
 	c.path = p
 	return c, c.Validate()
 }
@@ -142,7 +156,11 @@ func (c *Config) Save(dir string) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	b, err := yaml.Marshal(c)
+	out := *c
+	if out.Image == DefaultImage {
+		out.Image = ""
+	}
+	b, err := yaml.Marshal(&out)
 	if err != nil {
 		return err
 	}

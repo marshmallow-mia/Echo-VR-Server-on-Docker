@@ -9,13 +9,15 @@ for everything the dashboard does.
 
 ## Quick start
 
-On a Debian/Ubuntu host with Docker (`curl -fsSL https://get.docker.com | sh`) and `rsync`:
+On a Debian/Ubuntu host:
 
 ```sh
-curl -fsSL https://github.com/marshmallow-mia/Echo-VR-Server-on-Docker/releases/latest/download/install.sh | sudo sh
+curl -fsSL https://raw.githubusercontent.com/marshmallow-mia/Echo-VR-Server-on-Docker/main/install.sh | sudo sh
 ```
 
-The installer downloads a checksum-verified `evr-docker` binary to `/usr/local/bin` and opens the setup wizard. The wizard asks for:
+The installer downloads a checksum-verified `evr-docker` binary of the newest release to `/usr/local/bin` (a
+pre-release while there is no stable one; `EVR_VERSION=v2.0.0` picks one), offers to install Docker if it is missing,
+and opens the setup wizard. The wizard asks for:
 
 - how the servers sign in to EchoVRCE: a **device link** (you approve a code at echovrce.com/device; no password,
   the Discord ID comes from your account) or your Discord user ID and server password;
@@ -24,6 +26,10 @@ The installer downloads a checksum-verified `evr-docker` binary to `/usr/local/b
 
 It then links or checks the account, downloads and verifies the game and the runtime, and starts the servers.
 Run `evr-docker` again at any time to open the dashboard.
+
+To update `evr-docker`, run the installer again. Each version uses the image released with it
+(`ghcr.io/marshmallow-mia/echovr-server:<version>`), so `evr-docker server apply` then moves the servers to the new
+image, each one after its current match. Set `image:` in `config.yaml` to pin a different one.
 
 Unattended:
 
@@ -132,7 +138,7 @@ Nothing here requires `evr-docker` at run time.
 
 ## Moving from v1
 
-The old setup (`run.sh`, `install.sh`, cron `echo_update.sh`) is still on the `main` branch until v2 is released.
+The old setup (`run.sh`, `install.sh`, cron `echo_update.sh`) is kept on the [`v1`](https://github.com/marshmallow-mia/Echo-VR-Server-on-Docker/tree/v1) branch.
 
 ```sh
 sudo evr-docker migrate detect
