@@ -27,16 +27,8 @@ type Agent struct {
 
 	mu      sync.Mutex
 	samples []metrics.Sample
-	seen    map[string]*memory
+	watcher notify.Watcher
 	host    string
-}
-
-type memory struct {
-	state     string
-	restarts  []time.Time
-	lastRest  int
-	downSince time.Time
-	problem   bool
 }
 
 func (a *Agent) log(f string, args ...any) {
@@ -51,8 +43,8 @@ func (a *Agent) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	a.seen = map[string]*memory{}
 	a.host, _ = os.Hostname()
+	a.watcher.Host, a.watcher.Log = a.host, func(s string) { a.log("%s", s) }
 	if app.Cfg.Metrics.Listen != "" {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", metrics.Handler(a.snapshot))
@@ -110,79 +102,20 @@ func (a *Agent) watch(ctx context.Context, app *core.App) {
 		a.log("listing servers: %v", err)
 		return
 	}
-	n := notifier(app)
 	var samples []metrics.Sample
-	now := time.Now()
+	var obs []notify.Observation
 	for _, s := range servers {
-		name := s.Instance.Name
-		st := status.Status{Instance: name, Port: s.Instance.Port}
+		st := status.Status{Instance: s.Instance.Name, Port: s.Instance.Port}
 		if s.Status != nil {
 			st = *s.Status
 		}
 		samples = append(samples, metrics.Sample{Status: st, Running: s.Running()})
-		if _, configured := app.Cfg.Instance(name); !configured {
-			continue
-		}
-		m := a.seen[name]
-		if m == nil {
-			m = &memory{state: s.State(), lastRest: st.Restarts}
-			a.seen[name] = m
-			continue
-		}
-		state := s.State()
-		fields := map[string]string{"Server": name, "Port": fmt.Sprint(s.Instance.Port), "Runtime": st.RuntimeVersion}
-		send := func(ev notify.Event) {
-			ev.Host, ev.Fields = a.host, fields
-			if err := n.Send(ctx, ev); err != nil {
-				a.log("webhook: %v", err)
-			}
-		}
-		if state != m.state {
-			a.log("%s: %s → %s", name, m.state, state)
-			switch {
-			case state == "failed":
-				kind, title := notify.EventServerFailed, name+" stopped: "+st.Reason
-				if st.Reason == "bad_credentials" {
-					kind, title = notify.EventCredentialsFailed, name+": the backend rejected the account"
-				}
-				m.problem = true
-				send(notify.Event{Kind: kind, Level: notify.Critical, Title: title, Text: st.LastError + "\nFix the settings, then restart the server."})
-			case state == "registered" && m.problem:
-				m.problem = false
-				send(notify.Event{Kind: notify.EventServerRecovered, Level: notify.Good, Title: name + " is back", Text: fmt.Sprintf("Registered as %s:%d.", st.PublicIP, st.Port)})
-			}
-			m.state = state
-		}
-		if st.Restarts > m.lastRest {
-			for i := m.lastRest; i < st.Restarts; i++ {
-				m.restarts = append(m.restarts, now)
-			}
-		}
-		m.lastRest = st.Restarts
-		recent := m.restarts[:0]
-		for _, t := range m.restarts {
-			if now.Sub(t) < 15*time.Minute {
-				recent = append(recent, t)
-			}
-		}
-		m.restarts = recent
-		// Normal operation restarts once per match; flag only quick, failed restarts.
-		if len(recent) >= 5 && st.SessionsTotal == 0 && st.LastError != "" {
-			m.problem = true
-			send(notify.Event{Kind: notify.EventCrashLoop, Level: notify.Warning, Title: name + " keeps restarting",
-				Text: fmt.Sprintf("%d restarts in 15 minutes. Last error: %s", len(recent), st.LastError)})
-		}
-		if !s.Running() && !s.Instance.Disabled {
-			if m.downSince.IsZero() {
-				m.downSince = now
-			} else if now.Sub(m.downSince) > time.Minute && !m.problem {
-				m.problem = true
-				send(notify.Event{Kind: notify.EventServerDown, Level: notify.Critical, Title: name + " is not running", Text: "Container state: " + state})
-			}
-		} else {
-			m.downSince = time.Time{}
+		if _, configured := app.Cfg.Instance(s.Instance.Name); configured {
+			obs = append(obs, notify.Observation{Name: s.Instance.Name, State: s.State(), Status: st, Running: s.Running(), Enabled: !s.Instance.Disabled, Port: s.Instance.Port})
 		}
 	}
+	a.watcher.Notifier = notifier(app)
+	a.watcher.Observe(ctx, obs)
 	a.mu.Lock()
 	a.samples = samples
 	a.mu.Unlock()
