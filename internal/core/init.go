@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
 
@@ -62,11 +64,10 @@ func LoadAnswers(path string) (Answers, error) {
 // Validate checks answers before anything is changed.
 func (an *Answers) Validate() error {
 	var errs []error
-	if an.Account.DiscordID == "" || strings.Trim(an.Account.DiscordID, "0123456789") != "" {
+	// Without a password the host signs in with an echovrce.com device link
+	// during setup, and the Discord ID comes from the backend.
+	if an.Account.Password != "" && (an.Account.DiscordID == "" || strings.Trim(an.Account.DiscordID, "0123456789") != "") {
 		errs = append(errs, errors.New("account.discord_id must be your numeric Discord user ID"))
-	}
-	if an.Account.Password == "" {
-		errs = append(errs, errors.New("account.password is required (the server password set with the EchoVRCE bot)"))
 	}
 	if an.Servers < 0 || an.Servers > 64 {
 		errs = append(errs, errors.New("servers must be between 0 and 64"))
@@ -133,19 +134,42 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	if err != nil {
 		return nil, err
 	}
-	sec[config.EnvDiscordID] = an.Account.DiscordID
-	sec[config.EnvPassword] = an.Account.Password
+	if an.Account.DiscordID != "" {
+		sec[config.EnvDiscordID] = an.Account.DiscordID
+	}
+	if an.Account.Password != "" {
+		sec[config.EnvPassword] = an.Account.Password
+	}
 	if an.Account.HTTPKey != "" {
 		sec[config.EnvHTTPKey] = an.Account.HTTPKey
 	}
 	a := &App{Dir: dir, Cfg: cfg, Secrets: sec}
 
-	say("Account", "checking the EchoVRCE login")
-	if s, err := a.Login(ctx); err != nil {
-		return nil, fmt.Errorf("account check: %w", err)
-	} else if len(s.HostGuilds()) == 0 {
-		say("Account", "warning: this account has the server host role in no guild; servers will register but get no matches")
+	var s auth.Session
+	if an.Account.Password == "" && !a.DeviceLinked() {
+		say("Account", "no password: linking this host at echovrce.com/device")
+		say("Account", ResetPasswordNote)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return nil, err
+		}
+		s, err = a.LinkDevice(ctx, func(url, code string, expires time.Time) {
+			say("Account", "open "+url+" and approve the code "+code+" (valid until "+expires.Local().Format(time.TimeOnly)+")")
+		})
+		if err != nil {
+			return nil, fmt.Errorf("device link: %w", err)
+		}
 	} else {
+		say("Account", "checking the EchoVRCE login")
+		if s, err = a.Login(ctx); err != nil {
+			return nil, fmt.Errorf("account check: %w", err)
+		}
+	}
+	switch {
+	case !s.MembershipsKnown:
+		say("Account", s.Username+" signed in with the device link")
+	case len(s.HostGuilds()) == 0:
+		say("Account", "warning: this account has the server host role in no guild; servers will register but get no matches")
+	default:
 		say("Account", fmt.Sprintf("%s can host for %d guild(s)", s.Username, len(s.HostGuilds())))
 	}
 	if err := os.MkdirAll(cfg.DataDir, 0o755); err != nil {

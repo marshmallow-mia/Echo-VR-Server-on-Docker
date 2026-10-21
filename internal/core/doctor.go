@@ -138,8 +138,8 @@ func parentDir(p string) string {
 }
 
 func (a *App) accountCheck(ctx context.Context) Check {
-	if m := a.Secrets.Missing(); len(m) > 0 {
-		return check("account", Fail, fmt.Sprintf("%v not set", m), "evr-docker account set")
+	if m := a.Secrets.Missing(a.DeviceLinked()); len(m) > 0 {
+		return check("account", Fail, fmt.Sprintf("%v not set", m), "evr-docker account link (or account set for a password)")
 	}
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
@@ -149,6 +149,8 @@ func (a *App) accountCheck(ctx context.Context) Check {
 		return check("account", Fail, err.Error(), "evr-docker account set")
 	case err != nil:
 		return check("account", Warn, "cannot reach the backend: "+err.Error(), "")
+	case !s.MembershipsKnown:
+		return check("account", OK, s.Username+" signed in with the device link ("+s.HostSummary()+")", "")
 	case len(s.HostGuilds()) == 0:
 		return check("account", Warn, s.Username+" signed in, but has the server host role in no guild", "ask a guild admin for the ServerHost role, or servers get no matches")
 	default:

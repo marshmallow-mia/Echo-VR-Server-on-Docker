@@ -16,7 +16,6 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
 )
@@ -83,6 +82,7 @@ func (m *model) startWizard() {
 	an.Game.Source = "mirror"
 	an.PublicIP = "auto"
 	servers, firstPort, regions := "2", strconv.Itoa(hostcfg.FirstPort), ""
+	signIn := "device"
 	bindChoices := []huh.Option[string]{huh.NewOption("all addresses (0.0.0.0)", "")}
 	for _, ip := range core.HostIPs() {
 		bindChoices = append(bindChoices, huh.NewOption(ip, ip))
@@ -95,11 +95,18 @@ func (m *model) startWizard() {
 					"Everything can be changed later, here or with the evr-docker command."),
 		),
 		huh.NewGroup(
-			huh.NewInput().Title("Discord user ID").Description("The account that hosts the servers (Discord → Settings → Advanced → Developer mode, then copy your ID).").
+			huh.NewSelect[string]().Title("How should the servers sign in?").Options(
+				huh.NewOption("Device link at echovrce.com/device (recommended, no password)", "device"),
+				huh.NewOption("Discord ID and server password", "password"),
+			).Value(&signIn),
+			huh.NewNote().Title("Device link").Description(core.ResetPasswordNote+"\nThe code to approve is shown during setup."),
+		).Title("EchoVRCE account"),
+		huh.NewGroup(
+			huh.NewInput().Title("Discord user ID").Description("Discord → Settings → Advanced → Developer mode, then copy your ID.").
 				Value(&an.Account.DiscordID).Validate(digits),
 			huh.NewInput().Title("Server password").Description("The password you set for hosting with the EchoVRCE bot.").
 				EchoMode(huh.EchoModePassword).Value(&an.Account.Password).Validate(notEmpty("the password")),
-		).Title("EchoVRCE account"),
+		).Title("Password sign-in").WithHideFunc(func() bool { return signIn != "password" }),
 		huh.NewGroup(
 			huh.NewInput().Title("How many servers?").Value(&servers).Validate(intRange(0, 64)),
 			huh.NewInput().Title("First UDP port").Description("Servers use consecutive ports from here. Forward them 1:1 (same numbers) if the host is behind NAT.").
@@ -124,6 +131,9 @@ func (m *model) startWizard() {
 	m.form = f.WithTheme(huh.ThemeFunc(huh.ThemeCharm)).WithShowHelp(true).WithWidth(90)
 	m.screen, m.back = scrForm, scrDashboard
 	m.onSubmit = func() tea.Cmd {
+		if signIn == "device" {
+			an.Account.DiscordID, an.Account.Password = "", ""
+		}
 		an.Servers, _ = strconv.Atoi(servers)
 		an.FirstPort, _ = strconv.Atoi(firstPort)
 		an.Regions = splitList(regions)
@@ -444,7 +454,7 @@ func (m *model) updateAccount(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 					return err
 				}
-				say(fmt.Sprintf("signed in as %s, host role in %d guild(s)", s.Username, len(s.HostGuilds())))
+				say(fmt.Sprintf("signed in as %s, %s", s.Username, s.HostSummary()))
 				if err := app.Secrets.Save(app.Dir); err != nil {
 					return err
 				}
@@ -455,29 +465,18 @@ func (m *model) updateAccount(msg tea.Msg) (tea.Model, tea.Cmd) {
 		})
 	case "l":
 		return m, m.run("Linking at echovrce.com/device", func(ctx context.Context, say func(string)) error {
-			c := app.Auth()
-			code, err := c.RequestDevice(ctx)
+			say(core.ResetPasswordNote)
+			s, err := app.LinkDevice(ctx, func(url, code string, expires time.Time) {
+				say("Open " + url)
+				say("and approve the code " + code + " (valid until " + expires.Local().Format(time.TimeOnly) + ")")
+				say("waiting …")
+			})
 			if err != nil {
 				return err
 			}
-			say("Open " + code.URL())
-			say("and approve the code " + code.Code + " (valid until " + code.Expires.Local().Format(time.TimeOnly) + ")")
-			say("waiting …")
-			ctx, cancel := context.WithDeadline(ctx, code.Expires)
-			defer cancel()
-			linked, err := c.WaitDevice(ctx, code, 0)
-			if err != nil {
-				return err
-			}
-			for _, in := range app.Cfg.Instances {
-				p := app.Cfg.InstanceDir(in.Name) + "/root/_local/.credentials.json"
-				if err := auth.WriteCredentials(p, linked); err != nil {
-					return err
-				}
-			}
-			say(fmt.Sprintf("linked as %s; refresh token stored for %d server(s)", linked.Session.Username, len(app.Cfg.Instances)))
+			say(fmt.Sprintf("linked as %s; link given to %d server(s) (apply the configuration to restart them with it)", s.Username, len(app.Cfg.Instances)))
 			return nil
-		}, nil)
+		}, func() tea.Cmd { m.screen, m.account = scrAccount, nil; return m.loadAccount() })
 	}
 	return m, nil
 }
@@ -494,7 +493,9 @@ func (m *model) renderAccount() string {
 	default:
 		fmt.Fprintf(&b, "Signed in as %s  %s\n\n", ui.Bold.Render(a.session.Username), ui.Subtle.Render(a.session.UserID))
 		guilds := a.session.HostGuilds()
-		if len(guilds) == 0 {
+		if !a.session.MembershipsKnown {
+			b.WriteString(ui.Subtle.Render("Signed in with the device link; "+a.session.HostSummary()+".") + "\n")
+		} else if len(guilds) == 0 {
 			b.WriteString(ui.Warning.Render("No guild gives this account the server host role: servers register but get no matches.") + "\n")
 		} else {
 			fmt.Fprintf(&b, "Can host for %d guild(s):\n", len(guilds))
@@ -507,7 +508,7 @@ func (m *model) renderAccount() string {
 			fmt.Fprintf(&b, "  %s  %-12s %-11s players %d\n", s.CreatedAt.Local().Format(time.DateTime), s.Region, s.LobbyType, s.Players)
 		}
 	}
-	b.WriteString("\n" + ui.Subtle.Render("The device link is optional: servers still need the password (nevr-runtime 5.4.2).") + "\n")
+	b.WriteString("\n" + ui.Subtle.Render("Sign in without a password with l (device link).") + "\n")
 	b.WriteString(m.footer(ui.K("p", "change account"), ui.K("l", "link device"), ui.K("r", "refresh"), ui.K("esc", "back")))
 	return b.String()
 }
