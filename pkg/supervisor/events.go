@@ -1,0 +1,146 @@
+package supervisor
+
+import (
+	"encoding/json"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+// Kind is a log event the supervisor reacts to.
+type Kind int
+
+const (
+	KindNone Kind = iota
+	KindRuntimeVersion
+	KindLoginSuccess
+	KindLoginFailed
+	KindAuthenticated
+	KindBound
+	KindServerDBError
+	KindRegistered
+	KindSessionStart
+	KindSessionEnd
+	KindTeardown
+	KindShutdown
+	KindFatal
+)
+
+func (k Kind) String() string {
+	return [...]string{"none", "runtime_version", "login_success", "login_failed", "authenticated", "bound",
+		"serverdb_error", "registered", "session_start", "session_end", "teardown", "shutdown", "fatal"}[k]
+}
+
+// Reason classifies a fatal error; retryable reasons get a restart with
+// backoff, the others stop the instance until its settings change.
+type Reason string
+
+const (
+	ReasonNone           Reason = ""
+	ReasonBadCredentials Reason = "bad_credentials"
+	ReasonUDPUnreachable Reason = "udp_unreachable"
+	ReasonInvalidConfig  Reason = "invalid_config"
+	ReasonRegistration   Reason = "registration_rejected"
+	ReasonOther          Reason = "fatal"
+)
+
+// Retryable reports whether restarting can help.
+func (r Reason) Retryable() bool {
+	return r != ReasonBadCredentials && r != ReasonInvalidConfig
+}
+
+// Event is one interesting log line.
+type Event struct {
+	Kind    Kind
+	Line    string
+	Port    int    // KindBound, KindRegistered
+	IP      string // KindRegistered: address Nakama saw
+	Session string // KindSessionStart/End
+	Version string // KindRuntimeVersion
+	Reason  Reason // KindFatal, KindLoginFailed
+}
+
+var (
+	ansiRe       = regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	versionRe    = regexp.MustCompile(`NEVR-BUILD (\S+)`)
+	boundRe      = regexp.MustCompile(`Dedicated: broadcaster initialized at \[[^\]:]*:(\d+)\]`)
+	registeredRe = regexp.MustCompile(`Dedicated: registered as \S+ at \[[^/\]]*/([^:\]]+):(\d+)\]`)
+	sessionRe    = regexp.MustCompile(`session_id=(\S+)`)
+)
+
+// Clean strips colour codes and a JSONL wrapper so every source yields the same text.
+func Clean(raw string) string {
+	s := strings.TrimRight(ansiRe.ReplaceAllString(raw, ""), "\r\n")
+	if strings.HasPrefix(s, "{") && strings.Contains(s, `"msg"`) {
+		var rec struct {
+			Msg string `json:"msg"`
+		}
+		if json.Unmarshal([]byte(s), &rec) == nil && rec.Msg != "" {
+			s = strings.TrimRight(rec.Msg, "\r\n")
+		}
+	}
+	return s
+}
+
+// Parse classifies one log line. Lines that do not matter return KindNone.
+func Parse(raw string) Event {
+	line := Clean(raw)
+	ev := Event{Line: line}
+	switch {
+	case strings.Contains(line, "NEVR-BUILD "):
+		if m := versionRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.Version = KindRuntimeVersion, m[1]
+		}
+	case strings.Contains(line, "[NEVR.WS] LOGIN SUCCESS"):
+		ev.Kind = KindLoginSuccess
+	case strings.Contains(line, "[NEVR.WS] login failed status="):
+		ev.Kind, ev.Reason = KindLoginFailed, ReasonBadCredentials
+	case strings.Contains(line, "[NEVR.GAMESERVER] Server authenticated"),
+		strings.Contains(line, "ServerDB auth via refreshed OAuth2 token"):
+		ev.Kind = KindAuthenticated
+	case strings.Contains(line, "Dedicated: broadcaster initialized at"):
+		if m := boundRe.FindStringSubmatch(line); m != nil {
+			ev.Kind = KindBound
+			ev.Port, _ = strconv.Atoi(m[1])
+		}
+	case strings.Contains(line, "[NEVR.SERVERDB] Connection error"):
+		ev.Kind = KindServerDBError
+	case strings.Contains(line, "Dedicated: registered as"):
+		if m := registeredRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.IP = KindRegistered, m[1]
+			ev.Port, _ = strconv.Atoi(m[2])
+		}
+	case strings.Contains(line, "[NEVR.GAMESERVER] session starting"):
+		ev.Kind = KindSessionStart
+		if m := sessionRe.FindStringSubmatch(line); m != nil {
+			ev.Session = m[1]
+		}
+	case strings.Contains(line, "session ended by ServerDB"):
+		ev.Kind = KindSessionEnd
+		if m := sessionRe.FindStringSubmatch(line); m != nil {
+			ev.Session = m[1]
+		}
+	case strings.Contains(line, "CTRL+C teardown complete"):
+		ev.Kind = KindTeardown
+	case strings.Contains(line, "Graceful shutdown complete"), strings.Contains(line, "Graceful shutdown initiated"):
+		ev.Kind = KindShutdown
+	case strings.Contains(line, "[NEVR.FATAL]"):
+		ev.Kind, ev.Reason = KindFatal, classifyFatal(line)
+	}
+	return ev
+}
+
+func classifyFatal(line string) Reason {
+	switch {
+	case strings.Contains(line, "HTTP 401"), strings.Contains(line, "no valid token"):
+		return ReasonBadCredentials
+	case strings.Contains(line, "registration rejected") && strings.Contains(line, "code=10"):
+		return ReasonUDPUnreachable
+	case strings.Contains(line, "registration rejected"):
+		return ReasonRegistration
+	case strings.Contains(line, "config.yaml"), strings.Contains(line, "socket_uri"),
+		strings.Contains(line, "missing config keys"), strings.Contains(line, "session_router"):
+		return ReasonInvalidConfig
+	}
+	return ReasonOther
+}
