@@ -127,12 +127,22 @@ func options() (supervisor.Options, error) {
 		}
 		return o, nil
 	}
+	// A device link (refresh token from echovrce.com/device) can stand in for
+	// the password.
+	linked := false
+	if _, err := os.Stat(filepath.Join(o.Home, "root", "_local", ".credentials.json")); err == nil {
+		linked = true
+	}
 	for _, k := range []string{config.EnvDiscordID, config.EnvPassword, config.EnvHTTPKey} {
-		if strings.TrimSpace(os.Getenv(k)) == "" {
+		if strings.TrimSpace(os.Getenv(k)) == "" && !(k == config.EnvPassword && linked) {
 			return o, fmt.Errorf("%s is not set (EchoVRCE host account)", k)
 		}
 	}
 	c := config.Default()
+	if strings.TrimSpace(os.Getenv(config.EnvPassword)) == "" {
+		c.Auth.Password, c.DeviceLinked = "", true
+		fmt.Println("[evr] no password set: signing in with the device link in _local/.credentials.json")
+	}
 	c.Services.SocketURI = env("NEVR_SOCKET_URI", c.Services.SocketURI)
 	c.Services.ServerDBURI = env("NEVR_SERVERDB_URI", c.Services.ServerDBURI)
 	c.Auth.HTTPURI = env("NEVR_HTTP_URI", c.Auth.HTTPURI)
