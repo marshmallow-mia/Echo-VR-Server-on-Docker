@@ -230,15 +230,30 @@ func PublicIP(ctx context.Context) (string, error) {
 	return "", errors.New("no answer from api.ipify.org or ifconfig.me")
 }
 
-// HostIPs returns the host's non-loopback IPv4 addresses (for bind_ip choices).
+// HostIPs returns the host's IPv4 addresses that game ports can be published
+// on, leaving out loopback and container/VM bridges.
 func HostIPs() []string {
 	var out []string
-	addrs, _ := net.InterfaceAddrs()
-	for _, a := range addrs {
-		if n, ok := a.(*net.IPNet); ok && n.IP.To4() != nil && !n.IP.IsLoopback() && !strings.HasPrefix(n.IP.String(), "172.17.") {
-			out = append(out, n.IP.String())
+	ifaces, _ := net.Interfaces()
+	for _, ifc := range ifaces {
+		if ifc.Flags&net.FlagUp == 0 || ifc.Flags&net.FlagLoopback != 0 || virtualIface(ifc.Name) {
+			continue
+		}
+		addrs, _ := ifc.Addrs()
+		for _, a := range addrs {
+			if n, ok := a.(*net.IPNet); ok && n.IP.To4() != nil {
+				out = append(out, n.IP.String())
+			}
 		}
 	}
 	return out
 }
 
+func virtualIface(name string) bool {
+	for _, p := range []string{"docker", "br-", "veth", "pterodactyl", "pelican", "virbr", "cni", "flannel", "cali", "lxc", "tailscale", "zt", "wg"} {
+		if strings.HasPrefix(name, p) {
+			return true
+		}
+	}
+	return false
+}
