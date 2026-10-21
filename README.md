@@ -24,6 +24,8 @@ and opens the setup wizard. The wizard asks for:
 - how many servers to run and their first UDP port (default 6792);
 - where the game files come from: the public mirror (about 5 GB), a folder that is already on the host, or an archive.
 
+![The setup wizard asking how the servers sign in](docs/images/docker-wizard.svg)
+
 It then links or checks the account, downloads and verifies the game and the runtime, and starts the servers.
 Run `evr-docker` again at any time to open the dashboard.
 
@@ -91,6 +93,8 @@ and how many matches and restarts it has had.
 
 A failed device link can be retried with `l` right away; a running one can be cancelled with `esc`.
 
+![The nevr-runtime screen](docs/images/docker-runtime.svg)
+
 ## Commands
 
 Everything in the dashboard is also a command, and every command is also in the dashboard. Add `--json` for scripts and
@@ -120,6 +124,8 @@ evr-docker config show|edit
 Changes to a server that is hosting a match are applied after the match (or now with `--force`).
 
 ## Updates
+
+![The updates screen](docs/images/docker-updates.svg)
 
 `U` in the dashboard lists every part with the installed and the available version. `enter` updates one (you can pick
 the version), `c` checks again, `s` sets how each part is updated:
