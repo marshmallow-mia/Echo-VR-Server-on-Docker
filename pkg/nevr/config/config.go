@@ -44,7 +44,7 @@ type Config struct {
 	Identity  Identity   `yaml:"identity"`
 	Auth      Auth       `yaml:"auth"`
 	Network   Network    `yaml:"network,omitempty"`
-	Guilds    []string   `yaml:"guilds,omitempty,flow"`
+	Guilds    List       `yaml:"guilds,omitempty,flow"`
 	Telemetry *Telemetry `yaml:"telemetry,omitempty"`
 	Arena     *Arena     `yaml:"arena,omitempty"`
 }
@@ -66,7 +66,7 @@ type Auth struct {
 }
 
 type Network struct {
-	Regions               []string `yaml:"regions,omitempty,flow"`
+	Regions               List     `yaml:"regions,omitempty,flow"`
 	InternalIP            string   `yaml:"internal_ip,omitempty"`
 	ExternalIP            string   `yaml:"external_ip,omitempty"`
 	TickRateHz            int      `yaml:"tick_rate_hz,omitempty"`
@@ -83,6 +83,32 @@ type Arena struct {
 	RoundTime       float64 `yaml:"round_time,omitempty"`
 	CelebrationTime float64 `yaml:"celebration_time,omitempty"`
 	MercyScore      float64 `yaml:"mercy_score,omitempty"`
+}
+
+// List is a YAML list that may also be written as one comma-separated
+// string, as the runtime accepts both ("uwu" or [euw, default]).
+type List []string
+
+// UnmarshalYAML accepts a sequence or a comma-separated scalar.
+func (l *List) UnmarshalYAML(n *yaml.Node) error {
+	switch n.Kind {
+	case yaml.ScalarNode:
+		*l = nil
+		for _, p := range strings.Split(n.Value, ",") {
+			if p = strings.TrimSpace(p); p != "" {
+				*l = append(*l, p)
+			}
+		}
+		return nil
+	case yaml.SequenceNode:
+		var s []string
+		if err := n.Decode(&s); err != nil {
+			return err
+		}
+		*l = s
+		return nil
+	}
+	return fmt.Errorf("line %d: expected a list or a comma-separated string", n.Line)
 }
 
 // EnvRef returns the runtime's required-variable syntax for name.

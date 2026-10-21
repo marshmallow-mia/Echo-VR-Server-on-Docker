@@ -18,6 +18,7 @@ import (
 // Answers drive a non-interactive setup (`evr-docker init --answers f.yaml`)
 // and are what the TUI wizard fills in.
 type Answers struct {
+	Project   string   `yaml:"project,omitempty"`
 	DataDir   string   `yaml:"data_dir,omitempty"`
 	Image     string   `yaml:"image,omitempty"`
 	BindIP    string   `yaml:"bind_ip,omitempty"`
@@ -41,6 +42,8 @@ type Answers struct {
 		Pinned  string `yaml:"pinned,omitempty"`
 	} `yaml:"runtime"`
 	Start bool `yaml:"start"`
+	// Instances are added as-is (used by migrate to keep the old ports).
+	Instances []hostcfg.Instance `yaml:"-"`
 }
 
 // LoadAnswers reads an answers file; secrets may be given as ${ENV} references.
@@ -105,6 +108,9 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	}
 	if an.DataDir != "" {
 		cfg.DataDir = an.DataDir
+	}
+	if an.Project != "" {
+		cfg.Project = an.Project
 	}
 	if an.Image != "" {
 		cfg.Image = an.Image
@@ -183,6 +189,14 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	}
 	say("Runtime", "nevr-runtime "+tag)
 
+	for _, in := range an.Instances {
+		if _, exists := a.Cfg.Instance(in.Name); !exists {
+			a.Cfg.Instances = append(a.Cfg.Instances, in)
+		}
+	}
+	if err := a.Cfg.Validate(); err != nil {
+		return a, err
+	}
 	if n := an.Servers - len(a.Cfg.Instances); n > 0 {
 		if an.FirstPort != 0 && len(a.Cfg.Instances) == 0 {
 			for i := 0; i < n; i++ {
@@ -194,6 +208,9 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 		if err := a.Save(); err != nil {
 			return a, err
 		}
+	}
+	if err := a.Save(); err != nil {
+		return a, err
 	}
 	if an.Start {
 		if _, err := a.Apply(ctx, false, func(s string) { say("Servers", s) }); err != nil {

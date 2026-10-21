@@ -71,3 +71,13 @@ func TestParseRejectsUnknownTopLevel(t *testing.T) {
 		t.Errorf("x- keys must be allowed: %v", err)
 	}
 }
+
+func TestParseListForms(t *testing.T) {
+	c, err := Parse([]byte("network:\n  regions: \"uwu, euw\"\nguilds: [a, b]\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(c.Network.Regions) != 2 || c.Network.Regions[1] != "euw" || len(c.Guilds) != 2 {
+		t.Errorf("%+v %+v", c.Network.Regions, c.Guilds)
+	}
+}
