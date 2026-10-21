@@ -47,7 +47,7 @@ func migrateCmd(g *globals) *cobra.Command {
 		},
 	}
 	run.Flags().StringVar(&gameDir, "game-dir", "", "old ready-at-dawn-echo-arena directory")
-	run.Flags().StringVar(&httpKey, "http-key", "", "backend HTTP key (v1 configs do not have one)")
+	run.Flags().StringVar(&httpKey, "http-key", "", "backend HTTP key (default: the public key)")
 	run.Flags().StringVar(&image, "image", "", "server image to use")
 	run.Flags().StringVar(&project, "project", "", "container name prefix (default evr)")
 	run.Flags().StringVar(&dataDir, "data-dir", "", "where evr-docker keeps game files and server data (default /srv/echovr)")
@@ -74,11 +74,6 @@ func printLegacy(w io.Writer, l core.Legacy) {
 		acct = "Discord ID " + l.DiscordID
 		if l.Password != "" {
 			acct += ", password found"
-		}
-		if l.HasHTTPKey {
-			acct += ", HTTP key found"
-		} else {
-			acct += ", no HTTP key (pass --http-key)"
 		}
 	}
 	fmt.Fprintf(w, "Account:        %s\n", acct)

@@ -30,7 +30,12 @@ const (
 	DefaultSocketURI   = "ws://g.echovrce.com:80/spr"
 	DefaultServerDBURI = "ws://g.echovrce.com:80/nevr"
 	DefaultHTTPURI     = "https://g.echovrce.com:7350"
-	DefaultTickRate    = 120
+	// DefaultHTTPKey is the EchoVRCE backend's public HTTP key. nevr-runtime
+	// embeds it in every client build ("public by design",
+	// config/public-defaults.env.example); servers need it but do not get the
+	// built-in defaults, so it is set explicitly.
+	DefaultHTTPKey  = "1c65a082-6712-4a02-8c6d-23d5c32f7409"
+	DefaultTickRate = 120
 )
 
 // Session router modes accepted by network.session_router; anything else is
@@ -127,7 +132,7 @@ func Default() Config {
 		Version:  1,
 		Services: Services{SocketURI: DefaultSocketURI, ServerDBURI: DefaultServerDBURI},
 		Identity: Identity{DiscordID: EnvRef(EnvDiscordID)},
-		Auth:     Auth{HTTPURI: DefaultHTTPURI, HTTPKey: EnvRef(EnvHTTPKey), Password: EnvRef(EnvPassword)},
+		Auth:     Auth{HTTPURI: DefaultHTTPURI, HTTPKey: DefaultHTTPKey, Password: EnvRef(EnvPassword)},
 		Network:  Network{TickRateHz: DefaultTickRate},
 	}
 }

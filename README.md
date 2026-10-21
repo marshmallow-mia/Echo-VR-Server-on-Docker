@@ -17,7 +17,7 @@ curl -fsSL https://github.com/marshmallow-mia/Echo-VR-Server-on-Docker/releases/
 
 The installer downloads a checksum-verified `evr-docker` binary to `/usr/local/bin` and opens the setup wizard. The wizard asks for:
 
-- your **EchoVRCE host account**: your Discord user ID, the server password you set with the EchoVRCE bot, and the backend HTTP key;
+- your **EchoVRCE host account**: your Discord user ID and the server password you set with the EchoVRCE bot;
 - how many servers to run and their first UDP port (default 6792);
 - where the game files come from: the public mirror (about 5 GB), a folder that is already on the host, or an archive.
 
@@ -28,7 +28,7 @@ Unattended:
 
 ```sh
 echo "$PASSWORD" | sudo evr-docker init --discord-id 123456789012345678 --password-stdin \
-    --http-key "$HTTP_KEY" --servers 2 --regions euw
+    --servers 2 --regions euw
 # or: sudo evr-docker init --answers answers.yaml   (secrets may be ${ENV} references)
 ```
 
@@ -133,7 +133,7 @@ The old setup (`run.sh`, `install.sh`, cron `echo_update.sh`) is still on the `m
 
 ```sh
 sudo evr-docker migrate detect
-sudo evr-docker migrate run --http-key "$HTTP_KEY"
+sudo evr-docker migrate run
 ```
 
 This takes over the account from the old `config.json`/`config.yaml`, imports the game folder (hard-linked, so no

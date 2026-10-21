@@ -30,7 +30,7 @@ type Answers struct {
 	Account   struct {
 		DiscordID string `yaml:"discord_id"`
 		Password  string `yaml:"password"`
-		HTTPKey   string `yaml:"http_key"`
+		HTTPKey   string `yaml:"http_key,omitempty"` // optional; defaults to the public key
 	} `yaml:"account"`
 	Game struct {
 		Source string `yaml:"source"` // mirror (default), dir, archive, skip
@@ -67,9 +67,6 @@ func (an *Answers) Validate() error {
 	}
 	if an.Account.Password == "" {
 		errs = append(errs, errors.New("account.password is required (the server password set with the EchoVRCE bot)"))
-	}
-	if an.Account.HTTPKey == "" {
-		errs = append(errs, errors.New("account.http_key is required"))
 	}
 	if an.Servers < 0 || an.Servers > 64 {
 		errs = append(errs, errors.New("servers must be between 0 and 64"))
@@ -138,7 +135,9 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	}
 	sec[config.EnvDiscordID] = an.Account.DiscordID
 	sec[config.EnvPassword] = an.Account.Password
-	sec[config.EnvHTTPKey] = an.Account.HTTPKey
+	if an.Account.HTTPKey != "" {
+		sec[config.EnvHTTPKey] = an.Account.HTTPKey
+	}
 	a := &App{Dir: dir, Cfg: cfg, Secrets: sec}
 
 	say("Account", "checking the EchoVRCE login")

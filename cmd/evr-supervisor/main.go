@@ -31,7 +31,8 @@ Environment:
   EVR_GAME_DIR             shared game tree (default /opt/echovr/game/current)
   EVR_NEVR_DIR             runtime directory with one folder per tag (default /opt/echovr/nevr)
   NEVR_VERSION             runtime tag or "current" (default current)
-  NEVR_DISCORD_ID, NEVR_PASSWORD, NEVR_HTTP_KEY   EchoVRCE host account (required)
+  NEVR_DISCORD_ID, NEVR_PASSWORD   EchoVRCE host account (password optional with a device link)
+  NEVR_HTTP_KEY            backend HTTP key (default: the public key nevr-runtime embeds)
   NEVR_REGIONS, NEVR_GUILDS                       comma-separated lists (optional)
   NEVR_TICK_RATE (120), NEVR_EMPTY_TTL (0), NEVR_PUBLISHER_LOCK (echovrce)
   NEVR_SOCKET_URI, NEVR_SERVERDB_URI, NEVR_HTTP_URI   backend overrides
@@ -133,7 +134,7 @@ func options() (supervisor.Options, error) {
 	if _, err := os.Stat(filepath.Join(o.Home, "root", "_local", ".credentials.json")); err == nil {
 		linked = true
 	}
-	for _, k := range []string{config.EnvDiscordID, config.EnvPassword, config.EnvHTTPKey} {
+	for _, k := range []string{config.EnvDiscordID, config.EnvPassword} {
 		if strings.TrimSpace(os.Getenv(k)) == "" && !(k == config.EnvPassword && linked) {
 			return o, fmt.Errorf("%s is not set (EchoVRCE host account)", k)
 		}
@@ -146,6 +147,7 @@ func options() (supervisor.Options, error) {
 	c.Services.SocketURI = env("NEVR_SOCKET_URI", c.Services.SocketURI)
 	c.Services.ServerDBURI = env("NEVR_SERVERDB_URI", c.Services.ServerDBURI)
 	c.Auth.HTTPURI = env("NEVR_HTTP_URI", c.Auth.HTTPURI)
+	c.Auth.HTTPKey = env(config.EnvHTTPKey, config.DefaultHTTPKey)
 	if c.Network.TickRateHz, err = intEnv("NEVR_TICK_RATE", config.DefaultTickRate); err != nil {
 		return o, err
 	}
