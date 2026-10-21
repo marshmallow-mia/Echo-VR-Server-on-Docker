@@ -390,7 +390,7 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case "c":
 		channel, pinned := app.Cfg.Runtime.Channel, app.Cfg.Runtime.Pinned
-		auto := app.Cfg.Runtime.AutoUpdate
+		auto := app.Cfg.Updates.Runtime == "auto"
 		f := huh.NewForm(huh.NewGroup(
 			huh.NewSelect[string]().Title("Update channel").Options(
 				huh.NewOption("pre: newest release incl. pre-releases (every 5.x release is one)", "pre"),
@@ -401,7 +401,11 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 			huh.NewConfirm().Title("Update automatically?").Description("Needs the background service (More → Discord alerts and the background service).").Value(&auto),
 		).Title("Runtime updates"))
 		return m, m.showForm(f, scrRuntime, func() tea.Cmd {
-			app.Cfg.Runtime.Channel, app.Cfg.Runtime.Pinned, app.Cfg.Runtime.AutoUpdate = channel, pinned, auto
+			app.Cfg.Runtime.Channel, app.Cfg.Runtime.Pinned = channel, pinned
+			app.Cfg.Updates.Runtime = "notify"
+			if auto {
+				app.Cfg.Updates.Runtime = "auto"
+			}
 			if channel != "pinned" {
 				app.Cfg.Runtime.Pinned = ""
 			}
@@ -424,9 +428,10 @@ func (m *model) renderRuntime() string {
 	if cfg.Channel == "pinned" {
 		policy += " (" + cfg.Pinned + ")"
 	}
-	if cfg.AutoUpdate && agent.ServiceInstalled() {
+	auto := m.app.Cfg.Updates.Runtime == "auto"
+	if auto && agent.ServiceInstalled() {
 		policy += ", automatic updates on"
-	} else if cfg.AutoUpdate {
+	} else if auto {
 		policy += ", automatic updates need the background service (More → Discord alerts and the background service)"
 	} else {
 		policy += ", automatic updates off"

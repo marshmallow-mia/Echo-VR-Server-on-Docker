@@ -227,7 +227,30 @@ func (v Version) Less(o Version) bool {
 	if v.Pre == "" || o.Pre == "" {
 		return v.Pre != "" && o.Pre == ""
 	}
-	return v.Pre < o.Pre
+	return preLess(v.Pre, o.Pre)
+}
+
+// preLess orders pre-release labels as semver does: dot-separated parts,
+// numbers numerically (rc.2 < rc.10), numbers before words.
+func preLess(a, b string) bool {
+	pa, pb := strings.Split(a, "."), strings.Split(b, ".")
+	for i := 0; i < len(pa) && i < len(pb); i++ {
+		if pa[i] == pb[i] {
+			continue
+		}
+		na, ea := strconv.Atoi(pa[i])
+		nb, eb := strconv.Atoi(pb[i])
+		switch {
+		case ea == nil && eb == nil:
+			return na < nb
+		case ea == nil:
+			return true
+		case eb == nil:
+			return false
+		}
+		return pa[i] < pb[i]
+	}
+	return len(pa) < len(pb)
 }
 
 func (v Version) String() string {

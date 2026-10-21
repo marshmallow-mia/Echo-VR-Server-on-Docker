@@ -253,7 +253,7 @@ func runtimeCmd(g *globals) *cobra.Command {
 				if a.Cfg.Runtime.Channel == "pinned" {
 					fmt.Fprintf(w, " (%s)", a.Cfg.Runtime.Pinned)
 				}
-				fmt.Fprintf(w, ", auto update %t\n", a.Cfg.Runtime.AutoUpdate)
+				fmt.Fprintf(w, ", updates: %s\n", a.Cfg.Updates.Runtime)
 			})
 		},
 	})

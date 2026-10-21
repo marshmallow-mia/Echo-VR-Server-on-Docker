@@ -21,6 +21,7 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/supervisor"
 	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/updates"
 )
 
 // Run starts the TUI. Without a configuration it opens the setup wizard.
@@ -29,6 +30,9 @@ func Run(ctx context.Context, dir string) error {
 	_, err := tea.NewProgram(m, tea.WithContext(ctx)).Run()
 	if errors.Is(err, tea.ErrProgramKilled) || errors.Is(err, context.Canceled) {
 		return nil
+	}
+	if err == nil {
+		return reexecIfUpdated(m)
 	}
 	return err
 }
@@ -44,6 +48,7 @@ const (
 	scrAccount
 	scrDoctor
 	scrInfo
+	scrUpdates
 )
 
 type model struct {
@@ -81,6 +86,11 @@ type model struct {
 
 	infoTitle, infoText string
 
+	updTable    table.Model
+	updComps    []updates.Component
+	updChecking bool
+	reexec      bool
+
 	runtimes []core.RuntimeInfo
 	rtTable  table.Model
 	account  *accountInfo
@@ -105,6 +115,9 @@ func newModel(ctx context.Context, dir string) *model {
 	m.table.SetStyles(tableStyles())
 	m.rtTable = table.New(table.WithColumns([]table.Column{{Title: "VERSION", Width: 12}, {Title: "PUBLISHED", Width: 12}, {Title: "STATE", Width: 20}, {Title: "NOTE", Width: 50}}), table.WithFocused(true), table.WithHeight(8))
 	m.rtTable.SetStyles(tableStyles())
+	m.updTable = table.New(table.WithColumns([]table.Column{{Title: "PART", Width: 14}, {Title: "INSTALLED", Width: 16}, {Title: "AVAILABLE", Width: 34}, {Title: "MODE", Width: 7}, {Title: "NOTE", Width: 30}}),
+		table.WithFocused(true), table.WithHeight(6))
+	m.updTable.SetStyles(tableStyles())
 	m.logs = ui.NewLogView(func(s string) bool { return !supervisor.DefaultFilter(supervisor.Clean(s)) })
 	app, err := core.Open(dir)
 	switch {
@@ -276,6 +289,14 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.migrateForm(msg)
 	case editedMsg:
 		return m, m.afterEdit(msg)
+	case versionsMsg:
+		return m, m.applyForm(msg)
+	case updatesMsg:
+		m.updChecking = false
+		if m.screen == scrUpdates {
+			m.refreshUpdates()
+		}
+		return m, nil
 	case runtimesMsg:
 		m.runtimes = msg.list
 		if msg.err != nil {
@@ -377,6 +398,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		return m, nil
+	case scrUpdates:
+		return m.updateUpdates(msg)
 	case scrInfo:
 		if k, ok := msg.(tea.KeyPressMsg); ok && (k.String() == "esc" || k.String() == "q" || k.String() == "enter") {
 			m.screen = scrDashboard
@@ -468,6 +491,8 @@ func (m *model) updateDashboard(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.addForm()
 	case "m":
 		return m, m.menu()
+	case "U":
+		return m, m.openUpdates()
 	case "e":
 		if hasSel {
 			if _, ok := app.Cfg.Instance(name); ok {
@@ -591,6 +616,8 @@ func (m *model) render() string {
 		return m.renderAccount()
 	case scrDoctor:
 		return m.renderDoctor()
+	case scrUpdates:
+		return m.renderUpdates()
 	case scrInfo:
 		return m.header() + "  " + ui.Bold.Render(m.infoTitle) + "\n\n" + m.infoText + "\n" + ui.HelpBar(ui.K("esc", "back"))
 	}
@@ -612,13 +639,14 @@ func (m *model) render() string {
 	if s, ok := m.selected(); ok && s.Status != nil && s.Status.LastError != "" {
 		detail = "\n" + ui.Subtle.Render(ui.Truncate("last error: "+s.Status.LastError, m.width-2))
 	}
+	detail += m.updatesNotice()
 	if !m.app.HasAccount() {
 		detail += "\n" + ui.Warning.Render("The servers have no EchoVRCE sign-in yet: press ") + ui.KeyStyle.Render("c") + ui.Warning.Render(" to link this host.")
 	}
 	return m.header() + "\n\n" + body + detail + "\n" + m.footer(
 		ui.K("enter", "logs"), ui.K("s", "start"), ui.K("x", "stop"), ui.K("r/R", "restart"),
 		ui.K("a", "add"), ui.K("e", "edit"), ui.K("d", "delete"), ui.K("A", "apply"),
-		ui.K("u", "runtime"), ui.K("c", "account"), ui.K("m", "more"), ui.K("q", "quit"))
+		ui.K("u", "runtime"), ui.K("U", "updates"), ui.K("c", "account"), ui.K("m", "more"), ui.K("q", "quit"))
 }
 
 func (m *model) renderBusy() string {
