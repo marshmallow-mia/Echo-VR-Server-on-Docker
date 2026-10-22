@@ -14,9 +14,25 @@ esac
 [ "$(id -u)" = 0 ] || { echo "run as root (sudo)" >&2; exit 1; }
 if [ -z "$version" ]; then
   api="https://api.github.com/repos/$repo/releases"
-  tag() { sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n 1; }
-  version="$(curl -fsSL "$api/latest" 2>/dev/null | tag)"
-  [ -n "$version" ] || version="$(curl -fsSL "$api?per_page=1" | tag)"
+  tags() { sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p'; }
+  # GitHub does not list releases in version order (rc.10 comes after rc.6),
+  # so sort them: numbers padded, a full release after its pre-releases.
+  newest() {
+    tags | awk '{
+      v = $0; sub(/^v/, "", v); pre = ""
+      if (i = index(v, "-")) { pre = substr(v, i + 1); v = substr(v, 1, i - 1) }
+      split(v, a, "."); key = sprintf("%06d.%06d.%06d", a[1], a[2], a[3])
+      if (pre == "") key = key "~"
+      else {
+        n = split(pre, b, "."); p = ""
+        for (j = 1; j <= n; j++) { if (b[j] ~ /^[0-9]+$/) b[j] = sprintf("%06d", b[j]); p = p (j > 1 ? "." : "") b[j] }
+        key = key "-" p
+      }
+      print key " " $0
+    }' | sort | tail -n 1 | cut -d" " -f2
+  }
+  version="$(curl -fsSL "$api/latest" 2>/dev/null | tags | head -n 1)"
+  [ -n "$version" ] || version="$(curl -fsSL "$api?per_page=100" | newest)"
   [ -n "$version" ] || { echo "no release found for $repo" >&2; exit 1; }
 fi
 base="https://github.com/$repo/releases/download/$version"
