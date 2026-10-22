@@ -182,9 +182,19 @@ sudo evr-docker migrate detect
 sudo evr-docker migrate run
 ```
 
-This takes over the account from the old `config.json`/`config.yaml`, imports the game folder (hard-linked, so no
-second copy), and creates one server per old container on the same port. It then removes the old containers and
-disables the old update cron job. The old game folder is left alone; delete it once everything works.
+The old servers are replaced, not taken over: evr-docker takes the account from the old `config.json`/`config.yaml`,
+imports the game folder (hard-linked, so no second copy), removes the old containers and creates a new server for
+each on the same port. The old update cron job is disabled.
+
+Once the new servers run:
+
+- The old logs (`ready-at-dawn-echo-arena/logs/`) are moved to `/srv/echovr/logs/v1/`. You can also keep them where
+  they are or delete them.
+- You are asked whether to delete the old scripts (`run.sh`, `scripts/`, … and the cron job), the old
+  `ready-at-dawn-echo-arena` image and the old game folder. Nothing is deleted unless you pick it and confirm.
+
+`migrate run --logs move|keep|delete` and `--remove scripts,image,game` answer these up front; without `--remove`
+it asks for each part, and `--yes` alone deletes nothing.
 
 ## Troubleshooting
 

@@ -281,6 +281,25 @@ func (c *Client) ImageID(ctx context.Context, ref string) (string, error) {
 	return raw.ID, err
 }
 
+// Image is a local image.
+type Image struct {
+	ID   string   `json:"Id"`
+	Tags []string `json:"RepoTags"`
+	Size int64    `json:"Size"`
+}
+
+// Images lists local images whose reference matches ref (e.g. "name" or "name:tag").
+func (c *Client) Images(ctx context.Context, ref string) ([]Image, error) {
+	var out []Image
+	err := c.call(ctx, http.MethodGet, "/images/json", url.Values{"filters": {`{"reference":["` + ref + `"]}`}}, nil, &out)
+	return out, err
+}
+
+// RemoveImage deletes a local image and its untagged parents.
+func (c *Client) RemoveImage(ctx context.Context, id string, force bool) error {
+	return c.call(ctx, http.MethodDelete, "/images/"+id, url.Values{"force": {fmt.Sprint(force)}}, nil, nil)
+}
+
 // Pull pulls an image, reporting progress lines to progress (may be nil).
 func (c *Client) Pull(ctx context.Context, ref string, progress func(string)) error {
 	image, tag, _ := strings.Cut(ref, "@")

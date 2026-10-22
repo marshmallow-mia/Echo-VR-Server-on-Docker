@@ -4,15 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 )
 
 func migrateCmd(g *globals) *cobra.Command {
 	cmd := &cobra.Command{Use: "migrate", Short: "Move a v1 (bash run.sh) installation to evr-docker"}
-	var gameDir, httpKey, image, dataDir, project string
+	var gameDir, httpKey, image, dataDir, project, logs string
+	var remove []string
 	detect := &cobra.Command{
 		Use: "detect", Short: "Show what a migration would take over",
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -36,12 +42,24 @@ func migrateCmd(g *globals) *cobra.Command {
 				return errors.New("no v1 installation found (try --game-dir)")
 			}
 			printLegacy(g.out, l)
-			if !g.confirm("Stop the old containers and set up evr-docker with these settings?") {
+			opts := core.MigrateOptions{Logs: logs, Remove: remove}
+			// Deleting is never implied by --yes: without --remove, ask for each part.
+			if !cmd.Flags().Changed("remove") && !g.yes && term.IsTerminal(int(os.Stdin.Fd())) {
+				for _, c := range l.Removable() {
+					if g.confirm(fmt.Sprintf("After the move, delete %s?", c.What)) {
+						opts.Remove = append(opts.Remove, c.Key)
+					}
+				}
+			}
+			if err := opts.Validate(); err != nil {
+				return err
+			}
+			if !g.confirm("Replace the old containers with new evr-docker servers on the same ports?") {
 				return errors.New("cancelled (use --yes)")
 			}
-			_, err = core.Migrate(cmd.Context(), g.configDir, l, httpKey, image, dataDir, project, func(step, detail string) { g.say("[%s] %s", step, detail) })
+			_, err = core.Migrate(cmd.Context(), g.configDir, l, httpKey, image, dataDir, project, opts, func(step, detail string) { g.say("[%s] %s", step, detail) })
 			if err == nil {
-				g.say("\nMigrated. The old game directory %s was left untouched; delete it once you are happy.", l.GameDir)
+				g.say("\nMigrated.")
 			}
 			return err
 		},
@@ -51,6 +69,8 @@ func migrateCmd(g *globals) *cobra.Command {
 	run.Flags().StringVar(&image, "image", "", "server image to use")
 	run.Flags().StringVar(&project, "project", "", "container name prefix (default evr)")
 	run.Flags().StringVar(&dataDir, "data-dir", "", "where evr-docker keeps game files and server data (default /srv/echovr)")
+	run.Flags().StringVar(&logs, "logs", core.LogsMove, "old logs: move (to <data-dir>/"+game.V1LogsDir+"), keep or delete")
+	run.Flags().StringSliceVar(&remove, "remove", nil, "also delete, after the move: scripts, image, game (asked for each when omitted)")
 	cmd.AddCommand(run)
 	return cmd
 }
@@ -79,5 +99,14 @@ func printLegacy(w io.Writer, l core.Legacy) {
 	fmt.Fprintf(w, "Account:        %s\n", acct)
 	if l.CronFile != "" {
 		fmt.Fprintf(w, "Update cron:    %d line(s) in %s will be commented out\n", len(l.CronLines), l.CronFile)
+	}
+	if l.GameDir != "" {
+		fmt.Fprintf(w, "Old logs:       %s (%s)\n", filepath.Join(l.GameDir, "logs"), game.Size(l.LogsSize))
+	}
+	if l.RepoDir != "" {
+		fmt.Fprintf(w, "Old scripts:    %s\n", l.RepoDir)
+	}
+	for _, img := range l.Images {
+		fmt.Fprintf(w, "Old image:      %s (%s)\n", strings.Join(img.Tags, ", "), game.Size(img.Size))
 	}
 }

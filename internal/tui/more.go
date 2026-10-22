@@ -18,6 +18,7 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/agent"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
 )
@@ -262,9 +263,15 @@ func legacySummary(l core.Legacy) string {
 	}
 	fmt.Fprintf(&b, "Account: %s\n", acct)
 	if l.CronFile != "" {
-		fmt.Fprintf(&b, "The old update cron job in %s is turned off.", l.CronFile)
+		fmt.Fprintf(&b, "The old update cron job in %s is turned off.\n", l.CronFile)
 	}
-	return b.String()
+	if l.RepoDir != "" {
+		fmt.Fprintf(&b, "Old scripts: %s\n", l.RepoDir)
+	}
+	if l.GameDir != "" {
+		fmt.Fprintf(&b, "Old logs: %s", game.Size(l.LogsSize))
+	}
+	return strings.TrimSuffix(b.String(), "\n")
 }
 
 func (m *model) migrateForm(msg legacyMsg) tea.Cmd {
@@ -279,12 +286,37 @@ func (m *model) migrateForm(msg legacyMsg) tea.Cmd {
 	m.flash = ""
 	gameDir := msg.l.GameDir
 	confirm := false
-	f := huh.NewForm(huh.NewGroup(
+	logs := core.LogsMove
+	var remove []string
+	var ropts []huh.Option[string]
+	what := map[string]string{}
+	for _, r := range msg.l.Removable() {
+		ropts = append(ropts, huh.NewOption(r.What, r.Key))
+		what[r.Key] = r.What
+	}
+	fields := []huh.Field{
 		huh.NewNote().Title("v1 installation found").Description(legacySummary(msg.l)),
 		huh.NewInput().Title("Old game directory").Description("The folder with bin/win10/echovr.exe; its files are reused, not copied.").Value(&gameDir),
-		huh.NewConfirm().Title("Move it to evr-docker now?").
-			Description("The old containers are stopped and removed; each becomes a server on the same port. The old game folder is left alone.").Value(&confirm),
-	).Title("Move a v1 installation"))
+		huh.NewSelect[string]().Title("Old logs").Options(
+			huh.NewOption("Move them to "+filepath.Join(hostcfg.DefaultDataDir, game.V1LogsDir), core.LogsMove),
+			huh.NewOption("Keep them in the old game folder", core.LogsKeep),
+			huh.NewOption("Delete them", core.LogsDelete),
+		).Value(&logs),
+	}
+	if len(ropts) > 0 {
+		fields = append(fields, huh.NewMultiSelect[string]().Title("Also delete, once the new servers run").
+			Description("Nothing is deleted unless you pick it here.").Options(ropts...).Height(len(ropts)+5).Value(&remove).
+			Validate(func(v []string) error {
+				return core.MigrateOptions{Logs: logs, Remove: v}.Validate()
+			}))
+	}
+	f := huh.NewForm(
+		huh.NewGroup(fields...).Title("Move a v1 installation"),
+		huh.NewGroup(
+			huh.NewConfirm().Title("Move it to evr-docker now?").
+				Description("The old containers are stopped and removed, and a new server is created for each on the same port.").Value(&confirm),
+		),
+	)
 	back := scrDashboard
 	if m.app == nil {
 		back = scrForm
@@ -298,24 +330,50 @@ func (m *model) migrateForm(msg legacyMsg) tea.Cmd {
 			m.setFlash("cancelled", false)
 			return nil
 		}
-		var app *core.App
-		return m.run("Moving the v1 installation", func(ctx context.Context, say func(string)) error {
-			l := msg.l
-			if gameDir != l.GameDir {
-				var err error
-				if l, err = core.DetectLegacy(ctx, gameDir); err != nil {
-					return err
+		start := func(sure bool) tea.Cmd {
+			var app *core.App
+			return m.run("Moving the v1 installation", func(ctx context.Context, say func(string)) error {
+				l := msg.l
+				if gameDir != l.GameDir {
+					var err error
+					if l, err = core.DetectLegacy(ctx, gameDir); err != nil {
+						return err
+					}
 				}
-			}
-			a, err := core.Migrate(ctx, m.dir, l, "", "", "", "", func(step, detail string) { say(step + ": " + detail) })
-			app = a
-			if err == nil {
-				say("Done. The old game folder " + l.GameDir + " was left untouched; delete it once everything works.")
-			}
-			return err
-		}, func() tea.Cmd {
-			m.app = app
-			return m.loadServers()
-		})
+				opts := core.MigrateOptions{Logs: logs}
+				if sure {
+					opts.Remove = remove
+				}
+				a, err := core.Migrate(ctx, m.dir, l, "", "", "", "", opts, func(step, detail string) { say(step + ": " + detail) })
+				app = a
+				if err == nil {
+					say("Done.")
+				}
+				return err
+			}, func() tea.Cmd {
+				m.app = app
+				return m.loadServers()
+			})
+		}
+		if len(remove) == 0 {
+			return start(false)
+		}
+		var items []string
+		for _, k := range remove {
+			items = append(items, what[k])
+		}
+		return m.confirmDelete(items, back, start)
 	})
+}
+
+// confirmDelete asks once more before parts of the old installation are
+// deleted; then runs with whether they may be.
+func (m *model) confirmDelete(items []string, back screen, then func(sure bool) tea.Cmd) tea.Cmd {
+	sure := false
+	f := huh.NewForm(huh.NewGroup(
+		huh.NewConfirm().Title("Delete these for sure, once the new servers run?").
+			Description("• " + strings.Join(items, "\n• ") + "\nThis cannot be undone.").
+			Affirmative("Yes, delete them").Negative("No, keep them").Value(&sure),
+	))
+	return m.showForm(f, back, func() tea.Cmd { return then(sure) })
 }

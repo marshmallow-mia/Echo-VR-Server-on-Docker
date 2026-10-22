@@ -34,6 +34,55 @@ type Legacy struct {
 	HasHTTPKey bool
 	CronFile   string
 	CronLines  []string
+	// RepoDir is the v1 checkout with run.sh and scripts/ ("" if not found).
+	RepoDir string
+	// Images are the old ready-at-dawn-echo-arena images.
+	Images []docker.Image
+	// LogsSize is the size of the old game folder's logs folder.
+	LogsSize int64
+}
+
+// v1RepoEntries are the files of a v1 checkout; anything else in it is kept.
+var v1RepoEntries = []string{".git", ".github", "Dockerfile", "README.md", "files", "install.sh", "rsyncHosts", "run.sh", "scripts"}
+
+// Things a migration can delete afterwards.
+const (
+	RemoveScripts = "scripts"
+	RemoveImage   = "image"
+	RemoveGame    = "game"
+)
+
+// Log handling after a migration.
+const (
+	LogsMove   = "move"
+	LogsKeep   = "keep"
+	LogsDelete = "delete"
+)
+
+// MigrateOptions says what happens to the old installation once the new servers run.
+type MigrateOptions struct {
+	Logs   string   // LogsMove (default), LogsKeep or LogsDelete
+	Remove []string // RemoveScripts, RemoveImage, RemoveGame
+}
+
+// Validate rejects combinations that would lose what was asked to be kept.
+func (o MigrateOptions) Validate() error {
+	switch o.Logs {
+	case "", LogsMove, LogsKeep, LogsDelete:
+	default:
+		return fmt.Errorf("logs must be move, keep or delete, not %q", o.Logs)
+	}
+	for _, r := range o.Remove {
+		switch r {
+		case RemoveScripts, RemoveImage, RemoveGame:
+		default:
+			return fmt.Errorf("can remove scripts, image or game, not %q", r)
+		}
+		if r == RemoveGame && o.Logs == LogsKeep {
+			return errors.New("the old logs are inside the old game folder: move them, or keep the folder")
+		}
+	}
+	return nil
 }
 
 // LegacyContainer is one v1 game server container.
@@ -75,6 +124,9 @@ func DetectLegacy(ctx context.Context, gameDir string) (Legacy, error) {
 			if m.Destination == "/ready-at-dawn-echo-arena" && gameDir == "" {
 				gameDir = m.Source
 			}
+			if m.Destination == "/scripts" && l.RepoDir == "" && isFile(filepath.Join(filepath.Dir(m.Source), "run.sh")) {
+				l.RepoDir = filepath.Dir(m.Source)
+			}
 		}
 		l.Containers = append(l.Containers, lc)
 	}
@@ -87,7 +139,12 @@ func DetectLegacy(ctx context.Context, gameDir string) (Legacy, error) {
 			l.GameOK = true
 		}
 		l.readCredentials(gameDir)
+		l.LogsSize = game.DirSize(filepath.Join(gameDir, "logs"))
+		if parent := filepath.Dir(gameDir); l.RepoDir == "" && isFile(filepath.Join(parent, "run.sh")) {
+			l.RepoDir = parent
+		}
 	}
+	l.Images, _ = d.Images(ctx, LegacyImage)
 	for _, p := range []string{"/var/spool/cron/crontabs/root", "/var/spool/cron/root", "/etc/crontab"} {
 		b, err := os.ReadFile(p)
 		if err != nil {
@@ -133,13 +190,18 @@ func (l *Legacy) readCredentials(gameDir string) {
 	l.HasHTTPKey = l.HTTPKey != ""
 }
 
-// Migrate sets evr-docker up from a v1 installation: same account, the old
-// game files (hard-linked, not copied, when on the same disk), one server per
-// old container on the same port. Old containers are stopped and removed and
-// the old update cron job is commented out.
-func Migrate(ctx context.Context, dir string, l Legacy, httpKey, image, dataDir, project string, say func(string, string)) (*App, error) {
+// Migrate replaces a v1 installation with new evr-docker servers: same
+// account, the old game files (hard-linked, not copied, when on the same
+// disk), one new server per old container on the same port. Old containers
+// are stopped and removed and the old update cron job is commented out.
+// Once the new servers run, opts decides what happens to the old logs,
+// scripts, image and game folder.
+func Migrate(ctx context.Context, dir string, l Legacy, httpKey, image, dataDir, project string, opts MigrateOptions, say func(string, string)) (*App, error) {
 	if !l.GameOK {
 		return nil, fmt.Errorf("no usable v1 game directory: %s", l.GameErr)
+	}
+	if err := opts.Validate(); err != nil {
+		return nil, err
 	}
 	if httpKey == "" {
 		httpKey = l.HTTPKey
@@ -186,18 +248,121 @@ func Migrate(ctx context.Context, dir string, l Legacy, httpKey, image, dataDir,
 		an.Instances = append(an.Instances, hostcfg.Instance{Name: fmt.Sprintf("echo-%d", i+1), Port: port})
 	}
 	an.Start = true
-	return Init(ctx, dir, an, say)
+	app, err := Init(ctx, dir, an, say)
+	if err != nil {
+		return app, err
+	}
+	return app, cleanupLegacy(ctx, l, app.Cfg.DataDir, opts, func(s string) { say("Old installation", s) })
+}
+
+// Removal is a part of a v1 installation that can be deleted after the move.
+type Removal struct{ Key, What string }
+
+// Removable lists what of l can be deleted after the move.
+func (l Legacy) Removable() []Removal {
+	var out []Removal
+	if l.RepoDir != "" {
+		out = append(out, Removal{RemoveScripts, "the old scripts in " + l.RepoDir + " and their cron job"})
+	}
+	if len(l.Images) > 0 {
+		var size int64
+		for _, img := range l.Images {
+			size += img.Size
+		}
+		out = append(out, Removal{RemoveImage, "the old Docker image " + LegacyImage + " (" + game.Size(size) + ")"})
+	}
+	if l.GameDir != "" {
+		out = append(out, Removal{RemoveGame, "the old game folder " + l.GameDir})
+	}
+	return out
+}
+
+// cleanupLegacy moves or deletes the old logs, then removes what opts lists.
+func cleanupLegacy(ctx context.Context, l Legacy, dataDir string, opts MigrateOptions, say func(string)) error {
+	if l.GameDir != "" {
+		switch opts.Logs {
+		case "", LogsMove:
+			dst := filepath.Join(dataDir, game.V1LogsDir)
+			n, err := game.MoveLogs(l.GameDir, dst)
+			if err != nil {
+				return fmt.Errorf("moving the old logs: %w", err)
+			}
+			if n > 0 {
+				say(fmt.Sprintf("moved the old logs to %s", dst))
+			}
+		case LogsDelete:
+			if err := os.RemoveAll(filepath.Join(l.GameDir, "logs")); err != nil {
+				return err
+			}
+			say("deleted the old logs")
+		}
+	}
+	remove := map[string]bool{}
+	for _, r := range opts.Remove {
+		remove[r] = true
+	}
+	if remove[RemoveImage] && len(l.Images) > 0 {
+		d, err := docker.New()
+		if err != nil {
+			return err
+		}
+		for _, img := range l.Images {
+			if err := d.RemoveImage(ctx, img.ID, true); err != nil && !errors.Is(err, docker.ErrNotFound) {
+				return fmt.Errorf("deleting the old image: %w", err)
+			}
+		}
+		say("deleted the old image " + LegacyImage)
+	}
+	if remove[RemoveGame] && l.GameDir != "" {
+		if err := os.RemoveAll(l.GameDir); err != nil {
+			return fmt.Errorf("deleting the old game folder: %w", err)
+		}
+		say("deleted the old game folder " + l.GameDir)
+	}
+	if remove[RemoveScripts] && l.RepoDir != "" {
+		if err := game.RemoveEntries(l.RepoDir, v1RepoEntries); err != nil {
+			return fmt.Errorf("deleting the old scripts: %w", err)
+		}
+		say("deleted the old scripts in " + l.RepoDir)
+		if l.CronFile != "" {
+			if err := dropLines(l.CronFile, "echo_update.sh"); err != nil {
+				return err
+			}
+			say("removed the old cron job from " + l.CronFile)
+		}
+	}
+	return nil
+}
+
+func isFile(p string) bool {
+	fi, err := os.Stat(p)
+	return err == nil && fi.Mode().IsRegular()
+}
+
+// dropLines deletes every line containing needle, commented out or not.
+func dropLines(path, needle string) error {
+	return editLines(path, func(l string) (string, bool) { return l, !strings.Contains(l, needle) })
 }
 
 func commentOut(path, needle string) error {
+	return editLines(path, func(l string) (string, bool) {
+		if strings.Contains(l, needle) && !strings.HasPrefix(strings.TrimSpace(l), "#") {
+			return "# disabled by evr-docker migrate: " + l, true
+		}
+		return l, true
+	})
+}
+
+// editLines rewrites a file line by line; keep=false drops the line.
+func editLines(path string, f func(string) (string, bool)) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	lines := strings.Split(string(b), "\n")
-	for i, l := range lines {
-		if strings.Contains(l, needle) && !strings.HasPrefix(strings.TrimSpace(l), "#") {
-			lines[i] = "# disabled by evr-docker migrate: " + l
+	var lines []string
+	for _, l := range strings.Split(string(b), "\n") {
+		if l, keep := f(l); keep {
+			lines = append(lines, l)
 		}
 	}
 	fi, _ := os.Stat(path)
