@@ -5,6 +5,7 @@ package supervisor
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -522,7 +523,7 @@ func (s *Supervisor) resolveRuntime() (dll, version string, err error) {
 func (s *Supervisor) seedPrefix() error {
 	marker := filepath.Join(s.prefix(), ".evr-seeded")
 	if _, err := os.Stat(marker); err == nil {
-		return nil
+		return s.repairPrefix()
 	}
 	if err := os.MkdirAll(s.prefix(), 0o755); err != nil {
 		return err
@@ -533,7 +534,48 @@ func (s *Supervisor) seedPrefix() error {
 			return fmt.Errorf("copy %s: %v: %s", s.o.PrefixTemplate, err, out)
 		}
 	}
-	return os.WriteFile(marker, nil, 0o644)
+	if err := os.WriteFile(marker, nil, 0o644); err != nil {
+		return err
+	}
+	return s.repairPrefix()
+}
+
+// prefixRegistryKey is one of the keys Wine's setup (wine.inf) writes. The
+// image's template lost its registry up to v2.1.0 (wineserver was not waited
+// for), yet its .update-timestamp tells Wine the setup ran, so Wine never runs
+// it: nevr-runtime 6.x's host then cannot check the runtime's signature
+// (exit 78, "does not parse as PKCS#7").
+const prefixRegistryKey = `[Software\\Microsoft\\Cryptography\\OID`
+
+func prefixComplete(prefix string) bool {
+	b, err := os.ReadFile(filepath.Join(prefix, "system.reg"))
+	return err == nil && bytes.Contains(b, []byte(prefixRegistryKey))
+}
+
+// repairPrefix runs Wine's setup in a prefix that is marked as set up but has
+// no registry from it.
+func (s *Supervisor) repairPrefix() error {
+	if _, err := os.Stat(filepath.Join(s.prefix(), ".update-timestamp")); err != nil || prefixComplete(s.prefix()) {
+		return nil
+	}
+	s.logf("the Wine prefix has no registry (made from an older image): running Wine's setup once")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	env := append(os.Environ(), "WINEPREFIX="+s.prefix(), "WINEDEBUG=-all", "WINEDLLOVERRIDES=mscoree,mshtml=")
+	boot := exec.CommandContext(ctx, s.o.Wine, "wineboot", "-u")
+	boot.Env = env
+	out, err := boot.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("wineboot -u: %v: %s", err, bytes.TrimSpace(out))
+	}
+	// The registry reaches system.reg when the prefix's wineserver exits.
+	wait := exec.CommandContext(ctx, "wineserver", "-w")
+	wait.Env = env
+	_ = wait.Run()
+	if !prefixComplete(s.prefix()) {
+		return errors.New("Wine's setup did not write the registry (system.reg)")
+	}
+	return nil
 }
 
 func (s *Supervisor) wineserverKill() {

@@ -37,7 +37,12 @@ ENV WINEDEBUG=-all \
 RUN useradd -u 999 -m -d /home/container container \
  && install -d -o container /opt/wine-template /opt/echovr
 USER container
-RUN WINEPREFIX=/opt/wine-template wineboot -i && wineserver -w
+# wineserver -w must wait for the template's own wineserver: it writes the
+# registry when it exits, and the build would otherwise end first and keep a
+# prefix without it (nevr-runtime 6.x's host then refuses the runtime).
+RUN export WINEPREFIX=/opt/wine-template \
+ && wineboot -i && wineserver -w \
+ && grep -qF '[Software\\Microsoft\\Cryptography\\OID' "$WINEPREFIX/system.reg"
 USER root
 COPY --from=build /out/evr-supervisor /usr/local/bin/evr-supervisor
 COPY LICENSE /usr/share/doc/evr/LICENSE
