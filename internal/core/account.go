@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
@@ -19,7 +20,30 @@ var (
 	ErrNoAccount = errors.New("the servers have no EchoVRCE sign-in yet")
 	// ErrDeviceLink marks a device link that did not complete.
 	ErrDeviceLink = errors.New("device link failed")
+	// ErrPasswordRequired means a setup has no password and the device link
+	// is off.
+	ErrPasswordRequired = errors.New("nevr-runtime 6.x needs the host account's server password: pass --discord-id and --password-stdin (--device-link links this host instead, nevr-runtime 5.x only)")
+	// ErrDeviceLinkOff means a device link was asked for without the switch.
+	ErrDeviceLinkOff = errors.New("the device link is off (nevr-runtime 6.x refuses a server that has only a device link); run with --device-link or " + DeviceLinkEnv + "=1 to link this host anyway")
 )
+
+// DeviceLinkFlow turns the echovrce.com/device sign-in on (--device-link).
+// nevr-runtime 6.x refuses a server that has only a device link, so the
+// password is the sign-in and a new link is offered or made only with this
+// switch or DeviceLinkEnv. A link that is already stored keeps working.
+var DeviceLinkFlow bool
+
+// DeviceLinkEnv turns the device link on like --device-link ("1" or "true").
+const DeviceLinkEnv = "EVR_DEVICE_LINK"
+
+// DeviceLinkEnabled reports whether new device links are offered.
+func DeviceLinkEnabled() bool {
+	if DeviceLinkFlow {
+		return true
+	}
+	on, _ := strconv.ParseBool(os.Getenv(DeviceLinkEnv))
+	return on
+}
 
 // DeviceFile holds the echovrce.com device link (refresh token), 0600.
 const DeviceFile = "device.json"
@@ -45,6 +69,9 @@ func (a *App) DeviceLinked() bool {
 // LinkDevice runs the echovrce.com/device flow, stores the link, fills in the
 // Discord ID from the backend and gives every server the new link.
 func (a *App) LinkDevice(ctx context.Context, show func(url, code string, expires time.Time)) (auth.Session, error) {
+	if !DeviceLinkEnabled() {
+		return auth.Session{}, ErrDeviceLinkOff
+	}
 	c := a.Auth()
 	code, err := c.RequestDevice(ctx)
 	if err != nil {

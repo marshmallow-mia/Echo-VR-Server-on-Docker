@@ -30,13 +30,20 @@ func initCmd(g *globals) *cobra.Command {
 		Long: `Sets up everything in one go. Without flags in a terminal, the TUI wizard opens.
 For unattended installs pass --answers FILE (secrets may be ${ENV} references) or flags.
 
-Without a password the host is linked at echovrce.com/device during setup.
+The servers sign in with the host account's Discord ID and server password
+(nevr-runtime 6.x refuses a device link alone); in a terminal, missing ones are
+asked for. With --device-link and no password the host is linked at
+echovrce.com/device instead (nevr-runtime 5.x only).
 
 Example:
-  evr-docker init --servers 2 --start
-  echo "$PASSWORD" | evr-docker init --discord-id 1234 --password-stdin --servers 2 --start`,
+  echo "$PASSWORD" | evr-docker init --discord-id 1234 --password-stdin --servers 2 --start
+  evr-docker init --device-link --servers 2 --start`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if answersFile == "" && cmd.Flags().NFlag() == 0 && TUI != nil && isTerminal() {
+			n := cmd.Flags().NFlag()
+			if cmd.Flags().Changed("device-link") {
+				n-- // the switch alone still opens the wizard
+			}
+			if answersFile == "" && n == 0 && TUI != nil && isTerminal() {
 				return TUI(cmd.Context(), g.configDir)
 			}
 			if answersFile != "" {
@@ -77,7 +84,23 @@ Example:
 			if fl.Changed("start") || answersFile == "" {
 				an.Start = initStart
 			}
-			_, err := core.Init(cmd.Context(), g.configDir, an, func(step, detail string) { g.say("[%s] %s", step, detail) })
+			progress := func(step, detail string) { g.say("[%s] %s", step, detail) }
+			_, err := core.Init(cmd.Context(), g.configDir, an, progress)
+			if errors.Is(err, core.ErrPasswordRequired) && term.IsTerminal(int(os.Stdin.Fd())) {
+				// Nothing was changed yet: ask for the sign-in and go on.
+				if an.Account.DiscordID == "" {
+					fmt.Fprint(os.Stderr, "Discord user ID of the EchoVRCE host account: ")
+					fmt.Scanln(&an.Account.DiscordID)
+					an.Account.DiscordID = strings.TrimSpace(an.Account.DiscordID)
+				}
+				if an.Account.Password, err = readSecret("EchoVRCE server password: "); err != nil {
+					return err
+				}
+				if an.Account.Password == "" {
+					return core.ErrPasswordRequired
+				}
+				_, err = core.Init(cmd.Context(), g.configDir, an, progress)
+			}
 			if err == nil {
 				g.say("\nAll set. Check the servers with: evr-docker server ls")
 			}
@@ -436,11 +459,17 @@ func accountCmd(g *globals) *cobra.Command {
 	})
 
 	cmd.AddCommand(&cobra.Command{
-		Use: "link", Short: "Sign in at echovrce.com/device instead of with a password",
+		Use: "link", Short: "Sign in at echovrce.com/device instead of with a password (needs --device-link; nevr-runtime 5.x only)",
 		Long: `Shows a code to approve at echovrce.com/device, stores the link in
 /etc/evr-docker/device.json, takes the Discord ID from the backend and gives
-every server the link (a stored password is removed). No password is needed.`,
+every server the link (a stored password is removed). No password is needed.
+
+nevr-runtime 6.x refuses a server that has only a device link, so this runs
+only with --device-link or EVR_DEVICE_LINK=1.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if !core.DeviceLinkEnabled() {
+				return core.ErrDeviceLinkOff
+			}
 			a, err := g.app()
 			if err != nil {
 				return err

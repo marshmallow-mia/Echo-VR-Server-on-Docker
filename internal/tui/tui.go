@@ -487,7 +487,7 @@ func (m *model) updateDashboard(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case "a":
 		if !app.HasAccount() {
-			m.setFlash("Sign in first: l links this host (no password), p uses a password.", true)
+			m.setFlash(signInFirst(), true)
 			return m, m.openAccount()
 		}
 		return m, m.addForm()
@@ -702,4 +702,12 @@ func orDash(s string) string {
 		return "-"
 	}
 	return s
+}
+
+// signInFirst is the flash for an action that needs a sign-in.
+func signInFirst() string {
+	if core.DeviceLinkEnabled() {
+		return "Sign in first: p uses your Discord ID and server password, l links this host (nevr-runtime 5.x only)."
+	}
+	return "Sign in first: p signs in with your Discord ID and server password."
 }

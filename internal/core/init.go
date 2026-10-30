@@ -65,7 +65,8 @@ func LoadAnswers(path string) (Answers, error) {
 func (an *Answers) Validate() error {
 	var errs []error
 	// Without a password the host signs in with an echovrce.com device link
-	// during setup, and the Discord ID comes from the backend.
+	// during setup (only with DeviceLinkEnabled), and the Discord ID comes
+	// from the backend.
 	if an.Account.Password != "" && (an.Account.DiscordID == "" || strings.Trim(an.Account.DiscordID, "0123456789") != "") {
 		errs = append(errs, errors.New("account.discord_id must be your numeric Discord user ID"))
 	}
@@ -146,7 +147,10 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	a := &App{Dir: dir, Cfg: cfg, Secrets: sec}
 
 	var s auth.Session
-	if an.Account.Password == "" && !a.DeviceLinked() {
+	if sec[config.EnvPassword] == "" && !a.DeviceLinked() {
+		if !DeviceLinkEnabled() {
+			return nil, ErrPasswordRequired
+		}
 		say("Account", "no password: linking this host at echovrce.com/device")
 		say("Account", ResetPasswordNote)
 		if err := os.MkdirAll(dir, 0o755); err != nil {
