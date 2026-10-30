@@ -377,3 +377,26 @@ func TestRunOnceDeviceCodeThenNoRegistration(t *testing.T) {
 		t.Errorf("not restarted promptly after the approval: %s", d)
 	}
 }
+
+// Before each start of a two-file runtime the root's old run logs are compressed.
+func TestRunOnceCompressesOldLogs(t *testing.T) {
+	o, out := testOptions(t, "v6.9.0-device-code.log", 6792)
+	twoFileAt(t, &o, "v6.9.0", "v6.9.0-device-code.log", 1)
+	logs := filepath.Join(game.NevrRoot(filepath.Join(o.Home, ".wine"), "container"), "logs")
+	os.MkdirAll(logs, 0o755)
+	for _, n := range []string{"nevr-2026-10-29T10-00-00.000.jsonl", "nevr-2026-10-30T10-00-00.000.jsonl", "nevr-bootstrap.jsonl"} {
+		os.WriteFile(filepath.Join(logs, n), []byte("{}\n"), 0o644)
+	}
+	newSup(t, o).runOnce(context.Background())
+	if _, err := os.Stat(filepath.Join(logs, "nevr-2026-10-29T10-00-00.000.jsonl.gz")); err != nil {
+		t.Errorf("old run log not compressed: %v", err)
+	}
+	for _, n := range []string{"nevr-2026-10-30T10-00-00.000.jsonl", "nevr-bootstrap.jsonl"} {
+		if _, err := os.Stat(filepath.Join(logs, n)); err != nil {
+			t.Errorf("%s: %v", n, err)
+		}
+	}
+	if !strings.Contains(out.String(), "[evr] logs: compressed 1, removed 0") {
+		t.Errorf("no logs line:\n%s", out)
+	}
+}

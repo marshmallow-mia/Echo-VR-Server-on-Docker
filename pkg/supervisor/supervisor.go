@@ -279,6 +279,14 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 		if err := root.Prepare(); err != nil {
 			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "preparing the nEVR root: " + err.Error()}
 		}
+		// The runtime keeps every run's log (a new one after each match).
+		c, r, err := game.PruneLogs(filepath.Join(s.NevrRoot(), "logs"), time.Now())
+		if c+r > 0 {
+			s.logf("logs: compressed %d, removed %d (keeps %d days, at most %d MB)", c, r, int(game.LogKeep.Hours()/24), game.LogMaxBytes>>20)
+		}
+		if err != nil {
+			s.logf("logs: %v", err)
+		}
 	}
 
 	args := []string{"./" + game.ExeName, "-server", "-headless", "-noovr", "-no-console", "-nosymbollookup", "-port", fmt.Sprint(s.o.Port)}

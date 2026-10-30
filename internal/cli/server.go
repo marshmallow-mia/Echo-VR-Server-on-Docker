@@ -6,6 +6,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -226,12 +227,22 @@ func serverCmd(g *globals) *cobra.Command {
 				if len(args) == 0 {
 					return errors.New("name a server or use --all")
 				}
+				// Stops run at once: each waits for its server's clean shutdown. Start
+				// and restart stay one by one, since they may create containers
+				// (Apply), which must not run twice at a time.
+				limit := 1
+				if use == "stop" {
+					if _, err := a.Docker(); err != nil {
+						return err
+					}
+					limit = powerParallel
+				}
 				var errs []error
-				for _, n := range args {
-					if err := f(a, cmd, n); err != nil {
-						errs = append(errs, fmt.Errorf("%s: %w", n, err))
+				for i, err := range eachAtOnce(args, limit, func(n string) error { return f(a, cmd, n) }) {
+					if err != nil {
+						errs = append(errs, fmt.Errorf("%s: %w", args[i], err))
 					} else {
-						g.say("%s: %s", n, map[string]string{"start": "started", "stop": "stopped", "restart": "restarting"}[use])
+						g.say("%s: %s", args[i], map[string]string{"start": "started", "stop": "stopped", "restart": "restarting"}[use])
 					}
 				}
 				return errors.Join(errs...)
@@ -369,4 +380,25 @@ func orDash(s string) string {
 		return "-"
 	}
 	return s
+}
+
+// powerParallel is how many servers stop at the same time.
+const powerParallel = 8
+
+// eachAtOnce runs f for every name, at most limit at a time, and returns the
+// errors in the order of names.
+func eachAtOnce(names []string, limit int, f func(string) error) []error {
+	errs := make([]error, len(names))
+	sem := make(chan struct{}, max(limit, 1))
+	var wg sync.WaitGroup
+	for i, n := range names {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func() {
+			defer func() { <-sem; wg.Done() }()
+			errs[i] = f(n)
+		}()
+	}
+	wg.Wait()
+	return errs
 }

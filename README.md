@@ -77,6 +77,9 @@ echo "$PASSWORD" | sudo evr-docker init --discord-id 123456789012345678 --passwo
     exits when a match ends.
   - It detects rejected logins, unreachable ports and stuck registrations.
   - It handles the runtime's shutdown hang (nevr-runtime #723): a stop takes about 5 seconds and the server unregisters cleanly.
+  - It keeps the runtime's logs small: nevr-runtime 6.x writes one log per run (a new one after every match) and
+    removes none. Before each start the older ones are gzipped, and compressed logs older than 14 days or beyond
+    200 MB per server are removed. The newest run's log and `nevr-bootstrap.jsonl` stay as they are.
 - **Ports are published 1:1**, and the game port must also be forwarded 1:1 (same number outside and inside). The
   backend registers a server at the address it connects from and the port the game bound; a forwarded port with a
   different number would point players at the wrong place.

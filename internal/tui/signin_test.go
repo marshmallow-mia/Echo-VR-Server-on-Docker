@@ -85,6 +85,9 @@ func TestWizardDefaultsToTheConsoleCode(t *testing.T) {
 	if code < 0 || pw < 0 || code > pw {
 		t.Fatalf("the console code must come first, the password second:\n%s", v)
 	}
+	if !strings.Contains(ansi.Strip(v), "The dashboard shows the link meanwhile.") || !strings.Contains(ansi.Strip(v), "no password stored)") {
+		t.Errorf("the note is cut:\n%s", v)
+	}
 	if !regexp.MustCompile(`> Sign-in code on each server's console`).MatchString(ansi.Strip(v)) {
 		t.Errorf("the console code is not preselected:\n%s", v)
 	}
