@@ -20,17 +20,21 @@ var (
 	ErrNoAccount = errors.New("the servers have no EchoVRCE sign-in yet")
 	// ErrDeviceLink marks a device link that did not complete.
 	ErrDeviceLink = errors.New("device link failed")
-	// ErrPasswordRequired means a setup has no password and the device link
-	// is off.
-	ErrPasswordRequired = errors.New("nevr-runtime 6.x needs the host account's server password: pass --discord-id and --password-stdin (--device-link links this host instead, nevr-runtime 5.x only)")
+	// ErrSignInByCode means no password is set, so there is no account to
+	// check from the host: each server signs in on its own.
+	ErrSignInByCode = errors.New("no server password set: " + SignInCodeNote)
 	// ErrDeviceLinkOff means a device link was asked for without the switch.
-	ErrDeviceLinkOff = errors.New("the device link is off (nevr-runtime 6.x refuses a server that has only a device link); run with --device-link or " + DeviceLinkEnv + "=1 to link this host anyway")
+	ErrDeviceLinkOff = errors.New("the host-wide device link is off (nevr-runtime 5.x only; from v6.9.0 on each server shows its own sign-in code); run with --device-link or " + DeviceLinkEnv + "=1 to link this host anyway")
 )
 
-// DeviceLinkFlow turns the echovrce.com/device sign-in on (--device-link).
-// nevr-runtime 6.x refuses a server that has only a device link, so the
-// password is the sign-in and a new link is offered or made only with this
-// switch or DeviceLinkEnv. A link that is already stored keeps working.
+// SignInCodeNote explains the sign-in without a password.
+const SignInCodeNote = "each server prints a sign-in code on its console the first time it starts (nevr-runtime v6.9.0 and later); approve it at echovrce.com/device with the host account, and the server keeps the sign-in"
+
+// DeviceLinkFlow turns the old host-wide echovrce.com/device link on
+// (--device-link, hidden): only nevr-runtime 5.x servers use it. From v6.9.0
+// on a server without a password signs in by its own console code, so a new
+// link is offered or made only with this switch or DeviceLinkEnv. A link that
+// is already stored keeps working.
 var DeviceLinkFlow bool
 
 // DeviceLinkEnv turns the device link on like --device-link ("1" or "true").
@@ -57,8 +61,13 @@ const ResetPasswordHint = "device sign-in only works when the EchoVRCE account h
 
 func (a *App) devicePath() string { return filepath.Join(a.Dir, DeviceFile) }
 
-// HasAccount reports whether the servers can sign in.
-func (a *App) HasAccount() bool { return len(a.Secrets.Missing(a.DeviceLinked())) == 0 }
+// HasAccount reports whether the servers can sign in: with a complete
+// password sign-in, or without a password (console code, device link).
+func (a *App) HasAccount() bool { return len(a.Secrets.Missing()) == 0 }
+
+// SignsInByCode reports whether the servers sign in by their console code:
+// no password and no host-wide device link.
+func (a *App) SignsInByCode() bool { return a.Secrets[config.EnvPassword] == "" && !a.DeviceLinked() }
 
 // DeviceLinked reports whether a device link is stored.
 func (a *App) DeviceLinked() bool {
@@ -213,6 +222,45 @@ func (a *App) UsePassword(ctx context.Context, discordID, password string, say f
 	say(fmt.Sprintf("Signed in as %s; %s", s.Username, s.HostSummary()))
 	_, err = a.Apply(ctx, false, say)
 	return s, err
+}
+
+// UseSignInCode removes the password, so each server signs in by the code it
+// prints on its console, and recreates the servers.
+func (a *App) UseSignInCode(ctx context.Context, say func(string)) error {
+	if err := a.dropPassword(); err != nil {
+		return err
+	}
+	say("No password stored: " + SignInCodeNote)
+	_, err := a.Apply(ctx, false, say)
+	return err
+}
+
+// dropPassword forgets the password sign-in and the old host-wide device
+// link. The sign-in either left in a server's root goes too, so it asks for a
+// code; one a code made is kept.
+func (a *App) dropPassword() error {
+	had := a.Secrets[config.EnvPassword] != "" || a.DeviceLinked()
+	delete(a.Secrets, config.EnvPassword)
+	delete(a.Secrets, config.EnvDiscordID)
+	if err := a.Secrets.Save(a.Dir); err != nil {
+		return err
+	}
+	if err := os.Remove(a.devicePath()); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	for _, in := range a.Cfg.Instances {
+		dir := a.Cfg.InstanceDir(in.Name)
+		if err := os.Remove(filepath.Join(dir, "root", "_local", game.CredentialsName)); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+		if !had {
+			continue
+		}
+		if err := os.Remove(rootCredentials(dir)); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	return nil
 }
 
 // rootCredentials is the sign-in cache a 6.x runtime reads: in the nEVR root of

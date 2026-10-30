@@ -1,0 +1,712 @@
+[evr] starting: evr-supervisor
+[evr] evr-supervisor v2.0.0-rc.6
+[evr] starting evr-1 on port 6792 (runtime v6.9.0)
+[ERROR] Failed to initialize symbol handler: couldn't load dbgcore.dll (Module not found.) [Z:\home\container\root\bin\win10\dbgcore.dll]
+[NEVR.PATCH] boot log opened run=20-1dd6876d73f6d0e
+[NEVR.PATCH] Initializing v6.9.0 base=000000000000000000
+[NEVR.PATCH] NEVR-BUILD 6.9.0 c80158c2c98050e75103534fbbcd88c26650e939
+[NEVR.BOOT] host environment: wine=11.19 host_os=Linux 7.0.14-25-pve os_build=19045
+[NEVR.ROOT] info; root=C:\users\container\AppData\Local\nevr\echovr moved=0 left=0
+[NEVR.PATCH] function pointers resolved
+[NEVR.BOOT] initializing hooking engine...
+[NEVR.PATCH] minhook initialized
+[NEVR.EARLYQUIT] SetEarlyQuitPenaltyLevel hook installed va=0x1401ae2e0
+[NEVR.EARLYQUIT] EarlyQuitPenaltyExpression hook installed va=0x140d96190
+[NEVR.EARLYQUIT] feature-flag mask 0xdd -> 0xff va=0x1401618b9
+[NEVR.LOBBY] JoinPartyLobby hook installed va=0x140178d10
+[NEVR.LOBBY] LobbySessionFailureCB hook installed va=0x14017d380
+[NEVR.MENU] CCanvasUICS::SetText hook installed va=0x14037d470 label=nEVR 6.9.0 full_label=nEVR 6.9.0
+[NEVR.SPLASH] splash skip hook installed va=0x140a7bdd0 min_live_ms=750
+[NEVR.UITEXTURE] CGTextureResource::Attach hook installed va=0x1405491c0 ui_prefixes=5
+[NEVR.BOOT] installing DLL load hooks...
+[NEVR.DLLHOOK] info; LoadLibrary hooks OK (4/4)
+[NEVR.PATCH] info; dll load hooks installed
+[NEVR.BOOT] registering headless graphics hooks...
+[NEVR.HEADLESS] graphics hooks registered
+[NEVR.BOOT] patching DSC provider strings...
+[NEVR.XPID] DSC provider patch applied at 5 sites
+[NEVR.BOOT] detouring GetProviderPrefix → OVR-ORG...
+[NEVR.XPID] GetProviderPrefix detour OK
+[NEVR.BOOT] installing CSysDLL hooks...
+[NEVR.MIC] provider installed: Wine
+[NEVR.PATCH] hooked name=CSysDLL_GetSymbol
+[NEVR.PATCH] hooked name=CSysDLL_Load effect=pnsradgameserver_to_inprocess_serverlib
+[NEVR.BOOT] installing broadcaster guard...
+[NEVR.PATCH] broadcaster guard: no-op placeholder, nothing installed
+[NEVR.BOOT] initializing log filter...
+[NEVR.LOGFILTER] initializing (base=0x140000000, server=false)
+[NEVR.LOGFILTER] no config file found, using built-in defaults (51 suppress patterns)
+[NEVR.LOGFILTER] logging to: C:\users\container\AppData\Local\nevr\echovr\logs/nevr-2026-10-30T13-59-12.091.jsonl
+[NEVR.LOGFILTER] replayed 32 boot line(s) from Z:\home\container\root\bin\win10\logs\nevr-boot.jsonl into this log
+[NEVR.PATCH] debug; hooked name=CLog::PrintfImpl va=0x1400EBE70
+[NEVR.PATCH] log filter installed
+[NEVR.BOOT] installing game function hooks...
+[NEVR.PATCH] hook name=BuildCmdLineSyntaxDefinitions result=OK
+[NEVR.PATCH] hook name=PreprocessCommandLine result=OK
+[NEVR.PATCH] game hooks installed
+[NEVR.PATCH] tls deferred=ws_bridge stage=boot
+[NEVR.BOOT] installing crash recovery hooks...
+[NEVR.PATCH] info; CreateProcessA hook installed (crash reporter disabled)
+[NEVR.PATCH] info; CreateProcessW hook installed (crash reporter disabled)
+[NEVR.PATCH] info; ExitProcess hook installed (prevents crash reporter termination)
+[NEVR.PATCH] info; TerminateProcess hook installed (prevents self-termination)
+[NEVR.CRASH] crash recovery hooks installed
+[NEVR.PATCH] platform hooks deferred=platform_compat_module
+[NEVR.BOOT] installing server crash-recovery hooks...
+[NEVR.PATCH] debug; hooked name=CBroadcaster::Listen va=0x140F80ED0 mode=null_guard
+[NEVR.PATCH] debug; hooked name=CBroadcaster::ReceiveLocalEvent va=0x140F87AA0 mode=null_guard
+[NEVR.PATCH] debug; BugSplat crash handler hook installed (server crash suppression)
+[NEVR.PATCH] debug; InitializeGlobalGameSpace hook installed (server crash fix)
+[NEVR.PATCH] server crash-recovery hooks installed
+[NEVR.BOOT] installing exception handlers...
+[NEVR.CRASH] info; crash record path=C:\users\container\AppData\Local\nevr\echovr\logs\nevr-crash-20-1dd6876d73f6d0e.txt (written only if the game crashes)
+[NEVR.CRASH] info; hooked name=CrashExceptionFilter (crash-entry probe)
+[NEVR.CRASH] info; hooked name=HandleCrashDump (why-did-we-crash probe)
+[NEVR.CRASH] debug; debug; HandleCrashDump hook detail va=0x1401CEFE0 prologue=e9ae19e1ff
+[NEVR.CRASH] info; hooked name=CStackAllocator::DirectAlloc (out-of-memory probe)
+[NEVR.CRASH] veh deferred reason=wine_cli_unknown
+[NEVR.BOOT] installing console ctrl handler...
+[NEVR.PATCH] info; hooked name=GameConsoleHandlerInstall (re-arms our CTRL+C handler after the game's)
+[NEVR.PATCH] info; console ctrl handler installed (behind the game's handler until re-armed)
+[NEVR.PATCH] console ctrl handler installed
+[NEVR.BOOT] applying startup patches...
+[NEVR.PATCH] startup patches applied
+[NEVR.BOOT] initializing binary bug fix hooks...
+[NEVR.PATCH] debug; qpc_freq=10000000 Hz
+[NEVR.PATCH] debug; timer=high_resolution
+[NEVR.PATCH] info; hooked name=GetTimeMicroseconds va=0x1400D00C0 why="the microsecond timer overflows INT64 after about 10.7 days of uptime; replaced with an overflow-safe computation"
+[NEVR.PATCH] info; hooked name=CTimer_GetMilliSeconds va=0x1400D0110 why="the millisecond timer overflows the same way (CleanupPeers mass-disconnects on bad timestamps); replaced with an overflow-safe computation"
+[NEVR.PATCH] info; hooked name=EndMultiplayer va=0x140162450 why="a null pointer at arg1+0x2DA0 is dereferenced when multiplayer ends; checked before use"
+[NEVR.PATCH] info; hooked name=CPrecisionSleep::Wait va=0x1401CE0B0 why="it creates and destroys a kernel timer every frame (about 180 kernel transitions a second at 90 fps); uses one persistent high-resolution timer"
+[NEVR.PATCH] info; hooked name=CSpinWait::WaitForValue va=0x141500ED8 why="its backoff decreased (10 to 0 ms) under contention; it now increases (0 to 10 ms) and yields the hyper-thread"
+[NEVR.PATCH] info; patched name=CPrecisionSleep::BusyWait va=0x1401CE4C0 why="its QPC + Sleep(0) spin loop starves the hyper-thread sibling; now returns immediately (costs about 250 us of frame-pacing precision)" saved_orig_byte=0x48
+[NEVR.PATCH] info; hooked name=HTTPListenerBringup va=0x1401F5B00 why="the engine only logs a failed HTTP API listener bind and keeps running, leaving a server with a dead session API; a bind failure is now fatal in server mode"
+[NEVR.PATCH] info; DIAG hooked name=NetGameHostCheck va=0x140157FB0
+[NEVR.PATCH] info; hooks installed: 7 succeeded, 0 failed (failed: none); diag netgame-host-check: hooked
+[NEVR.PATCH] binary bug fix hooks installed
+[NEVR.BOOT] initialization complete; continuing in %LOCALAPPDATA%\nevr\echovr\logs\nevr-<timestamp>.jsonl
+[NEVR.LOGFILTER] replayed 47 boot line(s) from Z:\home\container\root\bin\win10\logs\nevr-boot.jsonl into this log
+2026-10-30T13:59:12.199Z info [NEVR.PATCH] boot hooks installed ok=true
+2026-10-30T13:59:12.199Z info [NEVR.BOOT] runtime initialized from the host's wrapper detour
+2026-10-30T13:59:12.202Z info [EVR] ==========================================================
+ Echo VR
+==========================================================
+2026-10-30T13:59:12.203Z info [NEVR.CONFIG] config.yaml loaded from: C:\users\container\AppData\Local\nevr\echovr\config.yaml chosen_by=nevr root
+2026-10-30T13:59:12.204Z info [NEVR.PATCH] veh installed handler=BreakpointVEH priority=1 modules_cached=46 stack_reserve_bytes=65536
+2026-10-30T13:59:12.204Z info [NEVR.CRASH] veh post_cli status=installed mode=server
+2026-10-30T13:59:12.204Z info [NEVR.PLUGIN] plugin trust: mode=unsigned-allowed source=default build=release literal="NEVR-PLUGIN-TRUST release" (plugins load whether or not they are signed; -require-signed-plugins makes a run signed-only)
+2026-10-30T13:59:12.204Z info [NEVR.BOOT] runtime bootstrap trigger=Preprocess first-call server bootstrap
+2026-10-30T13:59:12.205Z info [NEVR.PATCH] Early config loaded from: Z:\home\container\root\bin\win10\..\..\_local\config.json
+2026-10-30T13:59:12.205Z info [NEVR.RESOURCE] cache init dir=C:\users\container\AppData\Local\nevr\echovr\cache entries=0 loaded=0 refused=0 missing=0 reason=no index.json
+2026-10-30T13:59:12.205Z info [NEVR.RESOURCE] built-in splash skipped on a dedicated server (no menu is drawn)
+2026-10-30T13:59:12.206Z info [NEVR.RESOURCE] init complete overrides_registered=0 overrides_failed=0
+2026-10-30T13:59:12.206Z info [NEVR.MIC] server: no capture device; Mic* calls answer no-device
+2026-10-30T13:59:12.206Z info [NEVR.PATCH] Fatal error handler installed — server will exit on fatal errors
+2026-10-30T13:59:12.206Z info [NEVR.PATCH] server bring-up prologues validated queue_game_thread_call=ok begin_multiplayer_lobby=ok — the server will begin multiplayer once its login completes
+2026-10-30T13:59:12.219Z info [NEVR.MODULE] platform_compat initialized: 3/3 hooks installed (tls=ok createdir=ok msxml6=ok)
+2026-10-30T13:59:12.219Z info [NEVR.MODULE] Loaded: platform_compat (API v2, static)
+2026-10-30T13:59:12.219Z info [NEVR.CONFIG] built-in defaults embedded in this build: nevr_socket_uri, nevr_http_uri, nevr_http_key, nevr_server_key
+2026-10-30T13:59:12.220Z info [NEVR.CONFIG] environment overrides: (none)
+2026-10-30T13:59:12.220Z info [NEVR.AUTH] server has no auth.password: it signs in by device code, printed on the console
+2026-10-30T13:59:12.220Z info [NEVR.AUTH] Configured: url=https://g.echovrce.com:7350/
+2026-10-30T13:59:12.221Z info [NEVR.AUTH] No cached credentials — starting device code auth...
+2026-10-30T13:59:12.599Z info [NEVR.AUTH] Device authorization started; code shown
+2026-10-30T13:59:12.599Z info [NEVR.AUTH] Device code expires in 5 minutes
+{"code":"TEST","event":"server_sign_in_code","expires_in_s":300,"msg":"Approve this server: open https://echovrce.com/device?code=TEST (or enter the code TEST at https://echovrce.com/device) and sign in within 5 minutes","tag":"NEVR.AUTH","url":"https://echovrce.com/device?code=TEST"}
+2026-10-30T13:59:12.599Z info [NEVR.AUTH] server sign-in code printed on the console bytes=286; waiting for approval
+2026-10-30T13:59:12.599Z info [NEVR.AUTH] code shown url=https://echovrce.com/device?code=<4 chars masked> open_result=33 (shown)
+2026-10-30T13:59:16.007Z info [NEVR.AUTH] poll #1 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:19.381Z info [NEVR.AUTH] poll #2 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:22.755Z info [NEVR.AUTH] poll #3 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:26.125Z info [NEVR.AUTH] poll #4 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:29.502Z info [NEVR.AUTH] poll #5 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:32.886Z info [NEVR.AUTH] poll #6 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:36.258Z info [NEVR.AUTH] poll #7 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:39.631Z info [NEVR.AUTH] poll #8 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:43.012Z info [NEVR.AUTH] poll #9 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:46.384Z info [NEVR.AUTH] poll #10 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:49.756Z info [NEVR.AUTH] poll #11 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:53.130Z info [NEVR.AUTH] poll #12 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:56.530Z info [NEVR.AUTH] poll #13 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T13:59:59.904Z info [NEVR.AUTH] poll #14 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:03.306Z info [NEVR.AUTH] poll #15 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:06.681Z info [NEVR.AUTH] poll #16 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:10.057Z info [NEVR.AUTH] poll #17 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:13.427Z info [NEVR.AUTH] poll #18 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:16.798Z info [NEVR.AUTH] poll #19 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:20.172Z info [NEVR.AUTH] poll #20 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:23.546Z info [NEVR.AUTH] poll #21 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:26.916Z info [NEVR.AUTH] poll #22 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:30.289Z info [NEVR.AUTH] poll #23 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:33.659Z info [NEVR.AUTH] poll #24 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:37.033Z info [NEVR.AUTH] poll #25 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:40.406Z info [NEVR.AUTH] poll #26 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:43.779Z info [NEVR.AUTH] poll #27 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:47.153Z info [NEVR.AUTH] poll #28 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:50.524Z info [NEVR.AUTH] poll #29 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:53.899Z info [NEVR.AUTH] poll #30 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:00:57.298Z info [NEVR.AUTH] poll #31 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:00.699Z info [NEVR.AUTH] poll #32 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:04.073Z info [NEVR.AUTH] poll #33 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:07.448Z info [NEVR.AUTH] poll #34 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:10.818Z info [NEVR.AUTH] poll #35 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:14.217Z info [NEVR.AUTH] poll #36 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:17.591Z info [NEVR.AUTH] poll #37 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:20.991Z info [NEVR.AUTH] poll #38 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:24.366Z info [NEVR.AUTH] poll #39 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:27.736Z info [NEVR.AUTH] poll #40 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:31.108Z info [NEVR.AUTH] poll #41 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:34.479Z info [NEVR.AUTH] poll #42 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:37.853Z info [NEVR.AUTH] poll #43 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:41.227Z info [NEVR.AUTH] poll #44 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:44.598Z info [NEVR.AUTH] poll #45 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:47.977Z info [NEVR.AUTH] poll #46 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:51.349Z info [NEVR.AUTH] poll #47 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:54.723Z info [NEVR.AUTH] poll #48 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:01:58.097Z info [NEVR.AUTH] poll #49 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:01.471Z info [NEVR.AUTH] poll #50 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:04.843Z info [NEVR.AUTH] poll #51 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:08.215Z info [NEVR.AUTH] poll #52 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:11.589Z info [NEVR.AUTH] poll #53 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:14.684Z warn [NEVR.LOGFILTER] CAPTURED ZERO GAME LINES this interval (total=1): the hook is intact, so the game is idle or blocked (waiting for a login, or on a modal dialog). Filtering, truncation and file logging have nothing to act on until lines arrive.
+2026-10-30T14:02:14.961Z info [NEVR.AUTH] poll #54 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:18.335Z info [NEVR.AUTH] poll #55 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:21.706Z info [NEVR.AUTH] poll #56 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:25.081Z info [NEVR.AUTH] poll #57 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:28.453Z info [NEVR.AUTH] poll #58 http=200 status=pending server_status="pending" body="{"status":"pending"}"
+2026-10-30T14:02:31.830Z info [NEVR.AUTH] poll #59 http=200 status=verified server_status="verified" body="<1225 bytes, token fields not logged>"
+2026-10-30T14:02:31.831Z info [NEVR.AUTH] token expiry from JWT exp: 1793372549 (3598s from now)
+2026-10-30T14:02:31.831Z info [NEVR.AUTH] refresh token expiry from refresh_token_expires_in: 2591997s
+2026-10-30T14:02:31.831Z info [NEVR.AUTH] Device authorization completed
+2026-10-30T14:02:31.876Z info [NEVR.AUTH] Credentials written to C:\users\container\AppData\Local\nevr\echovr\.credentials.json protection=host_mode_600
+2026-10-30T14:02:31.876Z info [NEVR.AUTH] server sign-in ended: result=ok seconds=199
+2026-10-30T14:02:31.877Z info [NEVR.MODULE] token_auth initialized mode=server auth=ok
+2026-10-30T14:02:31.877Z info [NEVR.MODULE] Loaded: token_auth (API v2, static)
+2026-10-30T14:02:31.877Z info [NEVR.PATCH] -headless: native echovr.exe flag; headless gates applied, the same set -server runs.
+2026-10-30T14:02:31.877Z info [NEVR.PATCH] Server mode — headless + noovr applied
+2026-10-30T14:02:31.881Z info [NEVR.HEADLESS] engine flags 0x00000036 -> 0x00000034 (bit0_render=CLEAR(HEADLESS))
+2026-10-30T14:02:31.884Z info [NEVR.PATCH] pnsrad patched "pnsovr" -> "pnsrad" rva=0x16d35c4
+2026-10-30T14:02:31.884Z info [NEVR.PATCH] pnsrad patched "pnsdemo" -> "pnsrad" rva=0x16d35e8
+2026-10-30T14:02:31.884Z info [NEVR.PATCH] pnsrad patched OVR branch rva=0x1580e5 (bypasses OVR platform branch)
+2026-10-30T14:02:31.884Z info [NEVR.PATCH] pnsrad init complete: 3/3 echovr.exe patches applied
+2026-10-30T14:02:31.884Z info [NEVR.PATCH] OVR platform branch bypassed - allowing normal initialization
+2026-10-30T14:02:31.885Z info [NEVR.PATCH] Oculus Platform SDK blocking registered with the DLL load hook
+2026-10-30T14:02:31.885Z info [NEVR.PATCH] spectatorstream_check phase=PatchEnableServer addr=0x140116f3d expected=0f84df000000 actual=0f84df000000 result=applied
+2026-10-30T14:02:31.885Z info [NEVR.PATCH] Disabled loading tips system for server mode
+2026-10-30T14:02:31.896Z info [NEVR.COOPAI] CoopAiGoalsLookup hook installed va=0x1412c10f0
+2026-10-30T14:02:31.899Z info [NEVR.COOPAI] CoopAiWaypointsLookup hook installed va=0x1412c13d0
+2026-10-30T14:02:31.903Z info [NEVR.COOPAI] CoopAiBlackboardUpdate hook installed va=0x1412c1a30
+2026-10-30T14:02:31.903Z info [NEVR.PATCH] arena_public_clock armed for 2 script DLLs
+2026-10-30T14:02:31.903Z info [NEVR.PATCH] credits_text skipped reason=server_mode (no credits page on a server)
+2026-10-30T14:02:31.903Z info [NEVR.MENU] main-menu cards skipped reason=server_mode (a server draws no menu)
+2026-10-30T14:02:31.903Z info [NEVR.INVITE] service skipped reason=server_mode
+2026-10-30T14:02:31.903Z info [NEVR.INVITE] wizard observer skipped reason=server_mode
+2026-10-30T14:02:31.903Z info [NEVR.INVITE] choice observer skipped reason=server_mode
+2026-10-30T14:02:31.904Z info [NEVR.RENDER] render_config skipped reason=server_mode (a server renders nothing)
+2026-10-30T14:02:31.904Z info [NEVR.UI] text writer skipped reason=server_mode (a server draws no menu)
+2026-10-30T14:02:31.904Z info [NEVR.CONFIG] built-in defaults in use (config.yaml and environment leave these unset): nevr_http_key, nevr_http_uri, nevr_server_key, nevr_socket_uri
+2026-10-30T14:02:31.904Z info [NEVR.WS] network.session_router=legacy
+2026-10-30T14:02:31.905Z info [NEVR.WS] Proxy listening on ws://127.0.0.1:64444/ -> wss://g.echovrce.com:443/nevr
+2026-10-30T14:02:31.905Z info [NEVR.WS] Matchmaker listener on ws://127.0.0.1:56351
+2026-10-30T14:02:31.905Z info [NEVR.GAMESERVER] server bots off bots_per_session=0 source=default
+2026-10-30T14:02:31.905Z info [NEVR.PATCH] server team size size=5 in_effect=5 (the game's own cap, nothing written) cap=not_tried slot=not_tried source=default
+2026-10-30T14:02:31.974Z info [NEVR.BOOT] runtime provenance=signed-release version=6.9.0 reason=""
+2026-10-30T14:02:31.974Z info [NEVR.PLUGIN] no plugins configured in config.yaml — loading none
+2026-10-30T14:02:31.975Z info [NEVR.CRASH] module cache refreshed count=47 (post module/plugin load)
+2026-10-30T14:02:31.975Z info [NEVR.PATCH] shutdown deps resolved ws_bridge=in-process StopWebSocketBridgeListener=direct
+2026-10-30T14:02:31.975Z info [NEVR.BOOT] runtime bootstrap complete early_config=true bridge=true port=64444
+2026-10-30T14:02:31.989Z info [NEVR.PATCH] game console ctrl handler installed result=1
+2026-10-30T14:02:31.989Z info [NEVR.PATCH] console ctrl handler re-armed to front of chain (CTRL+C reaches us first; the game's handler runs behind us)
+2026-10-30T14:02:32.045Z warn [NEVR.PATCH] pnsrad CLog hook disabled — retaining native pnsrad output to avoid Wine stack overflow
+2026-10-30T14:02:32.045Z info [NEVR.PATCH] per-frame tick ALIVE — plugin/module OnFrame now dispatched (host=server)
+2026-10-30T14:02:32.046Z info [EVR] CL Args: "Z:\home\container\root\bin\win10\echovr.exe" -server -headless -noovr -no-console -nosymbollookup -port 6792
+2026-10-30T14:02:32.046Z info [EVR] ---> Starting 7 worker threads in the scheduler.
+[NEVR.PATCH] xinput stub name=XInputGetState state=not_connected
+error: XDG_RUNTIME_DIR is invalid or not set in the environment.
+2026-10-30T14:02:32.242Z info [EVR] Loading archive engine_assets
+2026-10-30T14:02:32.260Z info [EVR] Finished initializing engine
+2026-10-30T14:02:32.271Z info [EVR] Loading archive r14gamedata
+2026-10-30T14:02:32.276Z info [EVR] Creating DEMO provider
+2026-10-30T14:02:32.281Z info [NEVR.PATCH] pnsrad module patches: 4 succeeded, 0 failed — social layer (friends/party/login) ENABLED
+2026-10-30T14:02:32.289Z info [NEVR.PATCH] pnsrad DIAG party-broadcaster hook installed at +0x82d20
+2026-10-30T14:02:32.296Z info [NEVR.PATCH] pnsrad DIAG party-send-invite hook installed at +0x86df0
+2026-10-30T14:02:32.297Z info [EVR] [NETGAME] Resetting local connection stats
+2026-10-30T14:02:32.297Z info [NEVR.PATCH] game config.json loaded from default location
+2026-10-30T14:02:32.298Z info [NEVR.UPNP] config key upnp=<absent> -> enabled=false
+2026-10-30T14:02:32.298Z info [NEVR.PATCH] server tick rate: 120 a second (step 8333 us; the game had 33333 us); source=default
+2026-10-30T14:02:32.298Z info [NEVR.PATCH] service redirect key=config_host from=wss://config.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:64444/config
+2026-10-30T14:02:32.298Z info [EVR] [NSUSER] Setting local user data storage directory to C:\users\container\AppData\Local\RAD\EchoVR\users
+2026-10-30T14:02:32.298Z info [NEVR.PATCH] HTTP(S) connection redirected: https://graph.oculus.com/ → https://g.echovrce.com:7350/
+2026-10-30T14:02:32.299Z info [EVR] [NETGAME] NetGame switching state (from logged out, to loading root)
+2026-10-30T14:02:32.299Z info [NEVR.PATCH] game config.json loaded from default location
+2026-10-30T14:02:32.299Z info [NEVR.UPNP] config key upnp=<absent> -> enabled=false
+2026-10-30T14:02:32.299Z info [NEVR.PATCH] server tick rate: 120 a second (step 8333 us; the game had 8333 us); source=default
+2026-10-30T14:02:32.300Z info [NEVR.PATCH] HTTP(S) connection redirected: https://api.readyatdawn.com/ → https://g.echovrce.com:7350/
+2026-10-30T14:02:32.314Z info [EVR] [LEVELLOAD] Loading level 'mnu_master'
+2026-10-30T14:02:32.423Z info [EVR] [LEVELLOAD] Loading level 'r14_glb_global_root'
+2026-10-30T14:02:32.451Z warn [EVR] There are less R15NetRewardItem assignments than components (Did you get or make a change to item_assignment.json without rebuilding?)
+2026-10-30T14:02:32.453Z info [EVR] [LEVELLOAD] Finished loading level 'r14_glb_global_root' in 29 ms
+2026-10-30T14:02:32.453Z info [EVR] [LEVELLOAD] Enabling level 'r14_glb_global_root'
+2026-10-30T14:02:32.465Z info [EVR] [LEVELLOAD] Level 'mnu_master' offset by (0.000, 0.000, 0.000)
+2026-10-30T14:02:32.481Z info [EVR] [CONFIGS] RequestConfig: type=main_menu, id=main_menu
+2026-10-30T14:02:32.481Z info [NEVR.EARLYQUIT] lockoutcountdownactive=0 (lockoutcountdownsec=0)
+2026-10-30T14:02:32.481Z error [EVR] ~ Scriptnode can't find actor in gamespace ~
+	Script Actor:     0x710CD6662636E6B8
+	Script:           ui_mnu_game_admins
+	Node Type:        EnableComponentNode
+	Node UUID:        c9971725
+	Target Actor:     Player
+	Gamespace:        
+: raduri://ui_mnu_game_admins?elementname=c9971725&elementtype=scriptnodeelementtype=scriptproperty
+2026-10-30T14:02:32.483Z info [EVR] [LEVELLOAD] Finished loading level 'mnu_master' in 168 ms
+2026-10-30T14:02:32.483Z info [EVR] [LEVELLOAD] Enabling level 'mnu_master'
+2026-10-30T14:02:32.485Z warn [NEVR.PATCH] MSXML6 XMLHTTP CLSID passed through to the system object hr=0x80040154
+2026-10-30T14:02:32.485Z error [EVR] CHttpRequest CoCreateInstance failed with hresult 0x80040154
+2026-10-30T14:02:32.485Z error [EVR]  - CErrMsg
+  - message: Win HTTP Error: 0x80040154
+  - callstack: 
+  - file: d:\projects\rad\dev\src\engine\libs\os\network\csyshttp_win_xb1.cpp
+  - line: 956
+  - errorcode: 0x2a942b5e5b5e6566
+
+2026-10-30T14:02:32.487Z info [NEVR.PATCH] service redirect key=login_host from=wss://login.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:64444/login
+2026-10-30T14:02:32.487Z info [EVR] [NSUSER] Creating user OVR-ORG-1
+2026-10-30T14:02:32.487Z info [EVR] [NETGAME] Logging in...
+[SYSNET] Found Internet connection (IPv4)
+2026-10-30T14:02:32.489Z info [EVR] [NETGAME] NetGame switching state (from loading root, to logging in)
+[NEVR.MIC] pnsrad mic export(s) resolved -> WASAPI provider
+2026-10-30T14:02:32.494Z error [EVR] [SCRIPT] ui_mnu_keyboard: Tried to call function Disable externally but concurrent calls were set too low. Increase on FunctionDef node.
+2026-10-30T14:02:32.506Z info [NEVR.WS] game socket admitted conn=0 role=config basis=path listener=service target=/config has_query=false ws=00007ffff504c0a0 path=legacy game=0
+2026-10-30T14:02:32.506Z info [NEVR.WS] remote auth: token-auth JWT (value not logged)
+2026-10-30T14:02:32.507Z info [NEVR.WS] Proxy: game connected (conn=0, config, ws=00007ffff504c0a0)
+2026-10-30T14:02:32.507Z info [NEVR.WS] Proxy remote target: wss://g.echovrce.com:443/nevr
+2026-10-30T14:02:32.511Z info [EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:64444/config established
+2026-10-30T14:02:32.515Z info [NEVR.WS] game socket admitted conn=1 role=login basis=path listener=service target=/login has_query=false ws=00007ffff50a6ea0 path=legacy game=0
+2026-10-30T14:02:32.516Z info [NEVR.WS] remote auth: token-auth JWT (value not logged)
+2026-10-30T14:02:32.516Z info [NEVR.WS] Proxy: game connected (conn=1, login, ws=00007ffff50a6ea0)
+2026-10-30T14:02:32.516Z info [NEVR.WS] Proxy remote target: wss://g.echovrce.com:443/nevr
+2026-10-30T14:02:32.519Z info [EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:64444/login established
+2026-10-30T14:02:32.820Z info [NEVR.WS] login platform=4 (OVR-ORG) no_vr=0 game_flags=0x4a900000 is_server=1
+2026-10-30T14:02:32.820Z info [NEVR.WS] CNSUser login state patched acct=0->000000000000000000 state=0x0->0x4 provider=0->4 flags=0x32->0x4 (unblocks LogInSuccessCB)
+2026-10-30T14:02:32.820Z info [NEVR.WS] login hmd serial source=no-vr length=3
+2026-10-30T14:02:32.820Z info [NEVR.WS] login nevr_plugins configured=0 loaded=0
+2026-10-30T14:02:32.820Z info [NEVR.WS] login nevr_assets count=0
+2026-10-30T14:02:32.820Z info [NEVR.WS] login injected xpid=OVR-ORG-000000000000000000 platform=4 conn=1 (login) size=1063
+2026-10-30T14:02:32.911Z info [EVR] [CONFIGS] ConfigSuccessCB: type=main_menu, id=main_menu {"news":{"offseason":{"texture":"None","link":"https://en.wikipedia.org/wiki/Lone_Echo"},"sentiment":{"texture":"ui_mnu_news_latest","link":"https://en.wikipedia.org/wiki/Lone_Echo"}},"_ts":0,"help_link":"https://en.wikipedia.org/wiki/Lone_Echo","news_link":"https://en.wikipedia.org/wiki/Lone_Echo","discord_link":"https://en.wikipedia.org/wiki/Lone_Echo","splash":{"offseason":{"texture":"ui_menu_splash_screen_poster_a_shutdown_clr","l
+2026-10-30T14:02:33.210Z info [NEVR.WS] LOGIN SUCCESS
+[NSUSER] LoginId: 8D506F6A-D46A-11F1-BBF6-383EC87527A1:
+
+[NSUSER] Login settings received: {"config_data":{"active_battle_pass_season":{"id":"active_battle_pass_season","starttime":1711497600,"endtime":17911180800},"active_store_entry":{"id":"active_store_entry","starttime":1711497600,"endtime":17911180800},"active_store_featured_entry":{"id":"active_store_featured_entry","starttime":1711497600,"endtime":17911180800}},"env":"live","iap_unlocked":true,"remote_log_errors":true,"remote_log_rich_presence":true,"remote_log_metrics":true,"remote_log_warnings":true,"remote_log_social":true}
+2026-10-30T14:02:33.211Z info [EVR] [CONFIGS] RequestConfig: type=active_battle_pass_season, id=active_battle_pass_season
+2026-10-30T14:02:33.211Z info [EVR] [CONFIGS] RequestConfig: type=active_store_entry, id=active_store_entry
+2026-10-30T14:02:33.212Z info [EVR] [CONFIGS] RequestConfig: type=active_store_featured_entry, id=active_store_featured_entry
+2026-10-30T14:02:33.212Z info [EVR] [PROFILE] Getting logged in user OVR-ORG-000000000000000000's profile: {"defaultclientprofileid":"default","defaultserverprofileid":"default_new_item_types","unlocksetids":{"all":{}},"statgroupids":{"arena":{},"arena_practice_ai":{},"arena_public_ai":{},"weekly_2026_10_26":{},"daily_2026_10_30":{},"combat":{},"active_battle_pass_se":{}}}
+2026-10-30T14:02:33.212Z info [EVR] [DOCUMENTS] Requesting document (eula)
+2026-10-30T14:02:33.213Z error [EVR] [DEBUGPRINT] [MENU_GAME_ADMINS_PAGES] EULA is missing text_ga
+2026-10-30T14:02:33.319Z info [EVR] [CONFIGS] ConfigSuccessCB: type=active_battle_pass_season, id=active_battle_pass_season {"days_remaining_to_trigger_upsell":0,"offseason":false,"menu_link_upsell":null,"_ts":0,"description":null,"learn_more_link":null,"archives":{"marketing_lobby":null,"marketing_menu":null},"bp_xp_boost_reward_solo":0,"bp_currency_rewards":null,"bp_xp_boost_reward_party":0,"bp_xp_requirements":{"variable_tier_xp_requirements":null,"use_constant_tier_xp_requirements":true,"constant_tier_xp_requirements":0}
+2026-10-30T14:02:33.320Z info [EVR] [CONFIGS] ConfigSuccessCB: type=active_store_entry, id=active_store_entry {"days_remaining_to_trigger_upsell":0,"_ts":0,"entry_number":0,"id":"active_store_entry","marketing":{"lobby_poster_start_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","lobby_poster_upsell_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","menu_store_panel_upsell_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","menu_store_panel_start_texture":"ui_menu_splash_screen_poster_a_shutdown_clr"},"type":
+2026-10-30T14:02:33.321Z info [EVR] [CONFIGS] ConfigSuccessCB: type=active_store_featured_entry, id=active_store_featured_entry {"days_remaining_to_trigger_upsell":0,"_ts":0,"entry_number":0,"id":"active_store_featured_entry","marketing":{"lobby_poster_start_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","lobby_poster_upsell_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","menu_store_panel_upsell_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","menu_store_panel_start_texture":"ui_menu_splash_screen_post
+2026-10-30T14:02:33.347Z info [NEVR.EARLYQUIT] penalty set: stamp=0 stored_before=-1 stored_after=0 expiry=-1 now=1793368953 level=0 early_quits=9 applied=1 -> lockout expiry=-1 active=0
+2026-10-30T14:02:33.347Z info [NEVR.PATCH] service redirect key=transaction_host from=wss://transaction.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:64444/
+2026-10-30T14:02:33.347Z info [EVR] [NETGAME] NetGame switching state (from logging in, to logged in)
+2026-10-30T14:02:33.348Z info [EVR] [DOCUMENTS] Document received (eula) {"type":"eula","lang":"en","link_cc":"https://github.com/EchoTools","mark_as_read_profile_key":"legal|eula_version","version":1786950021,"link_pp":"https://github.com/EchoTools","version_ga":1786950021,"mark_as_read_profile_key_ga":"legal|game_admin_version","text":"Blank EULA for NoVR clients. You should only see this once.","text_ga":"Blank EULA for NoVR clients. You should only see this once.","link_ec":"https://github.com/EchoTools","link_cp":"https
+2026-10-30T14:02:33.348Z warn [EVR] [DynLoadTexture] Element 'background_image' has no texture specified
+2026-10-30T14:02:33.349Z info [NEVR.PATCH] server logged in — beginning multiplayer (no menu runs on a server to begin it)
+2026-10-30T14:02:33.349Z info [EVR] Beginning multiplayer
+2026-10-30T14:02:33.349Z info [NEVR.PATCH] DIAG netgame host-authority: granted=false flags=0x01 (bit1=0 bit2=0 bit6=0)
+2026-10-30T14:02:33.350Z info [NEVR.PATCH] service redirect key=transaction_host from=wss://transaction.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:64444/
+2026-10-30T14:02:33.355Z info [EVR] [SYSNET] Clearing low latency option
+2026-10-30T14:02:33.355Z info [EVR] Dedicated: broadcaster initialized at [172.18.0.2:6792]
+2026-10-30T14:02:33.355Z info [EVR] [NSLOBBY] loading server library 'pnsradgameserver' with log path 'z:\home\container\root\_local\r14logs'
+[NEVR.GAMESERVER] serverlib symbol resolved -> gamepatches factory
+[NEVR.GAMESERVER] ServerLib() created obj=00007ffff4ed1810
+[NEVR.GAMESERVER] UnkFunc1(this=00007ffff4ed1810, unk=0x6)
+[NEVR.GAMESERVER] Initialize(this=00007ffff4ed1810, lobby=000072053c0393f8, bc=000072053b3db620, unk2=000072052fe779a0, logPath=z:\home\container\root\_local\r14logs)
+2026-10-30T14:02:33.357Z info [NEVR.GAMESERVER] Initialized game server (game thread 36, broadcaster callbacks registered=15/15)
+2026-10-30T14:02:33.357Z info [NEVR.PATCH] console ctrl handler re-armed to front of chain (CTRL+C reaches us first; the game's handler runs behind us)
+2026-10-30T14:02:33.358Z info [NEVR.PATCH] GameServerLib started — CTRL+C now defers to the game's teardown, which exits at GameServerLib::Terminate
+2026-10-30T14:02:33.358Z info [EVR] {"message":"server library loaded","category":"serverlib","server_library_name":"pnsradgameserver"}
+2026-10-30T14:02:33.358Z info [EVR] [NETGAME] NetGame switching state (from logged in, to loading global)
+2026-10-30T14:02:33.358Z info [EVR] Ending multiplayer gameplay
+2026-10-30T14:02:33.358Z info [EVR] [NETGAME] Resetting local connection stats
+2026-10-30T14:02:33.358Z info [EVR] [NETGAME] AFK detection enabled (by init)
+2026-10-30T14:02:33.359Z info [EVR] [NETGAME] Initializing HTTP API
+2026-10-30T14:02:33.360Z info [EVR] [NETGAME] Bound HTTP listener to 127.0.0.1:6719, responding to /session
+2026-10-30T14:02:33.360Z info [EVR] [LEVELLOAD] Loading level 'r14_glb_global_mp'
+2026-10-30T14:02:33.411Z info [NEVR.PATCH] server clock read-back tick=125 clock=present step_us=8333 mode_bits=0x18 (0x8 fixed, 0x10 paced) expected_step_us=8333 step_state=set live=true
+2026-10-30T14:02:33.461Z info [EVR] [SOCIALGROUPS] Social lobby group info received
+2026-10-30T14:02:33.462Z info [EVR] [SOCIALGROUPS] active group = Echo VR Lounge
+2026-10-30T14:02:33.495Z info [EVR] [LEVELLOAD] Level 'r14_glb_global_mp' offset by (0.000, 0.000, 0.000)
+2026-10-30T14:02:33.523Z warn [EVR] List element rewardrow5 in list 0x46B5BEC3E9B61A5A (canvas 0x3CE278C8184CC075) is extraneous - disabling
+2026-10-30T14:02:33.524Z warn [EVR] List element rewardrow6 in list 0x46B5BEC3E9B61A5A (canvas 0x3CE278C8184CC075) is extraneous - disabling
+2026-10-30T14:02:33.524Z warn [EVR] List element rewardrow7 in list 0x46B5BEC3E9B61A5A (canvas 0x3CE278C8184CC075) is extraneous - disabling
+2026-10-30T14:02:33.524Z warn [EVR] List element rewardrow5 in list 0x46B5BEC3E9B61A5A (canvas mpl_postmatch_reward_page) is extraneous - disabling
+2026-10-30T14:02:33.524Z warn [EVR] List element rewardrow6 in list 0x46B5BEC3E9B61A5A (canvas mpl_postmatch_reward_page) is extraneous - disabling
+2026-10-30T14:02:33.525Z warn [EVR] List element rewardrow7 in list 0x46B5BEC3E9B61A5A (canvas mpl_postmatch_reward_page) is extraneous - disabling
+2026-10-30T14:02:33.562Z info [EVR] [DEBUGPRINT]  [ARM COMPUTER] Closing social controls
+2026-10-30T14:02:33.565Z info [EVR] [LEVELLOAD] Finished loading level 'r14_glb_global_mp' in 204 ms
+2026-10-30T14:02:33.567Z warn [NEVR.PATCH] Login session GUID not found in game log
+2026-10-30T14:02:33.567Z info [EVR] [NETGAME] NetGame switching state (from loading global, to lobby)
+2026-10-30T14:02:33.567Z info [NEVR.GAMESERVER] RequestRegistration server_id=000000000000000000 region=0x2fd38a995f615b9e version_lock=0x134b1272e1c4c0b7
+2026-10-30T14:02:34.045Z info [NEVR.AUTH] Credentials written to C:\users\container\AppData\Local\nevr\echovr\.credentials.json protection=host_mode_600
+2026-10-30T14:02:34.045Z info [NEVR.GAMESERVER] ServerDB auth via refreshed OAuth2 token (device-flow credential)
+2026-10-30T14:02:34.045Z info [NEVR.GAMESERVER] serverdb route=token services.serverdb=absent services.serverdb_uri=default token=present services.socket_uri=present identity.discord_id=absent
+2026-10-30T14:02:34.045Z info [NEVR.SERVERDB] Connecting to ServerDB at wss://g.echovrce.com:443/nevr
+2026-10-30T14:02:34.046Z info [NEVR.UPNP] disabled — announcing raw broadcaster port 6792, no mapping attempted (set "upnp" in config or pass -upnp)
+2026-10-30T14:02:34.059Z info [NEVR.GAMESERVER] registration metadata levels=32 manifests_read=2 plugin_levels=0 regions=0 guilds=0
+2026-10-30T14:02:34.060Z info [NEVR.GAMESERVER] No telemetry_uri in config — telemetry disabled
+2026-10-30T14:02:34.060Z info [NEVR.GAMESERVER] requested game server registration server_id=000000000000000000 region=0x0000000000000000
+2026-10-30T14:02:34.060Z info [EVR] [NSLOBBY] Registered lobby (id: 000000000000000000, radid: '', region: 'default', version: 1680630467, publisherlock: 'echovrce')
+2026-10-30T14:02:34.354Z info [NEVR.SERVERDB] Connected to ServerDB reconnect_count=0
+2026-10-30T14:02:36.553Z info [NEVR.GAMESERVER] Received registration success via protobuf: server_id=000000000000000000, ip=168.119.2.94
+2026-10-30T14:02:36.553Z info [EVR] [NSLOBBY] registration successful
+2026-10-30T14:02:36.553Z info [EVR] Dedicated: registered as 0x30BA0BE303D9278C at [172.18.0.2/168.119.2.94:6792]
+[evr] READY registered as 168.119.2.94:6792
+2026-10-30T14:02:36.554Z warn [NEVR.GAMESERVER] Unhandled WebSocket msgId: 0x43E6963AC76BEEE4 (size: 1)
+2026-10-30T14:02:38.836Z info [EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:64444/config closed
+2026-10-30T14:02:38.929Z info [NEVR.WS] Proxy: game disconnected (conn=0, config)
+2026-10-30T14:02:44.149Z info [NEVR.MENU] version label set item=lobby_version label=nEVR 6.9.0 replaced_text=2023-04-04T17:47:47Z count=1 result=1
+[evr] stopping: sending Ctrl+C to the game
+2026-10-30T14:02:47.427Z info [NEVR.PATCH] shutdown signal received — console ctrl event 0 (CTRL+C; a tty SIGINT arrives here under Wine) defer_to_game=true game_handler_behind=true game_server_lib_started=true
+2026-10-30T14:02:47.427Z info [NEVR.PATCH] shutdown watchdog armed timeout_ms=20000
+2026-10-30T14:02:47.427Z info [NEVR.PATCH] deferring to the game's console handler for lobby unregistration and ServerDB close; clean exit follows at GameServerLib::Terminate
+2026-10-30T14:02:47.427Z info [EVR] Console close signal received
+2026-10-30T14:02:47.433Z info [EVR] Ending multiplayer
+2026-10-30T14:02:47.433Z info [EVR] [NETGAME] EndMultiplayer
+2026-10-30T14:02:47.433Z info [EVR] [NETGAME] LeaveGame
+2026-10-30T14:02:47.433Z info [EVR] [NETGAME] Removing all users...
+2026-10-30T14:02:47.433Z info [NEVR.LOGFILTER] repeated count=7 window_s=14 msg="[EVR] List element rewardrow5 in list 0x46B5BEC3E9B61A5A (canvas 0x3CE278C8184CC075) is extraneous - disabling"
+2026-10-30T14:02:47.434Z info [EVR] [NETLOBBY] Ending session
+2026-10-30T14:02:47.434Z info [EVR] [NSLOBBY] ending session
+2026-10-30T14:02:47.434Z info [EVR] [NSLOBBY] leaving session
+2026-10-30T14:02:47.434Z info [EVR] [NETGAME] NetGame switching state (from lobby, to logged in)
+2026-10-30T14:02:47.434Z info [EVR] [NSLOBBY] leaving session
+2026-10-30T14:02:47.434Z info [EVR] [NSLOBBY] ending session
+2026-10-30T14:02:47.434Z info [EVR] [NSLOBBY] leaving session
+2026-10-30T14:02:47.434Z info [NEVR.LOGFILTER] repeated count=7 window_s=14 msg="[EVR] List element rewardrow5 in list 0x46B5BEC3E9B61A5A (canvas mpl_postmatch_reward_page) is extraneous - disabling"
+2026-10-30T14:02:47.435Z info [EVR] [NSLOBBY] unregistering
+2026-10-30T14:02:47.435Z info [NEVR.GAMESERVER] Unregistered 15 broadcaster callbacks (owner=000072053b3db620, liveOwner=000072053b3db620)
+2026-10-30T14:02:47.435Z info [NEVR.SERVERDB] Disconnecting from ServerDB
+2026-10-30T14:02:47.527Z info [NEVR.SERVERDB] Disconnected from ServerDB code=TEST reconnect_count=0
+2026-10-30T14:02:47.528Z info [NEVR.GAMESERVER] Unregistered game server
+2026-10-30T14:02:47.528Z info [NEVR.GAMESERVER] terminating game server
+2026-10-30T14:02:47.528Z info [NEVR.GAMESERVER] CTRL+C teardown complete (lobby unregistered, ServerDB socket closed) — exiting cleanly before the game's client-side teardown
+2026-10-30T14:02:47.528Z info [NEVR.PATCH] Graceful shutdown initiated (code=0)
+2026-10-30T14:02:47.528Z info [NEVR.PATCH] ws_bridge listener stop starting (hang marker: if shutdown never logs the next line, StopWebSocketBridgeListener is stuck here)
+2026-10-30T14:02:47.529Z info [NEVR.WS] listener stop stage=legacy_remotes begin count=1 thread=36 elapsed_ms=0
+2026-10-30T14:02:47.621Z info [NEVR.WS] Remote closed (conn=1, login, ws=00007ffff50a6ea0): code=TEST
+2026-10-30T14:02:47.622Z info [NEVR.WS] login session ended: the game's next login socket is a new login (shared connections renumbered from 2)
+2026-10-30T14:02:47.622Z info [NEVR.WS] remote session ended (conn=1, login, code=TEST): no game socket on it
+2026-10-30T14:02:47.623Z info [NEVR.WS] listener stop stage=legacy_remotes done count=1 thread=36 elapsed_ms=95
+2026-10-30T14:02:47.623Z info [NEVR.WS] listener stop stage=game_listener begin count=1 thread=36 elapsed_ms=95
+2026-10-30T14:02:47.924Z info [NEVR.WS] Proxy: game disconnected (conn=-1, unknown)
+2026-10-30T14:02:47.925Z info [NEVR.WS] listener stop stage=game_listener done count=1 thread=36 elapsed_ms=397
+2026-10-30T14:02:47.925Z info [NEVR.WS] listener stop stage=matchmaker_listener begin count=1 thread=36 elapsed_ms=397
+2026-10-30T14:02:47.926Z info [NEVR.WS] listener stop stage=matchmaker_listener done count=1 thread=36 elapsed_ms=398
+2026-10-30T14:02:47.926Z info [NEVR.WS] listeners stopped, 1 remote connection(s) closed — sockets released
+2026-10-30T14:02:47.926Z info [NEVR.PATCH] ws_bridge listener stopped — socket released
+2026-10-30T14:02:47.926Z info [NEVR.PATCH] binary bug fixes shutdown null_deref=0
+2026-10-30T14:02:47.978Z info [NEVR.PATCH] binary bug fixes shutdown restored BusyWait byte 0x48 at va=0x1401CE4C0
+2026-10-30T14:02:47.979Z info [NEVR.RESOURCE] shutdown complete overrides_registered=0 overrides_never_applied=0 hook_installed=false registry_released=true owned_buffers_process_lifetime=0
+2026-10-30T14:02:47.979Z error [NEVR.PATCH] ForceFatalExit(0) — terminating process
+[evr] stopped
+[evr] starting: evr-supervisor
+[evr] evr-supervisor v2.0.0-rc.6
+[evr] starting evr-1 on port 6792 (runtime v6.9.0)
+[ERROR] Failed to initialize symbol handler: couldn't load dbgcore.dll (Module not found.) [Z:\home\container\root\bin\win10\dbgcore.dll]
+[NEVR.PATCH] boot log opened run=20-1dd687763f0bcd0
+[NEVR.PATCH] Initializing v6.9.0 base=000000000000000000
+[NEVR.PATCH] NEVR-BUILD 6.9.0 c80158c2c98050e75103534fbbcd88c26650e939
+[NEVR.BOOT] host environment: wine=11.19 host_os=Linux 7.0.14-25-pve os_build=19045
+[NEVR.ROOT] info; root=C:\users\container\AppData\Local\nevr\echovr moved=0 left=0
+[NEVR.PATCH] function pointers resolved
+[NEVR.BOOT] initializing hooking engine...
+[NEVR.PATCH] minhook initialized
+[NEVR.EARLYQUIT] SetEarlyQuitPenaltyLevel hook installed va=0x1401ae2e0
+[NEVR.EARLYQUIT] EarlyQuitPenaltyExpression hook installed va=0x140d96190
+[NEVR.EARLYQUIT] feature-flag mask 0xdd -> 0xff va=0x1401618b9
+[NEVR.LOBBY] JoinPartyLobby hook installed va=0x140178d10
+[NEVR.LOBBY] LobbySessionFailureCB hook installed va=0x14017d380
+[NEVR.MENU] CCanvasUICS::SetText hook installed va=0x14037d470 label=nEVR 6.9.0 full_label=nEVR 6.9.0
+[NEVR.SPLASH] splash skip hook installed va=0x140a7bdd0 min_live_ms=750
+[NEVR.UITEXTURE] CGTextureResource::Attach hook installed va=0x1405491c0 ui_prefixes=5
+[NEVR.BOOT] installing DLL load hooks...
+[NEVR.DLLHOOK] info; LoadLibrary hooks OK (4/4)
+[NEVR.PATCH] info; dll load hooks installed
+[NEVR.BOOT] registering headless graphics hooks...
+[NEVR.HEADLESS] graphics hooks registered
+[NEVR.BOOT] patching DSC provider strings...
+[NEVR.XPID] DSC provider patch applied at 5 sites
+[NEVR.BOOT] detouring GetProviderPrefix → OVR-ORG...
+[NEVR.XPID] GetProviderPrefix detour OK
+[NEVR.BOOT] installing CSysDLL hooks...
+[NEVR.MIC] provider installed: Wine
+[NEVR.PATCH] hooked name=CSysDLL_GetSymbol
+[NEVR.PATCH] hooked name=CSysDLL_Load effect=pnsradgameserver_to_inprocess_serverlib
+[NEVR.BOOT] installing broadcaster guard...
+[NEVR.PATCH] broadcaster guard: no-op placeholder, nothing installed
+[NEVR.BOOT] initializing log filter...
+[NEVR.LOGFILTER] initializing (base=0x140000000, server=false)
+[NEVR.LOGFILTER] no config file found, using built-in defaults (51 suppress patterns)
+[NEVR.LOGFILTER] logging to: C:\users\container\AppData\Local\nevr\echovr\logs/nevr-2026-10-30T14-03-08.089.jsonl
+[NEVR.LOGFILTER] replayed 32 boot line(s) from Z:\home\container\root\bin\win10\logs\nevr-boot.jsonl into this log
+[NEVR.PATCH] debug; hooked name=CLog::PrintfImpl va=0x1400EBE70
+[NEVR.PATCH] log filter installed
+[NEVR.BOOT] installing game function hooks...
+[NEVR.PATCH] hook name=BuildCmdLineSyntaxDefinitions result=OK
+[NEVR.PATCH] hook name=PreprocessCommandLine result=OK
+[NEVR.PATCH] game hooks installed
+[NEVR.PATCH] tls deferred=ws_bridge stage=boot
+[NEVR.BOOT] installing crash recovery hooks...
+[NEVR.PATCH] info; CreateProcessA hook installed (crash reporter disabled)
+[NEVR.PATCH] info; CreateProcessW hook installed (crash reporter disabled)
+[NEVR.PATCH] info; ExitProcess hook installed (prevents crash reporter termination)
+[NEVR.PATCH] info; TerminateProcess hook installed (prevents self-termination)
+[NEVR.CRASH] crash recovery hooks installed
+[NEVR.PATCH] platform hooks deferred=platform_compat_module
+[NEVR.BOOT] installing server crash-recovery hooks...
+[NEVR.PATCH] debug; hooked name=CBroadcaster::Listen va=0x140F80ED0 mode=null_guard
+[NEVR.PATCH] debug; hooked name=CBroadcaster::ReceiveLocalEvent va=0x140F87AA0 mode=null_guard
+[NEVR.PATCH] debug; BugSplat crash handler hook installed (server crash suppression)
+[NEVR.PATCH] debug; InitializeGlobalGameSpace hook installed (server crash fix)
+[NEVR.PATCH] server crash-recovery hooks installed
+[NEVR.BOOT] installing exception handlers...
+[NEVR.CRASH] info; crash record path=C:\users\container\AppData\Local\nevr\echovr\logs\nevr-crash-20-1dd687763f0bcd0.txt (written only if the game crashes)
+[NEVR.CRASH] info; hooked name=CrashExceptionFilter (crash-entry probe)
+[NEVR.CRASH] info; hooked name=HandleCrashDump (why-did-we-crash probe)
+[NEVR.CRASH] debug; debug; HandleCrashDump hook detail va=0x1401CEFE0 prologue=e9ae19e1ff
+[NEVR.CRASH] info; hooked name=CStackAllocator::DirectAlloc (out-of-memory probe)
+[NEVR.CRASH] veh deferred reason=wine_cli_unknown
+[NEVR.BOOT] installing console ctrl handler...
+[NEVR.PATCH] info; hooked name=GameConsoleHandlerInstall (re-arms our CTRL+C handler after the game's)
+[NEVR.PATCH] info; console ctrl handler installed (behind the game's handler until re-armed)
+[NEVR.PATCH] console ctrl handler installed
+[NEVR.BOOT] applying startup patches...
+[NEVR.PATCH] startup patches applied
+[NEVR.BOOT] initializing binary bug fix hooks...
+[NEVR.PATCH] debug; qpc_freq=10000000 Hz
+[NEVR.PATCH] debug; timer=high_resolution
+[NEVR.PATCH] info; hooked name=GetTimeMicroseconds va=0x1400D00C0 why="the microsecond timer overflows INT64 after about 10.7 days of uptime; replaced with an overflow-safe computation"
+[NEVR.PATCH] info; hooked name=CTimer_GetMilliSeconds va=0x1400D0110 why="the millisecond timer overflows the same way (CleanupPeers mass-disconnects on bad timestamps); replaced with an overflow-safe computation"
+[NEVR.PATCH] info; hooked name=EndMultiplayer va=0x140162450 why="a null pointer at arg1+0x2DA0 is dereferenced when multiplayer ends; checked before use"
+[NEVR.PATCH] info; hooked name=CPrecisionSleep::Wait va=0x1401CE0B0 why="it creates and destroys a kernel timer every frame (about 180 kernel transitions a second at 90 fps); uses one persistent high-resolution timer"
+[NEVR.PATCH] info; hooked name=CSpinWait::WaitForValue va=0x141500ED8 why="its backoff decreased (10 to 0 ms) under contention; it now increases (0 to 10 ms) and yields the hyper-thread"
+[NEVR.PATCH] info; patched name=CPrecisionSleep::BusyWait va=0x1401CE4C0 why="its QPC + Sleep(0) spin loop starves the hyper-thread sibling; now returns immediately (costs about 250 us of frame-pacing precision)" saved_orig_byte=0x48
+[NEVR.PATCH] info; hooked name=HTTPListenerBringup va=0x1401F5B00 why="the engine only logs a failed HTTP API listener bind and keeps running, leaving a server with a dead session API; a bind failure is now fatal in server mode"
+[NEVR.PATCH] info; DIAG hooked name=NetGameHostCheck va=0x140157FB0
+[NEVR.PATCH] info; hooks installed: 7 succeeded, 0 failed (failed: none); diag netgame-host-check: hooked
+[NEVR.PATCH] binary bug fix hooks installed
+[NEVR.BOOT] initialization complete; continuing in %LOCALAPPDATA%\nevr\echovr\logs\nevr-<timestamp>.jsonl
+[NEVR.LOGFILTER] replayed 47 boot line(s) from Z:\home\container\root\bin\win10\logs\nevr-boot.jsonl into this log
+2026-10-30T14:03:08.183Z info [NEVR.PATCH] boot hooks installed ok=true
+2026-10-30T14:03:08.183Z info [NEVR.BOOT] runtime initialized from the host's wrapper detour
+2026-10-30T14:03:08.194Z info [EVR] ==========================================================
+ Echo VR
+==========================================================
+2026-10-30T14:03:08.195Z info [NEVR.CONFIG] config.yaml loaded from: C:\users\container\AppData\Local\nevr\echovr\config.yaml chosen_by=nevr root
+2026-10-30T14:03:08.196Z info [NEVR.PATCH] veh installed handler=BreakpointVEH priority=1 modules_cached=46 stack_reserve_bytes=65536
+2026-10-30T14:03:08.196Z info [NEVR.CRASH] veh post_cli status=installed mode=server
+2026-10-30T14:03:08.196Z info [NEVR.PLUGIN] plugin trust: mode=unsigned-allowed source=default build=release literal="NEVR-PLUGIN-TRUST release" (plugins load whether or not they are signed; -require-signed-plugins makes a run signed-only)
+2026-10-30T14:03:08.196Z info [NEVR.BOOT] runtime bootstrap trigger=Preprocess first-call server bootstrap
+2026-10-30T14:03:08.197Z info [NEVR.PATCH] Early config loaded from: Z:\home\container\root\bin\win10\..\..\_local\config.json
+2026-10-30T14:03:08.197Z info [NEVR.RESOURCE] cache init dir=C:\users\container\AppData\Local\nevr\echovr\cache entries=0 loaded=0 refused=0 missing=0 reason=no index.json
+2026-10-30T14:03:08.197Z info [NEVR.RESOURCE] built-in splash skipped on a dedicated server (no menu is drawn)
+2026-10-30T14:03:08.197Z info [NEVR.RESOURCE] init complete overrides_registered=0 overrides_failed=0
+2026-10-30T14:03:08.197Z info [NEVR.MIC] server: no capture device; Mic* calls answer no-device
+2026-10-30T14:03:08.197Z info [NEVR.PATCH] Fatal error handler installed — server will exit on fatal errors
+2026-10-30T14:03:08.198Z info [NEVR.PATCH] server bring-up prologues validated queue_game_thread_call=ok begin_multiplayer_lobby=ok — the server will begin multiplayer once its login completes
+2026-10-30T14:03:08.207Z info [NEVR.MODULE] platform_compat initialized: 3/3 hooks installed (tls=ok createdir=ok msxml6=ok)
+2026-10-30T14:03:08.207Z info [NEVR.MODULE] Loaded: platform_compat (API v2, static)
+2026-10-30T14:03:08.207Z info [NEVR.CONFIG] built-in defaults embedded in this build: nevr_socket_uri, nevr_http_uri, nevr_http_key, nevr_server_key
+2026-10-30T14:03:08.207Z info [NEVR.CONFIG] environment overrides: (none)
+2026-10-30T14:03:08.207Z info [NEVR.AUTH] server has no auth.password: it signs in by device code, printed on the console
+2026-10-30T14:03:08.208Z info [NEVR.AUTH] Configured: url=https://g.echovrce.com:7350/
+2026-10-30T14:03:08.617Z info [NEVR.AUTH] Credentials written to C:\users\container\AppData\Local\nevr\echovr\.credentials.json protection=host_mode_600
+2026-10-30T14:03:08.617Z info [NEVR.AUTH] token refresh succeeded during cache load, expires_in=3600s
+2026-10-30T14:03:08.617Z info [NEVR.AUTH] Using cached credentials -- no login needed
+2026-10-30T14:03:08.617Z info [NEVR.MODULE] token_auth initialized mode=server auth=ok
+2026-10-30T14:03:08.617Z info [NEVR.MODULE] Loaded: token_auth (API v2, static)
+2026-10-30T14:03:08.617Z info [NEVR.PATCH] -headless: native echovr.exe flag; headless gates applied, the same set -server runs.
+2026-10-30T14:03:08.617Z info [NEVR.PATCH] Server mode — headless + noovr applied
+2026-10-30T14:03:08.620Z info [NEVR.HEADLESS] engine flags 0x00000036 -> 0x00000034 (bit0_render=CLEAR(HEADLESS))
+2026-10-30T14:03:08.623Z info [NEVR.PATCH] pnsrad patched "pnsovr" -> "pnsrad" rva=0x16d35c4
+2026-10-30T14:03:08.623Z info [NEVR.PATCH] pnsrad patched "pnsdemo" -> "pnsrad" rva=0x16d35e8
+2026-10-30T14:03:08.623Z info [NEVR.PATCH] pnsrad patched OVR branch rva=0x1580e5 (bypasses OVR platform branch)
+2026-10-30T14:03:08.623Z info [NEVR.PATCH] pnsrad init complete: 3/3 echovr.exe patches applied
+2026-10-30T14:03:08.624Z info [NEVR.PATCH] OVR platform branch bypassed - allowing normal initialization
+2026-10-30T14:03:08.624Z info [NEVR.PATCH] Oculus Platform SDK blocking registered with the DLL load hook
+2026-10-30T14:03:08.624Z info [NEVR.PATCH] spectatorstream_check phase=PatchEnableServer addr=0x140116f3d expected=0f84df000000 actual=0f84df000000 result=applied
+2026-10-30T14:03:08.624Z info [NEVR.PATCH] Disabled loading tips system for server mode
+2026-10-30T14:03:08.631Z info [NEVR.COOPAI] CoopAiGoalsLookup hook installed va=0x1412c10f0
+2026-10-30T14:03:08.634Z info [NEVR.COOPAI] CoopAiWaypointsLookup hook installed va=0x1412c13d0
+2026-10-30T14:03:08.637Z info [NEVR.COOPAI] CoopAiBlackboardUpdate hook installed va=0x1412c1a30
+2026-10-30T14:03:08.637Z info [NEVR.PATCH] arena_public_clock armed for 2 script DLLs
+2026-10-30T14:03:08.637Z info [NEVR.PATCH] credits_text skipped reason=server_mode (no credits page on a server)
+2026-10-30T14:03:08.637Z info [NEVR.MENU] main-menu cards skipped reason=server_mode (a server draws no menu)
+2026-10-30T14:03:08.637Z info [NEVR.INVITE] service skipped reason=server_mode
+2026-10-30T14:03:08.637Z info [NEVR.INVITE] wizard observer skipped reason=server_mode
+2026-10-30T14:03:08.637Z info [NEVR.INVITE] choice observer skipped reason=server_mode
+2026-10-30T14:03:08.638Z info [NEVR.RENDER] render_config skipped reason=server_mode (a server renders nothing)
+2026-10-30T14:03:08.638Z info [NEVR.UI] text writer skipped reason=server_mode (a server draws no menu)
+2026-10-30T14:03:08.638Z info [NEVR.CONFIG] built-in defaults in use (config.yaml and environment leave these unset): nevr_http_key, nevr_http_uri, nevr_server_key, nevr_socket_uri
+2026-10-30T14:03:08.638Z info [NEVR.WS] network.session_router=legacy
+2026-10-30T14:03:08.639Z info [NEVR.WS] Proxy listening on ws://127.0.0.1:61228/ -> wss://g.echovrce.com:443/nevr
+2026-10-30T14:03:08.640Z info [NEVR.WS] Matchmaker listener on ws://127.0.0.1:65053
+2026-10-30T14:03:08.640Z info [NEVR.GAMESERVER] server bots off bots_per_session=0 source=default
+2026-10-30T14:03:08.640Z info [NEVR.PATCH] server team size size=5 in_effect=5 (the game's own cap, nothing written) cap=not_tried slot=not_tried source=default
+2026-10-30T14:03:08.693Z info [NEVR.BOOT] runtime provenance=signed-release version=6.9.0 reason=""
+2026-10-30T14:03:08.693Z info [NEVR.PLUGIN] no plugins configured in config.yaml — loading none
+2026-10-30T14:03:08.694Z info [NEVR.CRASH] module cache refreshed count=47 (post module/plugin load)
+2026-10-30T14:03:08.694Z info [NEVR.PATCH] shutdown deps resolved ws_bridge=in-process StopWebSocketBridgeListener=direct
+2026-10-30T14:03:08.694Z info [NEVR.BOOT] runtime bootstrap complete early_config=true bridge=true port=61228
+2026-10-30T14:03:08.699Z info [NEVR.PATCH] game console ctrl handler installed result=1
+2026-10-30T14:03:08.699Z info [NEVR.PATCH] console ctrl handler re-armed to front of chain (CTRL+C reaches us first; the game's handler runs behind us)
+2026-10-30T14:03:08.743Z warn [NEVR.PATCH] pnsrad CLog hook disabled — retaining native pnsrad output to avoid Wine stack overflow
+2026-10-30T14:03:08.743Z info [NEVR.PATCH] per-frame tick ALIVE — plugin/module OnFrame now dispatched (host=server)
+2026-10-30T14:03:08.744Z info [EVR] CL Args: "Z:\home\container\root\bin\win10\echovr.exe" -server -headless -noovr -no-console -nosymbollookup -port 6792
+2026-10-30T14:03:08.745Z info [EVR] ---> Starting 7 worker threads in the scheduler.
+[NEVR.PATCH] xinput stub name=XInputGetState state=not_connected
+error: XDG_RUNTIME_DIR is invalid or not set in the environment.
+2026-10-30T14:03:08.920Z info [EVR] Loading archive engine_assets
+2026-10-30T14:03:08.936Z info [EVR] Finished initializing engine
+2026-10-30T14:03:08.950Z info [EVR] Loading archive r14gamedata
+2026-10-30T14:03:08.956Z info [EVR] Creating DEMO provider
+2026-10-30T14:03:08.961Z info [NEVR.PATCH] pnsrad module patches: 4 succeeded, 0 failed — social layer (friends/party/login) ENABLED
+2026-10-30T14:03:08.969Z info [NEVR.PATCH] pnsrad DIAG party-broadcaster hook installed at +0x82d20
+2026-10-30T14:03:08.976Z info [NEVR.PATCH] pnsrad DIAG party-send-invite hook installed at +0x86df0
+2026-10-30T14:03:08.978Z info [EVR] [NETGAME] Resetting local connection stats
+2026-10-30T14:03:08.978Z info [NEVR.PATCH] game config.json loaded from default location
+2026-10-30T14:03:08.978Z info [NEVR.UPNP] config key upnp=<absent> -> enabled=false
+2026-10-30T14:03:08.978Z info [NEVR.PATCH] server tick rate: 120 a second (step 8333 us; the game had 33333 us); source=default
+2026-10-30T14:03:08.978Z info [NEVR.PATCH] service redirect key=config_host from=wss://config.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:61228/config
+2026-10-30T14:03:08.979Z info [EVR] [NSUSER] Setting local user data storage directory to C:\users\container\AppData\Local\RAD\EchoVR\users
+2026-10-30T14:03:08.979Z info [NEVR.PATCH] HTTP(S) connection redirected: https://graph.oculus.com/ → https://g.echovrce.com:7350/
+2026-10-30T14:03:08.980Z info [EVR] [NETGAME] NetGame switching state (from logged out, to loading root)
+2026-10-30T14:03:08.980Z info [NEVR.PATCH] game config.json loaded from default location
+2026-10-30T14:03:08.980Z info [NEVR.UPNP] config key upnp=<absent> -> enabled=false
+2026-10-30T14:03:08.980Z info [NEVR.PATCH] server tick rate: 120 a second (step 8333 us; the game had 8333 us); source=default
+2026-10-30T14:03:08.980Z info [NEVR.PATCH] HTTP(S) connection redirected: https://api.readyatdawn.com/ → https://g.echovrce.com:7350/
+2026-10-30T14:03:08.995Z info [EVR] [LEVELLOAD] Loading level 'mnu_master'
+2026-10-30T14:03:09.071Z info [EVR] [LEVELLOAD] Loading level 'r14_glb_global_root'
+2026-10-30T14:03:09.099Z warn [EVR] There are less R15NetRewardItem assignments than components (Did you get or make a change to item_assignment.json without rebuilding?)
+2026-10-30T14:03:09.100Z info [EVR] [LEVELLOAD] Finished loading level 'r14_glb_global_root' in 29 ms
+2026-10-30T14:03:09.101Z info [EVR] [LEVELLOAD] Enabling level 'r14_glb_global_root'
+2026-10-30T14:03:09.113Z info [EVR] [LEVELLOAD] Level 'mnu_master' offset by (0.000, 0.000, 0.000)
+2026-10-30T14:03:09.123Z info [EVR] [CONFIGS] RequestConfig: type=main_menu, id=main_menu
+2026-10-30T14:03:09.123Z info [NEVR.EARLYQUIT] lockoutcountdownactive=0 (lockoutcountdownsec=0)
+2026-10-30T14:03:09.124Z error [EVR] ~ Scriptnode can't find actor in gamespace ~
+	Script Actor:     0x710CD6662636E6B8
+	Script:           ui_mnu_game_admins
+	Node Type:        EnableComponentNode
+	Node UUID:        c9971725
+	Target Actor:     Player
+	Gamespace:        
+: raduri://ui_mnu_game_admins?elementname=c9971725&elementtype=scriptnodeelementtype=scriptproperty
+2026-10-30T14:03:09.125Z info [EVR] [LEVELLOAD] Finished loading level 'mnu_master' in 129 ms
+2026-10-30T14:03:09.125Z info [EVR] [LEVELLOAD] Enabling level 'mnu_master'
+2026-10-30T14:03:09.127Z warn [NEVR.PATCH] MSXML6 XMLHTTP CLSID passed through to the system object hr=0x80040154
+2026-10-30T14:03:09.127Z error [EVR] CHttpRequest CoCreateInstance failed with hresult 0x80040154
+2026-10-30T14:03:09.128Z error [EVR]  - CErrMsg
+  - message: Win HTTP Error: 0x80040154
+  - callstack: 
+  - file: d:\projects\rad\dev\src\engine\libs\os\network\csyshttp_win_xb1.cpp
+  - line: 956
+  - errorcode: 0x2a942b5e5b5e6566
+
+2026-10-30T14:03:09.132Z info [NEVR.PATCH] service redirect key=login_host from=wss://login.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:61228/login
+2026-10-30T14:03:09.133Z info [EVR] [NSUSER] Creating user OVR-ORG-1
+2026-10-30T14:03:09.133Z info [EVR] [NETGAME] Logging in...
+[SYSNET] Found Internet connection (IPv4)
+2026-10-30T14:03:09.135Z info [EVR] [NETGAME] NetGame switching state (from loading root, to logging in)
+[NEVR.MIC] pnsrad mic export(s) resolved -> WASAPI provider
+2026-10-30T14:03:09.140Z error [EVR] [SCRIPT] ui_mnu_keyboard: Tried to call function Disable externally but concurrent calls were set too low. Increase on FunctionDef node.
+2026-10-30T14:03:09.151Z info [NEVR.WS] game socket admitted conn=0 role=config basis=path listener=service target=/config has_query=false ws=00007ffff5075ad0 path=legacy game=0
+2026-10-30T14:03:09.152Z info [NEVR.WS] remote auth: token-auth JWT (value not logged)
+2026-10-30T14:03:09.152Z info [NEVR.WS] Proxy: game connected (conn=0, config, ws=00007ffff5075ad0)
+2026-10-30T14:03:09.152Z info [NEVR.WS] Proxy remote target: wss://g.echovrce.com:443/nevr
+2026-10-30T14:03:09.156Z info [EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:61228/config established
+2026-10-30T14:03:09.160Z info [NEVR.WS] game socket admitted conn=1 role=login basis=path listener=service target=/login has_query=false ws=00007ffff50a2150 path=legacy game=0
+2026-10-30T14:03:09.160Z info [NEVR.WS] remote auth: token-auth JWT (value not logged)
+2026-10-30T14:03:09.160Z info [NEVR.WS] Proxy: game connected (conn=1, login, ws=00007ffff50a2150)
+2026-10-30T14:03:09.161Z info [NEVR.WS] Proxy remote target: wss://g.echovrce.com:443/nevr
+2026-10-30T14:03:09.164Z info [EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:61228/login established
+2026-10-30T14:03:09.489Z info [NEVR.WS] login platform=4 (OVR-ORG) no_vr=0 game_flags=0x4a900000 is_server=1
+2026-10-30T14:03:09.489Z info [NEVR.WS] CNSUser login state patched acct=0->000000000000000000 state=0x0->0x4 provider=0->4 flags=0x32->0x4 (unblocks LogInSuccessCB)
+2026-10-30T14:03:09.489Z info [NEVR.WS] login hmd serial source=no-vr length=3
+2026-10-30T14:03:09.489Z info [NEVR.WS] login nevr_plugins configured=0 loaded=0
+2026-10-30T14:03:09.489Z info [NEVR.WS] login nevr_assets count=0
+2026-10-30T14:03:09.490Z info [NEVR.WS] login injected xpid=OVR-ORG-000000000000000000 platform=4 conn=1 (login) size=1063
+2026-10-30T14:03:09.556Z info [EVR] [CONFIGS] ConfigSuccessCB: type=main_menu, id=main_menu {"news":{"offseason":{"texture":"None","link":"https://en.wikipedia.org/wiki/Lone_Echo"},"sentiment":{"texture":"ui_mnu_news_latest","link":"https://en.wikipedia.org/wiki/Lone_Echo"}},"_ts":0,"help_link":"https://en.wikipedia.org/wiki/Lone_Echo","news_link":"https://en.wikipedia.org/wiki/Lone_Echo","discord_link":"https://en.wikipedia.org/wiki/Lone_Echo","splash":{"offseason":{"texture":"ui_menu_splash_screen_poster_a_shutdown_clr","l
+2026-10-30T14:03:09.881Z info [NEVR.WS] LOGIN SUCCESS
+[NSUSER] LoginId: A32A8F46-D46A-11F1-BBF6-383EC87527A1:
+
+[NSUSER] Login settings received: {"config_data":{"active_battle_pass_season":{"id":"active_battle_pass_season","starttime":1711497600,"endtime":17911180800},"active_store_entry":{"id":"active_store_entry","starttime":1711497600,"endtime":17911180800},"active_store_featured_entry":{"id":"active_store_featured_entry","starttime":1711497600,"endtime":17911180800}},"env":"live","iap_unlocked":true,"remote_log_errors":true,"remote_log_rich_presence":true,"remote_log_metrics":true,"remote_log_warnings":true,"remote_log_social":true}
+2026-10-30T14:03:09.890Z info [EVR] [CONFIGS] RequestConfig: type=active_battle_pass_season, id=active_battle_pass_season
+2026-10-30T14:03:09.890Z info [EVR] [CONFIGS] RequestConfig: type=active_store_entry, id=active_store_entry
+2026-10-30T14:03:09.890Z info [EVR] [CONFIGS] RequestConfig: type=active_store_featured_entry, id=active_store_featured_entry
+2026-10-30T14:03:09.891Z info [EVR] [PROFILE] Getting logged in user OVR-ORG-000000000000000000's profile: {"defaultclientprofileid":"default","defaultserverprofileid":"default_new_item_types","unlocksetids":{"all":{}},"statgroupids":{"arena":{},"arena_practice_ai":{},"arena_public_ai":{},"weekly_2026_10_26":{},"daily_2026_10_30":{},"combat":{},"active_battle_pass_se":{}}}
+2026-10-30T14:03:09.891Z info [EVR] [DOCUMENTS] Requesting document (eula)
+2026-10-30T14:03:09.891Z error [EVR] [DEBUGPRINT] [MENU_GAME_ADMINS_PAGES] EULA is missing text_ga
+2026-10-30T14:03:09.998Z info [EVR] [CONFIGS] ConfigSuccessCB: type=active_battle_pass_season, id=active_battle_pass_season {"days_remaining_to_trigger_upsell":0,"offseason":false,"menu_link_upsell":null,"_ts":0,"description":null,"learn_more_link":null,"archives":{"marketing_lobby":null,"marketing_menu":null},"bp_xp_boost_reward_solo":0,"bp_currency_rewards":null,"bp_xp_boost_reward_party":0,"bp_xp_requirements":{"variable_tier_xp_requirements":null,"use_constant_tier_xp_requirements":true,"constant_tier_xp_requirements":0}
+2026-10-30T14:03:09.999Z info [EVR] [CONFIGS] ConfigSuccessCB: type=active_store_entry, id=active_store_entry {"days_remaining_to_trigger_upsell":0,"_ts":0,"entry_number":0,"id":"active_store_entry","marketing":{"lobby_poster_start_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","lobby_poster_upsell_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","menu_store_panel_upsell_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","menu_store_panel_start_texture":"ui_menu_splash_screen_poster_a_shutdown_clr"},"type":
+2026-10-30T14:03:10.000Z info [EVR] [CONFIGS] ConfigSuccessCB: type=active_store_featured_entry, id=active_store_featured_entry {"days_remaining_to_trigger_upsell":0,"_ts":0,"entry_number":0,"id":"active_store_featured_entry","marketing":{"lobby_poster_start_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","lobby_poster_upsell_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","menu_store_panel_upsell_texture":"ui_menu_splash_screen_poster_a_shutdown_clr","menu_store_panel_start_texture":"ui_menu_splash_screen_post
+2026-10-30T14:03:10.017Z info [NEVR.EARLYQUIT] penalty set: stamp=0 stored_before=-1 stored_after=0 expiry=-1 now=1793368990 level=0 early_quits=9 applied=1 -> lockout expiry=-1 active=0
+2026-10-30T14:03:10.017Z info [NEVR.PATCH] service redirect key=transaction_host from=wss://transaction.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:61228/
+2026-10-30T14:03:10.017Z info [EVR] [NETGAME] NetGame switching state (from logging in, to logged in)
+2026-10-30T14:03:10.017Z info [EVR] [DOCUMENTS] Document received (eula) {"type":"eula","lang":"en","link_cc":"https://github.com/EchoTools","mark_as_read_profile_key":"legal|eula_version","version":1786950021,"link_pp":"https://github.com/EchoTools","version_ga":1786950021,"mark_as_read_profile_key_ga":"legal|game_admin_version","text":"Blank EULA for NoVR clients. You should only see this once.","text_ga":"Blank EULA for NoVR clients. You should only see this once.","link_ec":"https://github.com/EchoTools","link_cp":"https
+2026-10-30T14:03:10.018Z warn [EVR] [DynLoadTexture] Element 'background_image' has no texture specified
+2026-10-30T14:03:10.018Z info [NEVR.PATCH] server clock read-back tick=125 clock=present step_us=8333 mode_bits=0x18 (0x8 fixed, 0x10 paced) expected_step_us=8333 step_state=set live=true
+2026-10-30T14:03:10.019Z info [NEVR.PATCH] server logged in — beginning multiplayer (no menu runs on a server to begin it)
+2026-10-30T14:03:10.019Z info [EVR] Beginning multiplayer
+2026-10-30T14:03:10.019Z info [NEVR.PATCH] DIAG netgame host-authority: granted=false flags=0x01 (bit1=0 bit2=0 bit6=0)
+2026-10-30T14:03:10.020Z info [NEVR.PATCH] service redirect key=transaction_host from=wss://transaction.readyatdawn.com/rad/rad15_live to=ws://127.0.0.1:61228/
+2026-10-30T14:03:10.024Z info [EVR] [SYSNET] Clearing low latency option
+2026-10-30T14:03:10.024Z info [EVR] Dedicated: broadcaster initialized at [172.18.0.2:6792]
+2026-10-30T14:03:10.024Z info [EVR] [NSLOBBY] loading server library 'pnsradgameserver' with log path 'z:\home\container\root\_local\r14logs'
+[NEVR.GAMESERVER] serverlib symbol resolved -> gamepatches factory
+[NEVR.GAMESERVER] ServerLib() created obj=00007ffff4ed6980
+[NEVR.GAMESERVER] UnkFunc1(this=00007ffff4ed6980, unk=0x6)
+[NEVR.GAMESERVER] Initialize(this=00007ffff4ed6980, lobby=000075ab60039d38, bc=000075ab5f3db620, unk2=000075ab53e779a0, logPath=z:\home\container\root\_local\r14logs)
+2026-10-30T14:03:10.026Z info [NEVR.GAMESERVER] Initialized game server (game thread 36, broadcaster callbacks registered=15/15)
+2026-10-30T14:03:10.026Z info [NEVR.PATCH] console ctrl handler re-armed to front of chain (CTRL+C reaches us first; the game's handler runs behind us)
+2026-10-30T14:03:10.026Z info [NEVR.PATCH] GameServerLib started — CTRL+C now defers to the game's teardown, which exits at GameServerLib::Terminate
+2026-10-30T14:03:10.026Z info [EVR] {"message":"server library loaded","category":"serverlib","server_library_name":"pnsradgameserver"}
+2026-10-30T14:03:10.026Z info [EVR] [NETGAME] NetGame switching state (from logged in, to loading global)
+2026-10-30T14:03:10.027Z info [EVR] Ending multiplayer gameplay
+2026-10-30T14:03:10.027Z info [EVR] [NETGAME] Resetting local connection stats
+2026-10-30T14:03:10.027Z info [EVR] [NETGAME] AFK detection enabled (by init)
+2026-10-30T14:03:10.027Z info [EVR] [NETGAME] Initializing HTTP API
+2026-10-30T14:03:10.028Z info [EVR] [NETGAME] Bound HTTP listener to 127.0.0.1:6719, responding to /session
+2026-10-30T14:03:10.029Z info [EVR] [LEVELLOAD] Loading level 'r14_glb_global_mp'
+2026-10-30T14:03:10.130Z info [EVR] [LEVELLOAD] Level 'r14_glb_global_mp' offset by (0.000, 0.000, 0.000)
+2026-10-30T14:03:10.140Z info [EVR] [SOCIALGROUPS] Social lobby group info received
+2026-10-30T14:03:10.140Z info [EVR] [SOCIALGROUPS] active group = Echo VR Lounge
+2026-10-30T14:03:10.158Z warn [EVR] List element rewardrow5 in list 0x46B5BEC3E9B61A5A (canvas 0x3CE278C8184CC075) is extraneous - disabling
+2026-10-30T14:03:10.158Z warn [EVR] List element rewardrow6 in list 0x46B5BEC3E9B61A5A (canvas 0x3CE278C8184CC075) is extraneous - disabling
+2026-10-30T14:03:10.158Z warn [EVR] List element rewardrow7 in list 0x46B5BEC3E9B61A5A (canvas 0x3CE278C8184CC075) is extraneous - disabling
+2026-10-30T14:03:10.159Z warn [EVR] List element rewardrow5 in list 0x46B5BEC3E9B61A5A (canvas mpl_postmatch_reward_page) is extraneous - disabling
+2026-10-30T14:03:10.159Z warn [EVR] List element rewardrow6 in list 0x46B5BEC3E9B61A5A (canvas mpl_postmatch_reward_page) is extraneous - disabling
+2026-10-30T14:03:10.159Z warn [EVR] List element rewardrow7 in list 0x46B5BEC3E9B61A5A (canvas mpl_postmatch_reward_page) is extraneous - disabling
+2026-10-30T14:03:10.203Z info [EVR] [DEBUGPRINT]  [ARM COMPUTER] Closing social controls
+2026-10-30T14:03:10.207Z info [EVR] [LEVELLOAD] Finished loading level 'r14_glb_global_mp' in 178 ms
+2026-10-30T14:03:10.214Z warn [NEVR.PATCH] Login session GUID not found in game log
+2026-10-30T14:03:10.215Z info [EVR] [NETGAME] NetGame switching state (from loading global, to lobby)
+2026-10-30T14:03:10.215Z info [NEVR.GAMESERVER] RequestRegistration server_id=000000000000000000 region=0x2fd38a995f615b9e version_lock=0x134b1272e1c4c0b7
+2026-10-30T14:03:10.665Z info [NEVR.AUTH] Credentials written to C:\users\container\AppData\Local\nevr\echovr\.credentials.json protection=host_mode_600
+2026-10-30T14:03:10.666Z info [NEVR.GAMESERVER] ServerDB auth via refreshed OAuth2 token (device-flow credential)
+2026-10-30T14:03:10.666Z info [NEVR.GAMESERVER] serverdb route=token services.serverdb=absent services.serverdb_uri=default token=present services.socket_uri=present identity.discord_id=absent
+2026-10-30T14:03:10.666Z info [NEVR.SERVERDB] Connecting to ServerDB at wss://g.echovrce.com:443/nevr
+2026-10-30T14:03:10.666Z info [NEVR.UPNP] disabled — announcing raw broadcaster port 6792, no mapping attempted (set "upnp" in config or pass -upnp)
+2026-10-30T14:03:10.680Z info [NEVR.GAMESERVER] registration metadata levels=32 manifests_read=2 plugin_levels=0 regions=0 guilds=0
+2026-10-30T14:03:10.680Z info [NEVR.GAMESERVER] No telemetry_uri in config — telemetry disabled
+2026-10-30T14:03:10.680Z info [NEVR.GAMESERVER] requested game server registration server_id=000000000000000000 region=0x0000000000000000
+2026-10-30T14:03:10.681Z info [EVR] [NSLOBBY] Registered lobby (id: 000000000000000000, radid: '', region: 'default', version: 1680630467, publisherlock: 'echovrce')
+2026-10-30T14:03:10.971Z info [NEVR.SERVERDB] Connected to ServerDB reconnect_count=0
+2026-10-30T14:03:13.157Z info [NEVR.GAMESERVER] Received registration success via protobuf: server_id=000000000000000000, ip=168.119.2.94
+2026-10-30T14:03:13.157Z info [EVR] [NSLOBBY] registration successful
+2026-10-30T14:03:13.157Z info [EVR] Dedicated: registered as 0x15F6BBF835E50700 at [172.18.0.2/168.119.2.94:6792]
+[evr] READY registered as 168.119.2.94:6792
+2026-10-30T14:03:13.157Z warn [NEVR.GAMESERVER] Unhandled WebSocket msgId: 0x43E6963AC76BEEE4 (size: 1)
+2026-10-30T14:03:15.490Z info [EVR] [TCP CLIENT] [R14NETCLIENT] connection to ws://127.0.0.1:61228/config closed
+2026-10-30T14:03:15.583Z info [NEVR.WS] Proxy: game disconnected (conn=0, config)
+2026-10-30T14:03:20.781Z info [NEVR.MENU] version label set item=lobby_version label=nEVR 6.9.0 replaced_text=2023-04-04T17:47:47Z count=1 result=1

@@ -31,7 +31,9 @@ Environment:
   EVR_GAME_DIR             shared game tree (default /opt/echovr/game/current)
   EVR_NEVR_DIR             runtime directory with one folder per tag (default /opt/echovr/nevr)
   NEVR_VERSION             runtime tag or "current" (default current)
-  NEVR_DISCORD_ID, NEVR_PASSWORD   EchoVRCE host account (password optional with a device link)
+  NEVR_PASSWORD            host account's server password (optional: without it nevr-runtime
+                           v6.9.0+ prints a sign-in code on the console to approve once)
+  NEVR_DISCORD_ID          host account's Discord ID (needed with NEVR_PASSWORD)
   NEVR_HTTP_KEY            backend HTTP key (default: the public key nevr-runtime embeds)
   NEVR_REGIONS, NEVR_GUILDS                       comma-separated lists (optional)
   NEVR_TICK_RATE (120), NEVR_EMPTY_TTL (0), NEVR_PUBLISHER_LOCK (echovrce)
@@ -129,23 +131,23 @@ func options() (supervisor.Options, error) {
 		o.ConfigYAMLRoot = o.ConfigYAML // the operator's own file, for either layout
 		return o, nil
 	}
-	// A device link (refresh token from echovrce.com/device) can stand in for
-	// the password on a 5.x runtime.
+	// Without a password a two-file runtime from v6.9.0 on signs in by a code
+	// the host approves on the console; a 5.x runtime only with a device link
+	// made earlier (_local/.credentials.json).
+	noPassword := strings.TrimSpace(os.Getenv(config.EnvPassword)) == ""
+	noDiscordID := strings.TrimSpace(os.Getenv(config.EnvDiscordID)) == ""
 	linked := false
 	if _, err := os.Stat(filepath.Join(o.Home, "root", "_local", ".credentials.json")); err == nil {
 		linked = true
 	}
-	for _, k := range []string{config.EnvDiscordID, config.EnvPassword} {
-		if strings.TrimSpace(os.Getenv(k)) == "" && !(k == config.EnvPassword && linked) {
-			return o, fmt.Errorf("%s is not set (EchoVRCE host account)", k)
-		}
-	}
-	noPassword := strings.TrimSpace(os.Getenv(config.EnvPassword)) == ""
 	c := config.Default()
 	if noPassword {
-		c.Auth.Password, c.DeviceLinked = "", true
-		o.DeviceLinked = true
-		fmt.Println("[evr] no password set: signing in with the device link in _local/.credentials.json (nevr-runtime 5.x only)")
+		c.Auth.Password, c.DeviceLinked = "", linked
+		o.DeviceLinked, o.DeviceCode = linked, true
+		fmt.Println("[evr] no password set: nevr-runtime v6.9.0+ prints a sign-in code to approve (5.x: the device link in _local, if any)")
+	}
+	if noDiscordID {
+		c.Identity.DiscordID = ""
 	}
 	c.Services.SocketURI = env("NEVR_SOCKET_URI", c.Services.SocketURI)
 	c.Services.ServerDBURI = env("NEVR_SERVERDB_URI", c.Services.ServerDBURI)
@@ -173,10 +175,15 @@ func options() (supervisor.Options, error) {
 		return o, err
 	}
 	if o.ConfigYAML, err = c.Render(); err != nil {
-		return o, err
+		o.ConfigYAML, o.ConfigErr = nil, err.Error()
+		if noPassword && !linked {
+			o.ConfigErr = "NEVR_PASSWORD is not set: nevr-runtime 5.x servers need the host account's password (v6.9.0 and later sign in by a code to approve)"
+		}
 	}
 	if noPassword {
-		r.Auth.Password = ""
+		r.Auth.Password, r.Identity.DiscordID = "", "" // the device code is the whole credential
+	} else if noDiscordID {
+		r.Identity.DiscordID = ""
 	}
 	if o.ConfigYAMLRoot, err = r.Render(); err != nil {
 		o.ConfigYAMLRoot, o.RootConfigErr = nil, err.Error()

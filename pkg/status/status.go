@@ -16,13 +16,17 @@ const FileName = "status.json"
 type State string
 
 const (
-	StateStarting   State = "starting"   // process launched, not registered yet
-	StateRegistered State = "registered" // waiting for a match
-	StateInSession  State = "in_session" // hosting a match
-	StateStopping   State = "stopping"   // shutting down
-	StateBackoff    State = "backoff"    // waiting before a restart after an error
-	StateFailed     State = "failed"     // error that needs a settings change
-	StateStopped    State = "stopped"
+	StateStarting State = "starting" // process launched, not registered yet
+	// StateAwaitingApproval: a server without a password (nevr-runtime v6.9.0
+	// on) printed a sign-in code and waits until the host approves it at
+	// SignInURL; a new code follows when one runs out.
+	StateAwaitingApproval State = "awaiting_approval"
+	StateRegistered       State = "registered" // waiting for a match
+	StateInSession        State = "in_session" // hosting a match
+	StateStopping         State = "stopping"   // shutting down
+	StateBackoff          State = "backoff"    // waiting before a restart after an error
+	StateFailed           State = "failed"     // error that needs a settings change
+	StateStopped          State = "stopped"
 )
 
 // Idle reports whether an instance can be restarted without dropping players.
@@ -50,6 +54,9 @@ type Status struct {
 	Reason         string    `json:"reason,omitempty"`
 	LastError      string    `json:"last_error,omitempty"`
 	NextStart      time.Time `json:"next_start,omitzero"`
+	// SignInURL and SignInExpires are set in StateAwaitingApproval only.
+	SignInURL     string    `json:"sign_in_url,omitempty"`
+	SignInExpires time.Time `json:"sign_in_expires,omitzero"`
 }
 
 // Write stores s at path atomically.

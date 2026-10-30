@@ -33,6 +33,10 @@ type Answers struct {
 		DiscordID string `yaml:"discord_id"`
 		Password  string `yaml:"password"`
 		HTTPKey   string `yaml:"http_key,omitempty"` // optional; defaults to the public key
+		// DeviceLink links the host at echovrce.com/device when there is no
+		// password (old, nevr-runtime 5.x only; needs DeviceLinkEnabled).
+		// Without it, each server signs in by its console code.
+		DeviceLink bool `yaml:"device_link,omitempty"`
 	} `yaml:"account"`
 	Game struct {
 		Source string `yaml:"source"` // mirror (default), dir, archive, skip
@@ -64,9 +68,9 @@ func LoadAnswers(path string) (Answers, error) {
 // Validate checks answers before anything is changed.
 func (an *Answers) Validate() error {
 	var errs []error
-	// Without a password the host signs in with an echovrce.com device link
-	// during setup (only with DeviceLinkEnabled), and the Discord ID comes
-	// from the backend.
+	// Without a password each server signs in by its console code (v6.9.0+),
+	// or, with DeviceLinkEnabled, the host is linked at echovrce.com/device
+	// during setup and the Discord ID comes from the backend.
 	if an.Account.Password != "" && (an.Account.DiscordID == "" || strings.Trim(an.Account.DiscordID, "0123456789") != "") {
 		errs = append(errs, errors.New("account.discord_id must be your numeric Discord user ID"))
 	}
@@ -147,10 +151,10 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	a := &App{Dir: dir, Cfg: cfg, Secrets: sec}
 
 	var s auth.Session
-	if sec[config.EnvPassword] == "" && !a.DeviceLinked() {
-		if !DeviceLinkEnabled() {
-			return nil, ErrPasswordRequired
-		}
+	switch {
+	case sec[config.EnvPassword] == "" && !a.DeviceLinked() && !(an.Account.DeviceLink && DeviceLinkEnabled()):
+		say("Account", "no password: "+SignInCodeNote)
+	case sec[config.EnvPassword] == "" && !a.DeviceLinked():
 		say("Account", "no password: linking this host at echovrce.com/device")
 		say("Account", ResetPasswordNote)
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -162,13 +166,14 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 		if err != nil {
 			return nil, fmt.Errorf("%w: %w", ErrDeviceLink, err)
 		}
-	} else {
+	default:
 		say("Account", "checking the EchoVRCE login")
 		if s, err = a.Login(ctx); err != nil {
 			return nil, fmt.Errorf("account check: %w", err)
 		}
 	}
 	switch {
+	case a.SignsInByCode():
 	case !s.MembershipsKnown:
 		say("Account", s.Username+" signed in with the device link")
 	case len(s.HostGuilds()) == 0:
@@ -195,6 +200,7 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 		switch an.Game.Source {
 		case "skip":
 			say("Game", "skipped; install it later (key g in the dashboard, or evr-docker game install)")
+			err = nil // games.Current's "not installed" is what skip means
 		case "dir":
 			_, err = games.FromDir(ctx, an.Game.Path)
 		case "archive":

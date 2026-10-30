@@ -15,3 +15,15 @@ Measured on 2026-10-30 on the same Debian 12 LXC as [the 5.4.2 notes](nevr-5.4.2
 | Sign-in | A server's bridge login needs `identity.discord_id` **and** `auth.password` (nevr-runtime #1339). With only a device link (a refresh token in the root's `.credentials.json`) it stops at once: `[NEVR.FATAL] server login refused: no credential configured (missing auth.password)`. The refresh token is still used for the ServerDB token. The release README's "a refresh token when it has one" is older than that rule. | Without `NEVR_PASSWORD` a 6.x runtime is not started: the instance fails with `invalid_config` and the reason. `_local`'s device link is copied into the root once; after that the runtime rotates the root's copy. |
 | Console | The runtime's lines still reach the process's stdout/stderr under Wine, as with 5.4.2. | Unchanged: the supervisor parses the console. |
 | Not measured | A 6.6.0 login and registration against EchoVRCE: the host account had no password at the time. | |
+
+## v6.9.0: sign-in without a password (2026-10-30, on a live host)
+
+nevr-runtime #1532. Measured with an empty `config.yaml`, no `NEVR_PASSWORD` and no Discord ID.
+
+| Area | Measured | What the tooling does |
+|---|---|---|
+| Prompt | The code and the approval page come once on stderr as one JSON line: `{"tag":"NEVR.AUTH","event":"server_sign_in_code","code":"…","url":"https://echovrce.com/device?code=…","expires_in_s":300,"msg":"Approve this server: …"}`. The log masks the code. The server polls every ~3 s (`[NEVR.AUTH] poll #N`). | The supervisor prints `[evr] approve this server: open <url> …` instead of the JSON, hides the poll lines, sets `awaiting_approval` with the link in `status.json`, and stops the registration timeout while it waits. |
+| Approval | `server sign-in ended: result=ok seconds=199`, then `LOGIN SUCCESS`, `serverdb route=token … identity.discord_id=absent`, registration success: the server registered in 5 s. | The registration timeout starts again after `result=ok`. |
+| Expiry | After 5 minutes: `the code ran out before it was approved; requesting a new one (attempt 2)` and a new prompt; the server keeps waiting. | Each prompt updates the link. A sign-in that gives up (`result=failed`, `device sign-in ended without a token`) is `sign_in`, retried with backoff. |
+| Restart | The token is kept in the root's `.credentials.json` (0600). The next start: `Using cached credentials -- no login needed`, no new code, registered in 5 s. | Kept across restarts; dropped only when a password sign-in is replaced (`account code`). |
+| Config | With no password, `config.yaml` must not name `auth.password`: an unset bare `${NEVR_PASSWORD}` stays literal and would be sent. | The root file leaves out `auth` and `identity` without a password. Runtimes older than v6.9.0 are not started without one. |

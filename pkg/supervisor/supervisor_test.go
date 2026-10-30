@@ -281,3 +281,122 @@ func TestRunRuntimeRefusedIsNotRetried(t *testing.T) {
 	cancel()
 	<-done
 }
+
+// twoFileAt is twoFile with the runtime tag.
+func twoFileAt(t *testing.T, o *Options, tag, fixture string, code int) {
+	t.Helper()
+	twoFile(t, o, fixture, code)
+	dir := filepath.Join(o.NevrDir, tag)
+	if err := os.Rename(filepath.Join(o.NevrDir, "v6.6.0"), dir); err != nil {
+		t.Fatal(err)
+	}
+	os.Remove(filepath.Join(o.NevrDir, "current"))
+	if err := os.Symlink(tag, filepath.Join(o.NevrDir, "current")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// A server waiting for its sign-in code to be approved is not "unregistered":
+// the register timer starts once the sign-in ends, and the console shows the
+// link instead of the JSON prompt.
+func TestRunOnceDeviceCodeWaitsForApproval(t *testing.T) {
+	o, out := testOptions(t, "v6.9.0-device-code.log", 6792)
+	twoFileAt(t, &o, "v6.9.0", "v6.9.0-device-code.log", 0)
+	o.DeviceCode = true
+	o.RegisterTimeout = 700 * time.Millisecond
+	fx, _ := filepath.Abs("testdata/v6.9.0-device-code.log")
+	// Up to the prompt, a wait longer than RegisterTimeout, then the rest.
+	script := fmt.Sprintf("#!/bin/sh\nsed -n '1,115p' '%[1]s' >&2\nsleep 2\nsed -n '116,$p' '%[1]s' >&2\nexec sleep 300\n", fx)
+	os.WriteFile(o.Wine, []byte(script), 0o755)
+	var waiting status.Status
+	o.OnEvent = func(ev Event, st status.Status) {
+		if ev.Kind == KindSignInCode {
+			waiting = st
+		}
+	}
+	s := newSup(t, o)
+	res := s.runOnce(context.Background())
+	if !res.registered || res.reason != ReasonNone {
+		t.Fatalf("result %+v\n%s", res, out)
+	}
+	if waiting.State != status.StateAwaitingApproval || waiting.SignInURL != "https://echovrce.com/device?code=TEST" || waiting.SignInExpires.IsZero() {
+		t.Errorf("status while waiting: %+v", waiting)
+	}
+	if st := s.Status(); st.SignInURL != "" || !st.SignInExpires.IsZero() {
+		t.Errorf("sign-in link kept after the approval: %+v", st)
+	}
+	c := out.String()
+	if !strings.Contains(c, "[evr] approve this server: open https://echovrce.com/device?code=TEST") {
+		t.Errorf("no approval line:\n%s", c)
+	}
+	if strings.Contains(c, `"event":"server_sign_in_code"`) {
+		t.Error("raw JSON prompt printed")
+	}
+}
+
+// Before v6.9.0 a two-file runtime refuses a server without a password.
+func TestRunOnceDeviceCodeNeedsV690(t *testing.T) {
+	o, _ := testOptions(t, "v6.6.0-no-password.log", 6792)
+	twoFile(t, &o, "v6.6.0-no-password.log", 1)
+	o.DeviceCode = true
+	res := newSup(t, o).runOnce(context.Background())
+	if res.reason != ReasonInvalidConfig || !strings.Contains(res.detail, "v6.9.0") || !strings.Contains(res.detail, "NEVR_PASSWORD") {
+		t.Fatalf("result %+v", res)
+	}
+	if _, err := os.Stat(filepath.Join(filepath.Dir(o.Wine), "started")); !os.IsNotExist(err) {
+		t.Error("v6.6.0 started without a password")
+	}
+}
+
+// A 5.x runtime without a usable config says why instead of starting.
+func TestRunOnceOneFileNeedsConfig(t *testing.T) {
+	o, _ := testOptions(t, "registered-sigint.jsonl", 6795)
+	o.ConfigYAML, o.ConfigErr = nil, "NEVR_PASSWORD is not set"
+	res := newSup(t, o).runOnce(context.Background())
+	if res.reason != ReasonInvalidConfig || !strings.Contains(res.detail, "NEVR_PASSWORD is not set") {
+		t.Fatalf("result %+v", res)
+	}
+}
+
+// After the approval the register timer runs again: a server that signs in
+// but never registers is restarted.
+func TestRunOnceDeviceCodeThenNoRegistration(t *testing.T) {
+	o, out := testOptions(t, "v6.9.0-device-code.log", 6792)
+	twoFileAt(t, &o, "v6.9.0", "v6.9.0-device-code.log", 0)
+	o.DeviceCode = true
+	o.RegisterTimeout = 500 * time.Millisecond
+	fx, _ := filepath.Abs("testdata/v6.9.0-device-code.log")
+	// The prompt and the approval (line 182), then nothing.
+	os.WriteFile(o.Wine, []byte(fmt.Sprintf("#!/bin/sh\nsed -n '1,182p' '%s' >&2\nexec sleep 300\n", fx)), 0o755)
+	start := time.Now()
+	res := newSup(t, o).runOnce(context.Background())
+	if res.registered || res.reason != ReasonRegistration {
+		t.Fatalf("result %+v\n%s", res, out)
+	}
+	if d := time.Since(start); d > 5*time.Second {
+		t.Errorf("not restarted promptly after the approval: %s", d)
+	}
+}
+
+// Before each start of a two-file runtime the root's old run logs are compressed.
+func TestRunOnceCompressesOldLogs(t *testing.T) {
+	o, out := testOptions(t, "v6.9.0-device-code.log", 6792)
+	twoFileAt(t, &o, "v6.9.0", "v6.9.0-device-code.log", 1)
+	logs := filepath.Join(game.NevrRoot(filepath.Join(o.Home, ".wine"), "container"), "logs")
+	os.MkdirAll(logs, 0o755)
+	for _, n := range []string{"nevr-2026-10-29T10-00-00.000.jsonl", "nevr-2026-10-30T10-00-00.000.jsonl", "nevr-bootstrap.jsonl"} {
+		os.WriteFile(filepath.Join(logs, n), []byte("{}\n"), 0o644)
+	}
+	newSup(t, o).runOnce(context.Background())
+	if _, err := os.Stat(filepath.Join(logs, "nevr-2026-10-29T10-00-00.000.jsonl.gz")); err != nil {
+		t.Errorf("old run log not compressed: %v", err)
+	}
+	for _, n := range []string{"nevr-2026-10-30T10-00-00.000.jsonl", "nevr-bootstrap.jsonl"} {
+		if _, err := os.Stat(filepath.Join(logs, n)); err != nil {
+			t.Errorf("%s: %v", n, err)
+		}
+	}
+	if !strings.Contains(out.String(), "[evr] logs: compressed 1, removed 0") {
+		t.Errorf("no logs line:\n%s", out)
+	}
+}

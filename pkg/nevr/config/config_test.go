@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"flag"
 	"os"
 	"strings"
@@ -106,10 +105,10 @@ func TestRootDefault(t *testing.T) {
 	if _, err := Parse(got); err != nil {
 		t.Error(err)
 	}
-	// A device link does not stand in for the password on 6.x.
-	r.Auth.Password, r.DeviceLinked = "", true
-	if err := r.Validate(); !errors.Is(err, ErrRootNeedsPassword) {
-		t.Errorf("want ErrRootNeedsPassword, got %v", err)
+	// With a password the Discord ID is part of the credential.
+	r.Identity.DiscordID = ""
+	if err := r.Validate(); err == nil || !strings.Contains(err.Error(), "identity.discord_id") {
+		t.Errorf("password without a Discord ID: got %v", err)
 	}
 	// An override for another backend is kept.
 	o := RootDefault()
@@ -120,5 +119,39 @@ func TestRootDefault(t *testing.T) {
 	b, err := o.Render()
 	if err != nil || !strings.Contains(string(b), "socket_uri: ws://other:80/spr?regions=x") {
 		t.Errorf("override lost: %s %v", b, err)
+	}
+}
+
+// From nevr-runtime v6.9.0 a server without auth.password signs in by device
+// code: its file names neither the password nor the Discord ID. A bare
+// ${NEVR_PASSWORD} would stay literal when unset and be sent as the password.
+func TestRootDeviceCode(t *testing.T) {
+	r := RootDefault()
+	r.Auth.Password, r.Identity.DiscordID = "", ""
+	if err := r.SetMatchmaking([]string{"euw"}, []string{"123"}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := r.Render()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(got)
+	for _, unwanted := range []string{"password", "discord_id", "identity", "NEVR_PASSWORD", "auth:"} {
+		if strings.Contains(s, unwanted) {
+			t.Errorf("device-code config names %s:\n%s", unwanted, s)
+		}
+	}
+	for _, want := range []string{"regions: [euw]", "guilds: [\"123\"]", "tick_rate_hz: 120"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("device-code config lacks %q:\n%s", want, s)
+		}
+	}
+	if _, err := Parse(got); err != nil {
+		t.Error(err)
+	}
+	// A Discord ID alone is fine: the runtime ignores it without a password.
+	r.Identity.DiscordID = EnvRef(EnvDiscordID)
+	if err := r.Validate(); err != nil {
+		t.Errorf("device-code config with a Discord ID: %v", err)
 	}
 }

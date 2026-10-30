@@ -50,7 +50,7 @@ var sessionRouters = map[string]bool{"": true, "legacy": true, "config": true, "
 type Config struct {
 	Version   int        `yaml:"version"`
 	Services  Services   `yaml:"services,omitempty"`
-	Identity  Identity   `yaml:"identity"`
+	Identity  Identity   `yaml:"identity,omitempty"`
 	Auth      Auth       `yaml:"auth,omitempty"`
 	Network   Network    `yaml:"network,omitempty"`
 	Guilds    List       `yaml:"guilds,omitempty,flow"`
@@ -59,11 +59,10 @@ type Config struct {
 
 	// DeviceLinked means the instance has a device-link refresh token in
 	// _local/.credentials.json, so a missing password is not rejected here.
-	// It does not count for Root: a two-file runtime refuses a server login
-	// without auth.password.
 	DeviceLinked bool `yaml:"-"`
 	// Root marks the config of a two-file runtime (RootDefault): the service
-	// keys are optional overrides of the built-in values.
+	// keys are optional overrides of the built-in values, and without
+	// auth.password the server signs in by device code (v6.9.0 on).
 	Root bool `yaml:"-"`
 }
 
@@ -74,7 +73,7 @@ type Services struct {
 }
 
 type Identity struct {
-	DiscordID string `yaml:"discord_id"`
+	DiscordID string `yaml:"discord_id,omitempty"`
 }
 
 type Auth struct {
@@ -159,18 +158,17 @@ func RootDefault() Config {
 	}
 }
 
-// ErrRootNeedsPassword is why a two-file runtime cannot start on a device link.
-var ErrRootNeedsPassword = errors.New("auth.password is required: nevr-runtime 6.x servers log in with the host account's Discord ID and password, and refuse a device link alone (nevr-runtime #1339)")
+// ErrRootNeedsPassword is why a two-file runtime before DeviceCodeMin cannot
+// start without a password: it refuses a server login without auth.password
+// (nevr-runtime #1339). From v6.9.0 on such a server prints a sign-in code to
+// approve instead (nevr-runtime #1532).
+var ErrRootNeedsPassword = errors.New("NEVR_PASSWORD is not set: this nevr-runtime refuses a server login without auth.password; update to v6.9.0 or later (the server then shows a sign-in code to approve) or set the password")
 
 // Validate mirrors the checks that make a server exit at boot (v5.4.2, and
 // v6.6.0 for Root), so they surface in the TUI instead of in a crash loop.
 func (c Config) Validate() error {
 	var errs []error
-	if c.Root {
-		if c.Auth.Password == "" && !c.Services.AllowOfflineServer {
-			errs = append(errs, ErrRootNeedsPassword)
-		}
-	} else if c.Services.SocketURI == "" && !c.Services.AllowOfflineServer {
+	if !c.Root && c.Services.SocketURI == "" && !c.Services.AllowOfflineServer {
 		errs = append(errs, errors.New("services.socket_uri is required for a dedicated server"))
 	}
 	for name, v := range map[string]string{"services.socket_uri": c.Services.SocketURI, "services.serverdb_uri": c.Services.ServerDBURI} {
@@ -181,7 +179,9 @@ func (c Config) Validate() error {
 			errs = append(errs, fmt.Errorf("%s must be a ws:// or wss:// URL, got %q", name, v))
 		}
 	}
-	if c.Identity.DiscordID == "" {
+	// A two-file runtime without a password signs in by device code and needs
+	// no Discord ID.
+	if c.Identity.DiscordID == "" && !(c.Root && c.Auth.Password == "") {
 		errs = append(errs, errors.New("identity.discord_id is required"))
 	}
 	if !c.Root && (c.Auth.HTTPURI == "" || c.Auth.HTTPKey == "") {
