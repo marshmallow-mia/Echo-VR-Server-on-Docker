@@ -235,20 +235,28 @@ func (a *App) UseSignInCode(ctx context.Context, say func(string)) error {
 	return err
 }
 
-// dropPassword forgets the password sign-in. The sign-in a password left in a
-// server's root goes too, so it asks for a code; one a code made is kept.
+// dropPassword forgets the password sign-in and the old host-wide device
+// link. The sign-in either left in a server's root goes too, so it asks for a
+// code; one a code made is kept.
 func (a *App) dropPassword() error {
-	had := a.Secrets[config.EnvPassword] != ""
+	had := a.Secrets[config.EnvPassword] != "" || a.DeviceLinked()
 	delete(a.Secrets, config.EnvPassword)
 	delete(a.Secrets, config.EnvDiscordID)
 	if err := a.Secrets.Save(a.Dir); err != nil {
 		return err
 	}
-	if !had {
-		return nil
+	if err := os.Remove(a.devicePath()); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
 	}
 	for _, in := range a.Cfg.Instances {
-		if err := os.Remove(rootCredentials(a.Cfg.InstanceDir(in.Name))); err != nil && !errors.Is(err, os.ErrNotExist) {
+		dir := a.Cfg.InstanceDir(in.Name)
+		if err := os.Remove(filepath.Join(dir, "root", "_local", game.CredentialsName)); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+		if !had {
+			continue
+		}
+		if err := os.Remove(rootCredentials(dir)); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
 	}

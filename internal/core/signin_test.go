@@ -127,6 +127,22 @@ func TestUseSignInCode(t *testing.T) {
 	if _, err := os.Stat(creds); err != nil {
 		t.Error("an approved code's sign-in was removed")
 	}
+	// The old host-wide device link goes, with the copies it left.
+	legacy := filepath.Join(cfg.InstanceDir("evr-1"), "root", "_local", ".credentials.json")
+	os.MkdirAll(filepath.Dir(legacy), 0o755)
+	os.WriteFile(legacy, []byte("{}"), 0o600)
+	os.WriteFile(filepath.Join(dir, DeviceFile), []byte("{}"), 0o600)
+	if err := a.dropPassword(); err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []string{filepath.Join(dir, DeviceFile), legacy, creds} {
+		if _, err := os.Stat(p); !os.IsNotExist(err) {
+			t.Errorf("%s kept after leaving the device link", p)
+		}
+	}
+	if !a.SignsInByCode() {
+		t.Error("not on the console code after account code")
+	}
 }
 
 func TestLinkDeviceOff(t *testing.T) {
