@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
@@ -129,6 +130,12 @@ func (a *App) installDeviceLink(name string, overwrite bool) error {
 	if err := os.WriteFile(dst, b, 0o600); err != nil {
 		return err
 	}
+	// A 6.x runtime reads its sign-in from the nEVR root, where the supervisor
+	// copies _local's only when the root has none: drop the root's old one so
+	// the new link reaches it.
+	if err := os.Remove(rootCredentials(a.Cfg.InstanceDir(name))); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
 	for _, p := range []string{filepath.Join(a.Cfg.InstanceDir(name), "root"), filepath.Dir(dst), dst} {
 		if err := os.Chown(p, a.Cfg.UID, a.Cfg.UID); err != nil && os.Geteuid() == 0 {
 			return err
@@ -169,12 +176,20 @@ func (a *App) UsePassword(ctx context.Context, discordID, password string, say f
 		return s, err
 	}
 	for _, in := range a.Cfg.Instances {
-		err := os.Remove(filepath.Join(a.Cfg.InstanceDir(in.Name), "root", "_local", ".credentials.json"))
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			return s, err
+		dir := a.Cfg.InstanceDir(in.Name)
+		for _, p := range []string{filepath.Join(dir, "root", "_local", ".credentials.json"), rootCredentials(dir)} {
+			if err := os.Remove(p); err != nil && !errors.Is(err, os.ErrNotExist) {
+				return s, err
+			}
 		}
 	}
 	say(fmt.Sprintf("Signed in as %s; %s", s.Username, s.HostSummary()))
 	_, err = a.Apply(ctx, false, say)
 	return s, err
+}
+
+// rootCredentials is the sign-in cache a 6.x runtime reads: in the nEVR root of
+// the instance's Wine prefix (the image's user is "container").
+func rootCredentials(instanceDir string) string {
+	return filepath.Join(game.NevrRoot(filepath.Join(instanceDir, ".wine"), "container"), game.CredentialsName)
 }

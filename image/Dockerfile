@@ -9,14 +9,27 @@ ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/evr-supervisor ./cmd/evr-supervisor
 
 FROM debian:trixie-slim
-# Debian's Wine 10 is the tested build; WineHQ 11.0 crashes at boot with
-# nevr-runtime 5.4.2 (docs/nevr-5.4.2-findings.md).
-ARG WINE_VERSION=10.0~repack-6
+# WineHQ's Wine 11.19, its 64-bit half only. nevr-runtime 6.x's host checks the
+# signature of nevr-runtime.dll with crypt32, which Debian's Wine 10 cannot
+# decode (exit 78, "does not parse as PKCS#7"); nevr-runtime measured the check
+# on wine-11.19. WineHQ 11.0 crashed at boot with 5.4.2, 11.19 boots 5.4.3 and
+# 6.6.0 (docs/nevr-6.6.0-findings.md). echovr.exe is 64-bit, so the i386 half
+# and its multiarch libraries are left out: wine-devel (bin/wine, share/) is
+# unpacked by hand because its package depends on wine-devel-i386.
+ARG WINE_VERSION=11.19~trixie-1
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates tini procps winbind \
-      wine=${WINE_VERSION} wine64=${WINE_VERSION} libwine=${WINE_VERSION} \
- && rm -rf /var/lib/apt/lists/*
+ && apt-get install -y --no-install-recommends ca-certificates curl gnupg tini procps winbind \
+      libgnutls30t64 libfreetype6 libfontconfig1 libgssapi-krb5-2 libkrb5-3 libunwind8 libdbus-1-3 \
+ && install -d /etc/apt/keyrings \
+ && curl -fsSL https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key \
+ && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/winehq-archive.key] https://dl.winehq.org/wine-builds/debian trixie main" \
+      > /etc/apt/sources.list.d/winehq.list \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends wine-devel-amd64=${WINE_VERSION} \
+ && cd /tmp && apt-get download wine-devel=${WINE_VERSION} && dpkg -x wine-devel_*.deb / && rm -f wine-devel_*.deb \
+ && apt-get purge -y curl gnupg && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+ENV PATH=/opt/wine-devel/bin:$PATH
 ENV WINEDEBUG=-all \
     WINEDLLOVERRIDES="mscoree,mshtml=" \
     USER=container \

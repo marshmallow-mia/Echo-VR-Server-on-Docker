@@ -1,6 +1,6 @@
 // Package nevr finds, downloads and installs nevr-runtime releases.
 //
-// Every v5.x release is published as a GitHub pre-release, so "latest" on
+// Every v5.x and v6.x release is published as a GitHub pre-release, so "latest" on
 // GitHub points at v3.2.0; releases are always listed and picked explicitly.
 package nevr
 
@@ -21,6 +21,13 @@ const DefaultRepo = "EchoTools/nevr-runtime"
 // MinVersion is the oldest release that works as a dedicated server.
 var MinVersion = MustParseVersion("v5.4.2")
 
+// RootLayoutMin is the first release servers take in nEVR's two-file layout:
+// the host BugSplat64.dll beside echovr.exe and the signed nevr-runtime.dll in
+// the nEVR root (%LOCALAPPDATA%\nevr\echovr). From then on the server package
+// is published only as nevr-runtime-<tag>-windows.zip. The releases between
+// v5.4.3 and v6.0.0 have no server package of the old name and are not offered.
+var RootLayoutMin = MustParseVersion("v6.0.0")
+
 // Blocked lists releases that must never be installed on servers, with the reason.
 var Blocked = map[string]string{
 	"v5.3.0": "servers begin multiplayer twice and exit with code 62 (nevr-runtime #719)",
@@ -35,7 +42,7 @@ type Release struct {
 	Prerelease bool
 	Published  time.Time
 	Notes      string
-	Asset      Asset // the server zip, nevr-runtime-<tag>.zip
+	Asset      Asset // the server zip: nevr-runtime-<tag>.zip, from RootLayoutMin on nevr-runtime-<tag>-windows.zip
 	Blocked    string
 }
 
@@ -131,9 +138,17 @@ func (c *Client) List(ctx context.Context) ([]Release, error) {
 			continue
 		}
 		rel := Release{Tag: r.Tag, Version: v, Prerelease: r.Prerelease, Published: r.Published, Notes: r.Body, Blocked: Blocked[r.Tag]}
-		for _, a := range r.Assets {
-			if a.Name == "nevr-runtime-"+r.Tag+".zip" {
-				rel.Asset = Asset{Name: a.Name, URL: a.URL, Size: a.Size, SHA256: strings.TrimPrefix(a.Digest, "sha256:")}
+		names := []string{"nevr-runtime-" + r.Tag + ".zip"}
+		if !v.Less(RootLayoutMin) {
+			names = append(names, "nevr-runtime-"+r.Tag+"-windows.zip")
+		}
+	pick:
+		for _, name := range names {
+			for _, a := range r.Assets {
+				if a.Name == name {
+					rel.Asset = Asset{Name: a.Name, URL: a.URL, Size: a.Size, SHA256: strings.TrimPrefix(a.Digest, "sha256:")}
+					break pick
+				}
 			}
 		}
 		if rel.Asset.URL == "" {
