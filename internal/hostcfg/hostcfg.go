@@ -373,19 +373,15 @@ func (s Secrets) Save(dir string) error {
 	return writeAtomic(filepath.Join(dir, "secrets.env"), []byte(b.String()), 0o600)
 }
 
-// Missing lists the account secrets that are not set. With a device link
-// neither the password nor the Discord ID (taken from the backend) is needed.
-func (s Secrets) Missing(deviceLinked bool) []string {
-	if deviceLinked {
-		return nil
+// Missing lists the account secrets a password sign-in still lacks: the
+// Discord ID. Without a password nothing is missing: from nevr-runtime v6.9.0
+// on each server signs in by a code it prints on its console (a 5.x server by
+// a device link made earlier).
+func (s Secrets) Missing() []string {
+	if s[config.EnvPassword] != "" && s[config.EnvDiscordID] == "" {
+		return []string{config.EnvDiscordID}
 	}
-	var out []string
-	for _, k := range []string{config.EnvDiscordID, config.EnvPassword} {
-		if s[k] == "" {
-			out = append(out, k)
-		}
-	}
-	return out
+	return nil
 }
 
 // GameEnv returns the secrets the game container needs.

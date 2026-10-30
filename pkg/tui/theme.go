@@ -56,6 +56,8 @@ func StateLabel(state string) string {
 		return "in match"
 	case "backoff":
 		return "retrying"
+	case "awaiting_approval":
+		return "approve code"
 	default:
 		return strings.ReplaceAll(state, "_", " ")
 	}

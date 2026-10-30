@@ -138,8 +138,11 @@ func parentDir(p string) string {
 }
 
 func (a *App) accountCheck(ctx context.Context) Check {
-	if m := a.Secrets.Missing(a.DeviceLinked()); len(m) > 0 {
+	if m := a.Secrets.Missing(); len(m) > 0 {
 		return check("account", Fail, fmt.Sprintf("%v not set", m), "evr-docker account set (Discord ID and server password)")
+	}
+	if a.SignsInByCode() {
+		return check("account", OK, "no password: "+SignInCodeNote, "")
 	}
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()

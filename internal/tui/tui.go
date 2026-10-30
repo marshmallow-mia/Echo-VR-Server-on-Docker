@@ -19,6 +19,7 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/supervisor"
 	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/updates"
@@ -427,6 +428,9 @@ func (m *model) refreshTable() {
 		if s.Status != nil && s.Status.LastError != "" && (s.State() == "failed" || s.State() == "backoff") {
 			note = s.Status.LastError
 		}
+		if s.State() == string(status.StateAwaitingApproval) {
+			note = "approve: " + s.Status.SignInURL
+		}
 		rows = append(rows, table.Row{s.Instance.Name, strconv.Itoa(s.Instance.Port), ui.StateLabel(s.State()), runtime, reg, matches, restarts, note})
 	}
 	m.table.SetRows(rows)
@@ -641,14 +645,32 @@ func (m *model) render() string {
 	if s, ok := m.selected(); ok && s.Status != nil && s.Status.LastError != "" {
 		detail = "\n" + ui.Subtle.Render(ui.Truncate("last error: "+s.Status.LastError, m.width-2))
 	}
+	detail += m.approvalDetail()
 	detail += m.updatesNotice()
 	if !m.app.HasAccount() {
-		detail += "\n" + ui.Warning.Render("The servers have no EchoVRCE sign-in yet: press ") + ui.KeyStyle.Render("c") + ui.Warning.Render(" to link this host.")
+		detail += "\n" + ui.Warning.Render("The servers have no EchoVRCE sign-in yet: press ") + ui.KeyStyle.Render("c") + ui.Warning.Render(" to sign in.")
 	}
 	return m.header() + "\n\n" + body + detail + "\n" + m.footer(
 		ui.K("enter", "logs"), ui.K("s", "start"), ui.K("x", "stop"), ui.K("r/R", "restart"),
 		ui.K("a", "add"), ui.K("e", "edit"), ui.K("d", "delete"), ui.K("A", "apply"),
 		ui.K("u", "runtime"), ui.K("U", "updates"), ui.K("c", "account"), ui.K("m", "more"), ui.K("q", "quit"))
+}
+
+// approvalDetail names the servers that wait for their sign-in code.
+func (m *model) approvalDetail() string {
+	var b strings.Builder
+	for _, s := range m.servers {
+		if s.State() != string(status.StateAwaitingApproval) {
+			continue
+		}
+		until := ""
+		if !s.Status.SignInExpires.IsZero() {
+			until = " by " + s.Status.SignInExpires.Local().Format("15:04")
+		}
+		// Never cut: the link is what the host opens.
+		b.WriteString("\n" + ui.Warning.Render(fmt.Sprintf("%s waits for its sign-in: approve it with the host account%s at ", s.Instance.Name, until)) + s.Status.SignInURL)
+	}
+	return b.String()
 }
 
 func (m *model) renderBusy() string {

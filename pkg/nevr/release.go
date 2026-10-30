@@ -28,6 +28,12 @@ var MinVersion = MustParseVersion("v5.4.2")
 // v5.4.3 and v6.0.0 have no server package of the old name and are not offered.
 var RootLayoutMin = MustParseVersion("v6.0.0")
 
+// DeviceCodeMin is the first release whose server signs in without a password:
+// it prints a code on its console, waits until the host approves it at
+// echovrce.com/device and keeps the sign-in in the nEVR root (nevr-runtime
+// #1532). Older two-file runtimes refuse a server without auth.password.
+var DeviceCodeMin = MustParseVersion("v6.9.0")
+
 // Blocked lists releases that must never be installed on servers, with the reason.
 var Blocked = map[string]string{
 	"v5.3.0": "servers begin multiplayer twice and exit with code 62 (nevr-runtime #719)",

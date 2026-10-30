@@ -30,14 +30,15 @@ func initCmd(g *globals) *cobra.Command {
 		Long: `Sets up everything in one go. Without flags in a terminal, the TUI wizard opens.
 For unattended installs pass --answers FILE (secrets may be ${ENV} references) or flags.
 
-The servers sign in with the host account's Discord ID and server password
-(nevr-runtime 6.x refuses a device link alone); in a terminal, missing ones are
-asked for. With --device-link and no password the host is linked at
-echovrce.com/device instead (nevr-runtime 5.x only).
+Without a password each server prints a sign-in code on its console the first
+time it starts (nevr-runtime v6.9.0 and later): approve it at
+echovrce.com/device with the host account, and the server keeps the sign-in.
+evr-docker server logs NAME shows the code. To sign in with the host account's
+Discord ID and server password instead, pass --discord-id and --password-stdin.
 
 Example:
-  echo "$PASSWORD" | evr-docker init --discord-id 1234 --password-stdin --servers 2 --start
-  evr-docker init --device-link --servers 2 --start`,
+  evr-docker init --servers 2 --start
+  echo "$PASSWORD" | evr-docker init --discord-id 1234 --password-stdin --servers 2 --start`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			n := cmd.Flags().NFlag()
 			if cmd.Flags().Changed("device-link") {
@@ -56,6 +57,7 @@ Example:
 			if fl.Changed("discord-id") {
 				an.Account.DiscordID = discordID
 			}
+			an.Account.DeviceLink = an.Account.DeviceLink || core.DeviceLinkEnabled()
 			if fl.Changed("http-key") {
 				an.Account.HTTPKey = httpKey
 			}
@@ -86,21 +88,6 @@ Example:
 			}
 			progress := func(step, detail string) { g.say("[%s] %s", step, detail) }
 			_, err := core.Init(cmd.Context(), g.configDir, an, progress)
-			if errors.Is(err, core.ErrPasswordRequired) && term.IsTerminal(int(os.Stdin.Fd())) {
-				// Nothing was changed yet: ask for the sign-in and go on.
-				if an.Account.DiscordID == "" {
-					fmt.Fprint(os.Stderr, "Discord user ID of the EchoVRCE host account: ")
-					fmt.Scanln(&an.Account.DiscordID)
-					an.Account.DiscordID = strings.TrimSpace(an.Account.DiscordID)
-				}
-				if an.Account.Password, err = readSecret("EchoVRCE server password: "); err != nil {
-					return err
-				}
-				if an.Account.Password == "" {
-					return core.ErrPasswordRequired
-				}
-				_, err = core.Init(cmd.Context(), g.configDir, an, progress)
-			}
 			if err == nil {
 				g.say("\nAll set. Check the servers with: evr-docker server ls")
 			}
@@ -365,7 +352,7 @@ func runtimeCmd(g *globals) *cobra.Command {
 }
 
 func accountCmd(g *globals) *cobra.Command {
-	cmd := &cobra.Command{Use: "account", Short: "EchoVRCE host account: set, test, link and list registered servers"}
+	cmd := &cobra.Command{Use: "account", Short: "EchoVRCE host account: password or console code, test and list registered servers"}
 	var discordID, httpKey string
 	var passwordStdin bool
 	set := &cobra.Command{
@@ -397,6 +384,20 @@ func accountCmd(g *globals) *cobra.Command {
 			return err
 		},
 	}
+	cmd.AddCommand(&cobra.Command{
+		Use: "code", Short: "Sign in by the code each server prints on its console instead of a password (nevr-runtime v6.9.0+)",
+		Long: `Removes the stored password and Discord ID and recreates the servers. Each
+server then prints a sign-in code on its console at its next start: approve it
+at echovrce.com/device with the host account (evr-docker server logs NAME shows
+it). The server keeps the sign-in, so a restart does not ask again.`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			a, err := g.app()
+			if err != nil {
+				return err
+			}
+			return a.UseSignInCode(cmd.Context(), func(s string) { g.say("%s", s) })
+		},
+	})
 	set.Flags().StringVar(&discordID, "discord-id", "", "Discord user ID")
 	set.Flags().StringVar(&httpKey, "http-key", "", "backend HTTP key (default: the public key)")
 	set.Flags().BoolVar(&passwordStdin, "password-stdin", false, "read the password from stdin (also when stdin is not a terminal)")
@@ -459,13 +460,14 @@ func accountCmd(g *globals) *cobra.Command {
 	})
 
 	cmd.AddCommand(&cobra.Command{
-		Use: "link", Short: "Sign in at echovrce.com/device instead of with a password (needs --device-link; nevr-runtime 5.x only)",
+		Use: "link", Hidden: true, Short: "Link this host at echovrce.com/device (old, nevr-runtime 5.x only; needs --device-link)",
 		Long: `Shows a code to approve at echovrce.com/device, stores the link in
 /etc/evr-docker/device.json, takes the Discord ID from the backend and gives
-every server the link (a stored password is removed). No password is needed.
+every server the link (a stored password is removed).
 
-nevr-runtime 6.x refuses a server that has only a device link, so this runs
-only with --device-link or EVR_DEVICE_LINK=1.`,
+Only nevr-runtime 5.x servers use this link, so this runs only with
+--device-link or EVR_DEVICE_LINK=1. From v6.9.0 on use evr-docker account code:
+each server shows its own sign-in code.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if !core.DeviceLinkEnabled() {
 				return core.ErrDeviceLinkOff

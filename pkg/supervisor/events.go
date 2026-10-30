@@ -24,11 +24,14 @@ const (
 	KindTeardown
 	KindShutdown
 	KindFatal
+	KindSignInCode
+	KindSignInEnded
 )
 
 func (k Kind) String() string {
 	return [...]string{"none", "runtime_version", "login_success", "login_failed", "authenticated", "bound",
-		"serverdb_error", "registered", "session_start", "session_end", "teardown", "shutdown", "fatal"}[k]
+		"serverdb_error", "registered", "session_start", "session_end", "teardown", "shutdown", "fatal",
+		"sign_in_code", "sign_in_ended"}[k]
 }
 
 // Reason classifies a fatal error; retryable reasons get a restart with
@@ -44,7 +47,10 @@ const (
 	// ReasonRuntimeRefused: the host (6.x) did not load nevr-runtime.dll from the
 	// nEVR root (missing, or its signature refused) and stopped with exit 78.
 	ReasonRuntimeRefused Reason = "runtime_refused"
-	ReasonOther          Reason = "fatal"
+	// ReasonSignIn: a server without a password (v6.9.0 on) ended its device
+	// sign-in without a token, because the service could not be asked. Retried.
+	ReasonSignIn Reason = "sign_in"
+	ReasonOther  Reason = "fatal"
 )
 
 // Retryable reports whether restarting can help.
@@ -78,6 +84,9 @@ type Event struct {
 	IP      string // KindRegistered: address Nakama saw
 	Session string // KindSessionStart/End
 	Version string // KindRuntimeVersion
+	URL     string // KindSignInCode: the approval page, code included
+	Expires int    // KindSignInCode: seconds the code is valid
+	OK      bool   // KindSignInEnded: approved
 	Reason  Reason // KindFatal, KindLoginFailed
 }
 
@@ -98,6 +107,17 @@ type hostStop struct {
 	Detail string `json:"detail"`
 }
 
+// signInPrompt is the prompt of a server without a password (v6.9.0 on),
+// printed on stderr as bare JSON: {"tag":"NEVR.AUTH","event":"server_sign_in_code",
+// "code":"…","url":"…?code=…","expires_in_s":300,"msg":"Approve this server: …"}.
+// It is the only line that carries the code; the runtime's log masks it.
+type signInPrompt struct {
+	Tag     string `json:"tag"`
+	Event   string `json:"event"`
+	URL     string `json:"url"`
+	Expires int    `json:"expires_in_s"`
+}
+
 // Clean strips colour codes and a JSONL wrapper so every source yields the same text.
 func Clean(raw string) string {
 	s := strings.TrimRight(ansiRe.ReplaceAllString(raw, ""), "\r\n")
@@ -114,6 +134,12 @@ func Clean(raw string) string {
 
 // Parse classifies one log line. Lines that do not matter return KindNone.
 func Parse(raw string) Event {
+	if s := strings.TrimSpace(ansiRe.ReplaceAllString(raw, "")); strings.HasPrefix(s, "{") && strings.Contains(s, `"server_sign_in_code"`) {
+		var p signInPrompt
+		if json.Unmarshal([]byte(s), &p) == nil && p.Tag == "NEVR.AUTH" && p.Event == "server_sign_in_code" && p.URL != "" {
+			return Event{Kind: KindSignInCode, Line: "approve this server: " + p.URL, URL: p.URL, Expires: p.Expires}
+		}
+	}
 	line := Clean(raw)
 	ev := Event{Line: line}
 	switch {
@@ -132,6 +158,8 @@ func Parse(raw string) Event {
 		if m := versionRe.FindStringSubmatch(line); m != nil {
 			ev.Kind, ev.Version = KindRuntimeVersion, m[1]
 		}
+	case strings.Contains(line, "[NEVR.AUTH] server sign-in ended: result="):
+		ev.Kind, ev.OK = KindSignInEnded, strings.Contains(line, "result=ok")
 	case strings.Contains(line, "[NEVR.WS] LOGIN SUCCESS"):
 		ev.Kind = KindLoginSuccess
 	case strings.Contains(line, "[NEVR.WS] login failed status="):
@@ -173,6 +201,8 @@ func Parse(raw string) Event {
 
 func classifyFatal(line string) Reason {
 	switch {
+	case strings.Contains(line, "device sign-in ended without a token"):
+		return ReasonSignIn
 	case strings.Contains(line, "HTTP 401"), strings.Contains(line, "no valid token"),
 		strings.Contains(line, "the service refused the credential"):
 		return ReasonBadCredentials

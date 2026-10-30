@@ -102,10 +102,13 @@ func (a *App) Auth() *auth.Client {
 
 // Login checks the configured account.
 func (a *App) Login(ctx context.Context) (auth.Session, error) {
-	if a.Secrets[config.EnvPassword] == "" && a.DeviceLinked() {
-		return a.refreshDevice(ctx)
+	if a.Secrets[config.EnvPassword] == "" {
+		if a.DeviceLinked() {
+			return a.refreshDevice(ctx)
+		}
+		return auth.Session{}, ErrSignInByCode
 	}
-	if m := a.Secrets.Missing(a.DeviceLinked()); len(m) > 0 {
+	if m := a.Secrets.Missing(); len(m) > 0 {
 		return auth.Session{}, fmt.Errorf("%w (%v missing)", ErrNoAccount, m)
 	}
 	return a.Auth().Login(ctx, a.Secrets[config.EnvDiscordID], a.Secrets[config.EnvPassword])
@@ -266,7 +269,7 @@ func (a *App) Apply(ctx context.Context, force bool, progress func(string)) ([]s
 			return nil, err
 		}
 	}
-	if m := a.Secrets.Missing(a.DeviceLinked()); len(m) > 0 && len(a.Cfg.Instances) > 0 {
+	if m := a.Secrets.Missing(); len(m) > 0 && len(a.Cfg.Instances) > 0 {
 		return nil, fmt.Errorf("%w (%v missing)", ErrNoAccount, m)
 	}
 	servers, err := a.Servers(ctx)

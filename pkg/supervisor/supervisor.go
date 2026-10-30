@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 )
 
@@ -41,9 +43,15 @@ type Options struct {
 	// _local/config.yaml. ConfigYAMLRoot is the one for a two-file runtime
 	// (v6.0.0 on), written to the nEVR root; when it is nil, RootConfigErr says
 	// why such a runtime cannot start with these settings.
+	// ConfigErr, with ConfigYAML nil, says why a one-file runtime cannot start.
 	ConfigYAML     []byte
+	ConfigErr      string
 	ConfigYAMLRoot []byte
 	RootConfigErr  string
+	// DeviceCode: no password is set, so a two-file runtime signs in by a code
+	// the host approves (nevr-runtime v6.9.0 on, DeviceCodeMin); older ones
+	// are not started.
+	DeviceCode bool
 	// User is the Wine prefix's user, whose AppData holds the nEVR root; default
 	// $USER, else "container".
 	User         string
@@ -104,7 +112,7 @@ func (o *Options) defaults() {
 
 // DefaultFilter hides the runtime's high-volume diagnostic lines.
 func DefaultFilter(line string) bool {
-	for _, noisy := range []string{"[NEVR.SOCIAL]", "server->game", "game->server", "hook_liveness", "[NEVR.LOGFILTER] health", "NSUSER] saved", "[NEVR.SELFCHECK]"} {
+	for _, noisy := range []string{"[NEVR.SOCIAL]", "server->game", "game->server", "hook_liveness", "[NEVR.LOGFILTER] health", "NSUSER] saved", "[NEVR.SELFCHECK]", "[NEVR.AUTH] poll #"} {
 		if strings.Contains(line, noisy) {
 			return false
 		}
@@ -242,6 +250,14 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 	if twoFile && s.o.ConfigYAMLRoot == nil {
 		return result{exitCode: -1, reason: ReasonInvalidConfig, detail: fmt.Sprintf("nevr-runtime %s: %s", version, s.o.RootConfigErr)}
 	}
+	if !twoFile && s.o.ConfigYAML == nil && s.o.ConfigErr != "" {
+		return result{exitCode: -1, reason: ReasonInvalidConfig, detail: fmt.Sprintf("nevr-runtime %s: %s", version, s.o.ConfigErr)}
+	}
+	if twoFile && s.o.DeviceCode {
+		if v, err := nevr.ParseVersion(version); err == nil && v.Less(nevr.DeviceCodeMin) {
+			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: fmt.Sprintf("nevr-runtime %s: %v", version, config.ErrRootNeedsPassword)}
+		}
+	}
 	farm := game.Farm{GameDir: s.o.GameDir, Root: s.root(), RuntimeDLL: dll, Port: s.o.Port, PublisherLock: s.o.PublisherLock, ConfigYAML: s.o.ConfigYAML}
 	if twoFile {
 		// The runtime never reads _local/config.yaml, and it would copy one into
@@ -353,7 +369,9 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 				}
 				continue
 			}
-			fmt.Fprintln(s.o.Console, raw)
+			if ev.Kind != KindSignInCode { // the handler prints the link instead of the JSON
+				fmt.Fprintln(s.o.Console, raw)
+			}
 			s.handle(ev, &res, register, scheduleKill, killGroup)
 		case <-register.C:
 			if !res.registered {
@@ -417,6 +435,24 @@ func (s *Supervisor) handle(ev Event, res *result, register *time.Timer, schedul
 		if ev.Port != s.o.Port {
 			res.reason, res.detail = ReasonInvalidConfig, fmt.Sprintf("game bound UDP port %d instead of %d", ev.Port, s.o.Port)
 			killGroup(res.detail)
+		}
+	case KindSignInCode:
+		// Waiting for the host is not a registration that hangs.
+		register.Stop()
+		expires := time.Now().Add(time.Duration(ev.Expires) * time.Second).UTC()
+		s.update(func(st *status.Status) {
+			st.State, st.SignInURL, st.SignInExpires = status.StateAwaitingApproval, ev.URL, expires
+		})
+		s.logf("approve this server: open %s and sign in with the host account by %s UTC (a new code follows if this one runs out)", ev.URL, expires.Format("15:04"))
+	case KindSignInEnded:
+		s.update(func(st *status.Status) {
+			if st.State == status.StateAwaitingApproval {
+				st.State = status.StateStarting
+			}
+			st.SignInURL, st.SignInExpires = "", time.Time{}
+		})
+		if ev.OK {
+			register.Reset(s.o.RegisterTimeout)
 		}
 	case KindRegistered:
 		res.registered = true

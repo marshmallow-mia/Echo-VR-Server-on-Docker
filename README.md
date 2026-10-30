@@ -19,10 +19,11 @@ The installer downloads a checksum-verified `evr-docker` binary of the newest re
 pre-release while there is no stable one; `EVR_VERSION=v2.0.0` picks one), offers to install Docker if it is missing,
 and opens the setup wizard. The wizard asks for:
 
-- your EchoVRCE host account: your Discord user ID and the server password you set for hosting with the EchoVRCE bot.
-  nevr-runtime 6.x needs the password: it refuses a server that has only a device link. The device link (you approve a
-  code at echovrce.com/device, no password) is still there for nevr-runtime 5.x, but only with `--device-link` or
-  `EVR_DEVICE_LINK=1` (for example `sudo evr-docker --device-link`);
+- how the servers sign in to EchoVRCE. By default no password is stored: from nevr-runtime 6.9.0 on, each server prints
+  a sign-in code on its console the first time it starts. Open the link it shows (the dashboard shows it too), approve it
+  with the host account, and the server keeps the sign-in, so restarts don't ask again. A code runs out after 5 minutes
+  and the server then shows a new one. You can also sign in with your Discord user ID and the server password you set
+  for hosting with the EchoVRCE bot;
 - how many servers to run and their first UDP port (default 6792);
 - where the game files come from: the public mirror (about 5 GB), a folder that is already on the host, or an archive.
 
@@ -39,11 +40,12 @@ match. Set `image:` in `config.yaml` to pin a different one.
 Unattended:
 
 ```sh
+sudo evr-docker init --servers 2 --regions euw
+# each server's code: evr-docker server logs evr-1 (or the dashboard)
+# with a password instead:
 echo "$PASSWORD" | sudo evr-docker init --discord-id 123456789012345678 --password-stdin \
     --servers 2 --regions euw
 # or: sudo evr-docker init --answers answers.yaml   (secrets may be ${ENV} references)
-# nevr-runtime 5.x only, without a password: prints a code to approve at echovrce.com/device
-sudo evr-docker init --device-link --servers 2 --regions euw
 ```
 
 ## How it works
@@ -67,8 +69,10 @@ sudo evr-docker init --device-link --servers 2 --regions euw
   - It writes the runtime config and the port. nevr-runtime 5.4.2 ignores `-port`, so the port goes into a per-server
     `netconfig_dedicatedserver.json`.
   - For nevr-runtime 6.x it copies the signed `nevr-runtime.dll` and the config into the server's nEVR root before each
-    start. 6.x has EchoVRCE's addresses built in, so that config carries only the account and the server's settings, and
-    6.x needs the account's password: it refuses a device link alone.
+    start. 6.x has EchoVRCE's addresses built in, so that config carries only the server's settings, and the account
+    only when a password is set. Without one (6.9.0 and later) the server waits for its sign-in code to be approved: the
+    supervisor shows the link in the console and in `status.json` (state `awaiting_approval`), and starts its
+    registration timeout only after the approval. Older 6.x versions need the password and are not started without it.
   - It starts the game under Wine and follows its log. It restarts the game after every match, because the runtime
     exits when a match ends.
   - It detects rejected logins, unreachable ports and stuck registrations.
@@ -94,12 +98,10 @@ and how many matches and restarts it has had.
 | `A` | apply the configuration (after editing `config.yaml` by hand) |
 | `U` | updates of evr-docker, the game files and nevr-runtime: install, pick a version, settings |
 | `u` | runtime versions: install (`enter`), roll back (`b`), delete (`x`), check for and roll out an update (`u`), update settings (`c`) |
-| `c` | account: sign-in state and registered servers; `p` signs in with your Discord ID and server password (with `--device-link`, `l` links this host at echovrce.com/device) |
+| `c` | account: sign-in state and registered servers; `p` signs in with your Discord ID and server password, `c` goes back to each server's console code |
 | `D` | doctor: checks of Docker, disk, game, runtime, account, ports, public IP, with the key that fixes each |
 | `g` | install the game files |
 | `m` | more: alerts and the background service, number of servers, show or edit the configuration, a compose file, moving a v1 installation |
-
-With `--device-link`, a failed device link can be retried with `l` right away; a running one can be cancelled with `esc`.
 
 ![The nevr-runtime screen](docs/images/docker-runtime.svg)
 
@@ -121,7 +123,7 @@ evr-docker server apply [--force]     make containers match config.yaml
 evr-docker server rm NAME [--purge]
 evr-docker game install [--from-dir DIR | --archive FILE] / game status
 evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|remove TAG|channel pre|stable|pinned [TAG]
-evr-docker account set|test|servers   password sign-in (account link with --device-link: nevr-runtime 5.x only)
+evr-docker account code|set|test|servers   console code (default) or password sign-in
 evr-docker agent install|uninstall|run|webhook URL   metrics, Discord alerts, automatic updates
 evr-docker update [check|ls|apply|settings]   evr-docker itself, game files, nevr-runtime
 evr-docker migrate detect|run         take over a v1 (bash run.sh) installation
@@ -212,6 +214,9 @@ it asks for each part, and `--yes` alone deletes nothing.
   - `bad_credentials`: the backend rejected the Discord ID or password.
   - `udp_unreachable`: the backend could not reach the game port; check the 1:1 port forward.
   - `registration_rejected`: the server did not register in time.
+  - `sign_in`: a server without a password could not get a sign-in code from EchoVRCE; it tries again.
+- A server in **approve code** state waits for its sign-in: open the link in the dashboard or in
+  `evr-docker server logs NAME` and approve it with the host account.
 - Under Proxmox LXC, Docker needs `nesting=1,keyctl=1`.
 
 ## Building

@@ -18,6 +18,7 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/update"
 )
@@ -84,8 +85,14 @@ func (m *model) startWizard() {
 	an.Game.Source = "mirror"
 	an.PublicIP = "auto"
 	servers, firstPort, regions := "2", strconv.Itoa(hostcfg.FirstPort), ""
-	signIn := "password"
-	linkOn := core.DeviceLinkEnabled()
+	signIn := "code"
+	signInOptions := []huh.Option[string]{
+		huh.NewOption("Sign-in code on each server's console (nevr-runtime 6.9.0+, no password stored)", "code"),
+		huh.NewOption("Discord ID and server password", "password"),
+	}
+	if core.DeviceLinkEnabled() {
+		signInOptions = append(signInOptions, huh.NewOption("Device link for the whole host (old, nevr-runtime 5.x only)", "device"))
+	}
 	bindChoices := []huh.Option[string]{huh.NewOption("all addresses (0.0.0.0)", "")}
 	for _, ip := range core.HostIPs() {
 		bindChoices = append(bindChoices, huh.NewOption(ip, ip))
@@ -98,12 +105,9 @@ func (m *model) startWizard() {
 					"Everything can be changed later, here or with the evr-docker command."),
 		),
 		huh.NewGroup(
-			huh.NewSelect[string]().Title("How should the servers sign in?").Options(
-				huh.NewOption("Discord ID and server password (needed for nevr-runtime 6.x)", "password"),
-				huh.NewOption("Device link at echovrce.com/device (nevr-runtime 5.x only)", "device"),
-			).Value(&signIn),
-			huh.NewNote().Title("Device link").Description(core.ResetPasswordNote+"\nThe code to approve is shown during setup."),
-		).Title("EchoVRCE account").WithHideFunc(func() bool { return !linkOn }),
+			huh.NewSelect[string]().Title("How should the servers sign in?").Options(signInOptions...).Value(&signIn),
+			huh.NewNote().Description("Without a password, "+core.SignInCodeNote+".\nThe dashboard shows the link while a server waits."),
+		).Title("EchoVRCE account"),
 		huh.NewGroup(
 			huh.NewNote().Description(passwordNote),
 			huh.NewInput().Title("Discord user ID").Description("Discord → Settings → Advanced → Developer mode, then copy your ID.").
@@ -135,9 +139,10 @@ func (m *model) startWizard() {
 	m.form = f.WithTheme(huh.ThemeFunc(huh.ThemeCharm)).WithShowHelp(true).WithWidth(90)
 	m.screen, m.back = scrForm, scrDashboard
 	m.onSubmit = func() tea.Cmd {
-		if signIn == "device" {
+		if signIn != "password" {
 			an.Account.DiscordID, an.Account.Password = "", ""
 		}
+		an.Account.DeviceLink = signIn == "device"
 		an.Servers, _ = strconv.Atoi(servers)
 		an.FirstPort, _ = strconv.Atoi(firstPort)
 		an.Regions = splitList(regions)
@@ -485,6 +490,10 @@ func (m *model) updateAccount(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.openAccount()
 	case "p":
 		return m, m.passwordForm()
+	case "c":
+		if m.app != nil && m.app.Secrets[config.EnvPassword] != "" {
+			return m, m.useSignInCode()
+		}
 	case "l":
 		if core.DeviceLinkEnabled() {
 			return m, m.linkDevice()
@@ -494,7 +503,15 @@ func (m *model) updateAccount(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // passwordNote says where the server password comes from.
-const passwordNote = "nevr-runtime 6.x signs in with the host account's Discord ID and server password\n(set it for hosting with the EchoVRCE bot); it refuses a server that has only a device link."
+const passwordNote = "Optional: the host account's Discord ID and the server password you set for hosting\nwith the EchoVRCE bot. Without one, each server shows its own sign-in code (nevr-runtime 6.9.0+)."
+
+// useSignInCode drops the password and recreates the servers.
+func (m *model) useSignInCode() tea.Cmd {
+	app := m.app
+	return m.run("Switching to the console sign-in code", func(ctx context.Context, say func(string)) error {
+		return app.UseSignInCode(ctx, say)
+	}, func() tea.Cmd { return m.openAccount() })
+}
 
 // linkDevice links this host at echovrce.com/device and recreates the servers with it.
 func (m *model) linkDevice() tea.Cmd {
@@ -537,6 +554,22 @@ func (m *model) renderAccount() string {
 	switch {
 	case a == nil:
 		b.WriteString(m.spin.View() + " signing in …\n")
+	case errors.Is(a.err, core.ErrSignInByCode):
+		b.WriteString("No password stored: " + m.wrap(core.SignInCodeNote, 0) + ".\n\n")
+		waiting := 0
+		for _, s := range m.servers {
+			if st := s.Status; st != nil && st.State == status.StateAwaitingApproval {
+				fmt.Fprintf(&b, "  %s waits: %s\n", s.Instance.Name, st.SignInURL)
+				waiting++
+			}
+		}
+		if waiting > 0 {
+			b.WriteString("\n")
+		}
+		b.WriteString("Press " + ui.KeyStyle.Render("p") + " to sign in with your Discord ID and server password instead.\n")
+		if linkOn {
+			b.WriteString("Or press " + ui.KeyStyle.Render("l") + " to link this host at echovrce.com/device (old, nevr-runtime 5.x only).\n")
+		}
 	case errors.Is(a.err, core.ErrNoAccount):
 		b.WriteString(ui.Warning.Render("Not signed in yet: the servers cannot register with EchoVRCE.") + "\n\n")
 		b.WriteString("Press " + ui.KeyStyle.Render("p") + " to sign in with your Discord ID and server password.\n")
@@ -575,6 +608,9 @@ func (m *model) renderAccount() string {
 		}
 	}
 	keys := []ui.Key{ui.K("p", "password sign-in")}
+	if m.app != nil && m.app.Secrets[config.EnvPassword] != "" {
+		keys = append(keys, ui.K("c", "console code instead"))
+	}
 	if linkOn {
 		keys = append(keys, ui.K("l", "link this host"))
 	}
