@@ -1,5 +1,9 @@
-// Package config models the nevr-runtime config.yaml that a dedicated server
-// reads from <root>/_local/config.yaml.
+// Package config models the nevr-runtime config.yaml of a dedicated server.
+//
+// A one-file runtime (5.x) reads <root>/_local/config.yaml. A two-file runtime
+// (v6.0.0 on) reads only the nEVR root's config.yaml (or -config-file) and has
+// EchoVRCE's service addresses and public HTTP key built in, so its file
+// (RootDefault) carries only the account and the server's own settings.
 //
 // Key names follow the table in nevr-runtime src/runtime/lifecycle/service_map.cpp
 // (v5.4.2), not docs/reference/example-config.yaml, which disagrees with the code
@@ -45,9 +49,9 @@ var sessionRouters = map[string]bool{"": true, "legacy": true, "config": true, "
 // Config is the subset of config.yaml a dedicated server uses.
 type Config struct {
 	Version   int        `yaml:"version"`
-	Services  Services   `yaml:"services"`
+	Services  Services   `yaml:"services,omitempty"`
 	Identity  Identity   `yaml:"identity"`
-	Auth      Auth       `yaml:"auth"`
+	Auth      Auth       `yaml:"auth,omitempty"`
 	Network   Network    `yaml:"network,omitempty"`
 	Guilds    List       `yaml:"guilds,omitempty,flow"`
 	Telemetry *Telemetry `yaml:"telemetry,omitempty"`
@@ -55,11 +59,16 @@ type Config struct {
 
 	// DeviceLinked means the instance has a device-link refresh token in
 	// _local/.credentials.json, so a missing password is not rejected here.
+	// It does not count for Root: a two-file runtime refuses a server login
+	// without auth.password.
 	DeviceLinked bool `yaml:"-"`
+	// Root marks the config of a two-file runtime (RootDefault): the service
+	// keys are optional overrides of the built-in values.
+	Root bool `yaml:"-"`
 }
 
 type Services struct {
-	SocketURI          string `yaml:"socket_uri"`
+	SocketURI          string `yaml:"socket_uri,omitempty"`
 	ServerDBURI        string `yaml:"serverdb_uri,omitempty"`
 	AllowOfflineServer bool   `yaml:"allow_offline_server,omitempty"`
 }
@@ -69,8 +78,8 @@ type Identity struct {
 }
 
 type Auth struct {
-	HTTPURI  string `yaml:"http_uri"`
-	HTTPKey  string `yaml:"http_key"`
+	HTTPURI  string `yaml:"http_uri,omitempty"`
+	HTTPKey  string `yaml:"http_key,omitempty"`
 	Password string `yaml:"password,omitempty"`
 }
 
@@ -137,11 +146,31 @@ func Default() Config {
 	}
 }
 
-// Validate mirrors the checks that make a v5.4.2 server exit at boot, so they
-// surface in the TUI instead of in a crash loop.
+// RootDefault returns a two-file runtime's server config for EchoVRCE: no
+// services or HTTP endpoints (the runtime's built-in ones are EchoVRCE's),
+// the account from the environment.
+func RootDefault() Config {
+	return Config{
+		Version:  1,
+		Identity: Identity{DiscordID: EnvRef(EnvDiscordID)},
+		Auth:     Auth{Password: EnvRef(EnvPassword)},
+		Network:  Network{TickRateHz: DefaultTickRate},
+		Root:     true,
+	}
+}
+
+// ErrRootNeedsPassword is why a two-file runtime cannot start on a device link.
+var ErrRootNeedsPassword = errors.New("auth.password is required: nevr-runtime 6.x servers log in with the host account's Discord ID and password, and refuse a device link alone (nevr-runtime #1339)")
+
+// Validate mirrors the checks that make a server exit at boot (v5.4.2, and
+// v6.6.0 for Root), so they surface in the TUI instead of in a crash loop.
 func (c Config) Validate() error {
 	var errs []error
-	if c.Services.SocketURI == "" && !c.Services.AllowOfflineServer {
+	if c.Root {
+		if c.Auth.Password == "" && !c.Services.AllowOfflineServer {
+			errs = append(errs, ErrRootNeedsPassword)
+		}
+	} else if c.Services.SocketURI == "" && !c.Services.AllowOfflineServer {
 		errs = append(errs, errors.New("services.socket_uri is required for a dedicated server"))
 	}
 	for name, v := range map[string]string{"services.socket_uri": c.Services.SocketURI, "services.serverdb_uri": c.Services.ServerDBURI} {
@@ -155,13 +184,13 @@ func (c Config) Validate() error {
 	if c.Identity.DiscordID == "" {
 		errs = append(errs, errors.New("identity.discord_id is required"))
 	}
-	if c.Auth.HTTPURI == "" || c.Auth.HTTPKey == "" {
+	if !c.Root && (c.Auth.HTTPURI == "" || c.Auth.HTTPKey == "") {
 		errs = append(errs, errors.New("auth.http_uri and auth.http_key are required for ServerDB sign-in"))
 	}
-	// Without a password the server signs in with the device link
+	// Without a password a 5.x server signs in with the device link
 	// (_local/.credentials.json). That works for accounts without a password;
 	// with one set, the /spr login answered HTTP 400 (tested with v5.4.2).
-	if c.Auth.Password == "" && !c.Services.AllowOfflineServer && !c.DeviceLinked {
+	if !c.Root && c.Auth.Password == "" && !c.Services.AllowOfflineServer && !c.DeviceLinked {
 		errs = append(errs, errors.New("auth.password is required for a dedicated server"))
 	}
 	if r := c.Network.TickRateHz; r != 0 && (r < 10 || r > 1000) {
@@ -191,6 +220,9 @@ func (c Config) Validate() error {
 // as to network.regions/guilds, which the runtime appends to serverdb_uri.
 func (c *Config) SetMatchmaking(regions, guilds []string) error {
 	c.Network.Regions, c.Guilds = regions, guilds
+	if c.Services.SocketURI == "" {
+		return nil // the built-in login address; the runtime sends network.regions and guilds itself
+	}
 	u, err := url.Parse(c.Services.SocketURI)
 	if err != nil {
 		return fmt.Errorf("services.socket_uri: %w", err)

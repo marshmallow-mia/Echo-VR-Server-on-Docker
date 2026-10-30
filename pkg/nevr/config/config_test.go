@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"strings"
@@ -79,5 +80,45 @@ func TestParseListForms(t *testing.T) {
 	}
 	if len(c.Network.Regions) != 2 || c.Network.Regions[1] != "euw" || len(c.Guilds) != 2 {
 		t.Errorf("%+v %+v", c.Network.Regions, c.Guilds)
+	}
+}
+
+func TestRootDefault(t *testing.T) {
+	r := RootDefault()
+	if err := r.SetMatchmaking([]string{"uwu", "default"}, nil); err != nil {
+		t.Fatal(err)
+	}
+	got, err := r.Render()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(got)
+	for _, unwanted := range []string{"services:", "socket_uri", "serverdb_uri", "http_uri", "http_key"} {
+		if strings.Contains(s, unwanted) {
+			t.Errorf("root config names %s (6.x has EchoVRCE's built in):\n%s", unwanted, s)
+		}
+	}
+	for _, want := range []string{"discord_id: ${NEVR_DISCORD_ID:?", "password: ${NEVR_PASSWORD:?", "regions: [uwu, default]", "tick_rate_hz: 120"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("root config lacks %q:\n%s", want, s)
+		}
+	}
+	if _, err := Parse(got); err != nil {
+		t.Error(err)
+	}
+	// A device link does not stand in for the password on 6.x.
+	r.Auth.Password, r.DeviceLinked = "", true
+	if err := r.Validate(); !errors.Is(err, ErrRootNeedsPassword) {
+		t.Errorf("want ErrRootNeedsPassword, got %v", err)
+	}
+	// An override for another backend is kept.
+	o := RootDefault()
+	o.Services.SocketURI = "ws://other:80/spr"
+	if err := o.SetMatchmaking([]string{"x"}, nil); err != nil {
+		t.Fatal(err)
+	}
+	b, err := o.Render()
+	if err != nil || !strings.Contains(string(b), "socket_uri: ws://other:80/spr?regions=x") {
+		t.Errorf("override lost: %s %v", b, err)
 	}
 }

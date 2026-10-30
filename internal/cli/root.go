@@ -60,6 +60,7 @@ runtimes and per-server data in /srv/echovr.`,
 		},
 	}
 	root.PersistentFlags().StringVar(&g.configDir, "config-dir", hostcfg.Dir(), "configuration directory")
+	root.PersistentFlags().BoolVar(&core.DeviceLinkFlow, "device-link", false, "offer the echovrce.com/device sign-in (nevr-runtime 5.x only; also "+core.DeviceLinkEnv+"=1)")
 	root.PersistentFlags().BoolVar(&g.json, "json", false, "print machine-readable JSON")
 	root.PersistentFlags().BoolVarP(&g.yes, "yes", "y", false, "do not ask for confirmation")
 	root.AddCommand(initCmd(g), doctorCmd(g), serverCmd(g), gameCmd(g), runtimeCmd(g), accountCmd(g),
@@ -82,7 +83,10 @@ func hintFor(err error) string {
 	case errors.Is(err, hostcfg.ErrNotInitialized):
 		return "Set up with: evr-docker (the wizard) or evr-docker init --help"
 	case errors.Is(err, core.ErrNoAccount), errors.Is(err, core.ErrDeviceLink):
-		return "Sign in with: evr-docker account link (no password), or evr-docker account set (Discord ID and password)"
+		if core.DeviceLinkEnabled() {
+			return "Sign in with: evr-docker account set (Discord ID and server password), or evr-docker account link --device-link (nevr-runtime 5.x only)"
+		}
+		return "Sign in with: evr-docker account set (Discord ID and server password)"
 	}
 	return ""
 }

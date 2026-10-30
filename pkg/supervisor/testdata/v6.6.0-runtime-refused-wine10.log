@@ -1,0 +1,2 @@
+[ERROR] Failed to initialize symbol handler: couldn't load dbgcore.dll (Module not found.) [Z:\home\container\root\bin\win10\dbgcore.dll]
+{"tag":"NEVR.STOP","ts":"2026-10-30T08:56:32.198Z","pid":32,"event":"stop","stopped":true,"code":78,"reason":"runtime_refused","host_version":"6.6.0","runtime_version":"not loaded","detail":"malformed signature: does not parse as PKCS#7: error 2147942487; path=C:\\users\\container\\AppData\\Local\\nevr\\echovr\\nevr-runtime.dll","log":"C:\\users\\container\\AppData\\Local\\nevr\\echovr\\logs\\nevr-bootstrap.jsonl"}

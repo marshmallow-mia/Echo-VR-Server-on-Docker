@@ -37,11 +37,20 @@ type Options struct {
 	PrefixTemplate string
 	Port, HTTPPort int
 	PublisherLock  string
+	// ConfigYAML is the config for a one-file runtime (5.x), written to
+	// _local/config.yaml. ConfigYAMLRoot is the one for a two-file runtime
+	// (v6.0.0 on), written to the nEVR root; when it is nil, RootConfigErr says
+	// why such a runtime cannot start with these settings.
 	ConfigYAML     []byte
-	Wine           string   // default "wine"
-	ExtraArgs      []string // appended to the game's command line
-	DeviceLinked   bool     // signs in with _local/.credentials.json instead of a password
-	Env            []string // added to the game's environment
+	ConfigYAMLRoot []byte
+	RootConfigErr  string
+	// User is the Wine prefix's user, whose AppData holds the nEVR root; default
+	// $USER, else "container".
+	User         string
+	Wine         string   // default "wine"
+	ExtraArgs    []string // appended to the game's command line
+	DeviceLinked bool     // signs in with _local/.credentials.json instead of a password
+	Env          []string // added to the game's environment
 
 	RegisterTimeout time.Duration // start → registered; default 180s
 	TeardownGrace   time.Duration // after "CTRL+C teardown complete"; default 3s
@@ -75,6 +84,12 @@ func (o *Options) defaults() {
 	set(&o.Heartbeat, 15*time.Second)
 	if o.Wine == "" {
 		o.Wine = "wine"
+	}
+	if o.User == "" {
+		o.User = os.Getenv("USER")
+	}
+	if o.User == "" {
+		o.User = "container"
 	}
 	if o.Runtime == "" {
 		o.Runtime = "current"
@@ -124,8 +139,11 @@ func New(o Options) (*Supervisor, error) {
 }
 
 // Paths inside Home.
-func (s *Supervisor) root() string       { return filepath.Join(s.o.Home, "root") }
-func (s *Supervisor) prefix() string     { return filepath.Join(s.o.Home, ".wine") }
+func (s *Supervisor) root() string   { return filepath.Join(s.o.Home, "root") }
+func (s *Supervisor) prefix() string { return filepath.Join(s.o.Home, ".wine") }
+
+// NevrRoot is the instance's nEVR root inside its Wine prefix (two-file runtimes).
+func (s *Supervisor) NevrRoot() string   { return game.NevrRoot(s.prefix(), s.o.User) }
 func (s *Supervisor) statusPath() string { return filepath.Join(s.o.Home, status.FileName) }
 
 // Status returns a copy of the current status.
@@ -219,12 +237,32 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 	if err != nil {
 		return result{exitCode: -1, reason: ReasonInvalidConfig, detail: err.Error()}
 	}
+	runtimeDir := filepath.Dir(dll)
+	twoFile := game.HasRuntime(runtimeDir)
+	if twoFile && s.o.ConfigYAMLRoot == nil {
+		return result{exitCode: -1, reason: ReasonInvalidConfig, detail: fmt.Sprintf("nevr-runtime %s: %s", version, s.o.RootConfigErr)}
+	}
 	farm := game.Farm{GameDir: s.o.GameDir, Root: s.root(), RuntimeDLL: dll, Port: s.o.Port, PublisherLock: s.o.PublisherLock, ConfigYAML: s.o.ConfigYAML}
+	if twoFile {
+		// The runtime never reads _local/config.yaml, and it would copy one into
+		// a root that has none; the root gets its own below.
+		farm.ConfigYAML = nil
+		if err := os.Remove(filepath.Join(s.root(), "_local", "config.yaml")); err != nil && !os.IsNotExist(err) {
+			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "preparing instance: " + err.Error()}
+		}
+	}
 	if err := farm.Build(); err != nil {
 		return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "preparing instance: " + err.Error()}
 	}
 	if err := s.seedPrefix(); err != nil {
 		return result{exitCode: -1, reason: ReasonOther, detail: "preparing Wine prefix: " + err.Error()}
+	}
+	if twoFile {
+		root := game.Root{Dir: s.NevrRoot(), RuntimeDLL: filepath.Join(runtimeDir, game.RuntimeName), ConfigYAML: s.o.ConfigYAMLRoot,
+			LegacyCredentials: filepath.Join(s.root(), "_local", game.CredentialsName)}
+		if err := root.Prepare(); err != nil {
+			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "preparing the nEVR root: " + err.Error()}
+		}
 	}
 
 	args := []string{"./" + game.ExeName, "-server", "-headless", "-noovr", "-no-console", "-nosymbollookup", "-port", fmt.Sprint(s.o.Port)}
@@ -358,6 +396,11 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 			s.proc = nil
 			s.mu.Unlock()
 			res.exitCode = code
+			if res.reason == ReasonNone && !stopping {
+				if r, d := exitReason(code); r != ReasonNone {
+					res.reason, res.detail, res.clean = r, d, false
+				}
+			}
 			if stopping || (res.reason == ReasonNone && (res.clean || code == 0)) {
 				res.clean = true
 			}

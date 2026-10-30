@@ -17,8 +17,9 @@ import (
 	"time"
 )
 
-// Store is a directory of installed runtimes: <dir>/<tag>/BugSplat64.dll, plus
-// the symlinks "current" and "previous". Instances resolve "current" each time
+// Store is a directory of installed runtimes: <dir>/<tag>/BugSplat64.dll (and,
+// from RootLayoutMin on, <dir>/<tag>/nevr-runtime.dll), plus the symlinks
+// "current" and "previous". Instances resolve "current" each time
 // they start, so switching it rolls out at match boundaries.
 type Store struct {
 	Dir  string
@@ -29,21 +30,25 @@ const (
 	CurrentLink  = "current"
 	PreviousLink = "previous"
 	DLLName      = "BugSplat64.dll"
+	RuntimeName  = "nevr-runtime.dll" // the signed runtime of the two-file layout (game.RuntimeName); it goes into the nEVR root
+	sumsName     = "SHA256SUMS"
 	manifestName = "manifest.json"
 )
 
 // Installed describes one installed runtime.
 type Installed struct {
-	Tag         string    `json:"tag"`
-	ZipSHA256   string    `json:"zip_sha256"`
-	DLLSHA256   string    `json:"dll_sha256"`
-	Published   time.Time `json:"published"`
-	InstalledAt time.Time `json:"installed_at"`
-	Bad         string    `json:"bad,omitempty"` // set when a rollout failed with this tag
+	Tag       string `json:"tag"`
+	ZipSHA256 string `json:"zip_sha256"`
+	DLLSHA256 string `json:"dll_sha256"`
+	// RuntimeSHA256 is set for a two-file release (nevr-runtime.dll beside the host).
+	RuntimeSHA256 string    `json:"runtime_sha256,omitempty"`
+	Published     time.Time `json:"published"`
+	InstalledAt   time.Time `json:"installed_at"`
+	Bad           string    `json:"bad,omitempty"` // set when a rollout failed with this tag
 }
 
 // files extracted from the server zip, by base name.
-var wanted = map[string]bool{DLLName: true, "echovr_server.exe": true, "README.md": true, "INSTALL.md": true}
+var wanted = map[string]bool{DLLName: true, RuntimeName: true, "echovr_server.exe": true, "README.md": true, "INSTALL.md": true, "README.txt": true}
 
 // Install downloads rel, checks it against GitHub's digest and unpacks it. It is
 // a no-op if the tag is already installed with the same checksum.
@@ -78,11 +83,11 @@ func (s Store) Install(ctx context.Context, rel Release) (Installed, error) {
 		return Installed{}, err
 	}
 	defer os.RemoveAll(stage)
-	dllSum, err := unpack(tmp.Name(), stage)
+	sums, err := unpack(tmp.Name(), stage)
 	if err != nil {
 		return Installed{}, err
 	}
-	inst := Installed{Tag: rel.Tag, ZipSHA256: sum, DLLSHA256: dllSum, Published: rel.Published, InstalledAt: time.Now().UTC()}
+	inst := Installed{Tag: rel.Tag, ZipSHA256: sum, DLLSHA256: sums[DLLName], RuntimeSHA256: sums[RuntimeName], Published: rel.Published, InstalledAt: time.Now().UTC()}
 	b, _ := json.MarshalIndent(inst, "", "  ")
 	if err := os.WriteFile(filepath.Join(stage, manifestName), b, 0o644); err != nil {
 		return Installed{}, err
@@ -129,25 +134,39 @@ func (s Store) download(ctx context.Context, url string, w io.Writer) (string, e
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func unpack(zipPath, dst string) (dllSHA256 string, err error) {
+// unpack extracts the wanted files of the zip into dst and returns their
+// SHA-256 by name. When the zip carries SHA256SUMS, every extracted file it
+// lists must match it.
+func unpack(zipPath, dst string) (map[string]string, error) {
 	zr, err := zip.OpenReader(zipPath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer zr.Close()
+	sums := map[string]string{}
+	var listed map[string]string
 	for _, f := range zr.File {
 		name := filepath.Base(f.Name)
-		if f.FileInfo().IsDir() || !wanted[name] {
+		if f.FileInfo().IsDir() {
+			continue
+		}
+		if name == sumsName {
+			if listed, err = readSums(f); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		if !wanted[name] {
 			continue
 		}
 		rc, err := f.Open()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		out, err := os.OpenFile(filepath.Join(dst, name), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o644)
 		if err != nil {
 			rc.Close()
-			return "", err
+			return nil, err
 		}
 		h := sha256.New()
 		_, err = io.Copy(io.MultiWriter(out, h), io.LimitReader(rc, 256<<20))
@@ -156,16 +175,41 @@ func unpack(zipPath, dst string) (dllSHA256 string, err error) {
 			err = cerr
 		}
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		if name == DLLName {
-			dllSHA256 = hex.EncodeToString(h.Sum(nil))
+		sums[name] = hex.EncodeToString(h.Sum(nil))
+	}
+	if sums[DLLName] == "" {
+		return nil, fmt.Errorf("%s does not contain %s", filepath.Base(zipPath), DLLName)
+	}
+	for name, got := range sums {
+		if want, ok := listed[name]; ok && want != got {
+			return nil, fmt.Errorf("%s in %s does not match its SHA256SUMS line: got %s, listed %s", name, filepath.Base(zipPath), got, want)
 		}
 	}
-	if dllSHA256 == "" {
-		return "", fmt.Errorf("%s does not contain %s", filepath.Base(zipPath), DLLName)
+	return sums, nil
+}
+
+// readSums parses a sha256sum-style file ("<hex>  <name>" per line).
+func readSums(f *zip.File) (map[string]string, error) {
+	rc, err := f.Open()
+	if err != nil {
+		return nil, err
 	}
-	return dllSHA256, nil
+	defer rc.Close()
+	b, err := io.ReadAll(io.LimitReader(rc, 1<<20))
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]string{}
+	for _, line := range strings.Split(string(b), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) != 2 {
+			continue
+		}
+		out[filepath.Base(strings.TrimPrefix(fields[1], "*"))] = strings.ToLower(fields[0])
+	}
+	return out, nil
 }
 
 // Get returns an installed runtime's manifest.

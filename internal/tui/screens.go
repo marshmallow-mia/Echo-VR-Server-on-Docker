@@ -84,7 +84,8 @@ func (m *model) startWizard() {
 	an.Game.Source = "mirror"
 	an.PublicIP = "auto"
 	servers, firstPort, regions := "2", strconv.Itoa(hostcfg.FirstPort), ""
-	signIn := "device"
+	signIn := "password"
+	linkOn := core.DeviceLinkEnabled()
 	bindChoices := []huh.Option[string]{huh.NewOption("all addresses (0.0.0.0)", "")}
 	for _, ip := range core.HostIPs() {
 		bindChoices = append(bindChoices, huh.NewOption(ip, ip))
@@ -98,17 +99,18 @@ func (m *model) startWizard() {
 		),
 		huh.NewGroup(
 			huh.NewSelect[string]().Title("How should the servers sign in?").Options(
-				huh.NewOption("Device link at echovrce.com/device (recommended, no password)", "device"),
-				huh.NewOption("Discord ID and server password", "password"),
+				huh.NewOption("Discord ID and server password (needed for nevr-runtime 6.x)", "password"),
+				huh.NewOption("Device link at echovrce.com/device (nevr-runtime 5.x only)", "device"),
 			).Value(&signIn),
 			huh.NewNote().Title("Device link").Description(core.ResetPasswordNote+"\nThe code to approve is shown during setup."),
-		).Title("EchoVRCE account"),
+		).Title("EchoVRCE account").WithHideFunc(func() bool { return !linkOn }),
 		huh.NewGroup(
+			huh.NewNote().Description(passwordNote),
 			huh.NewInput().Title("Discord user ID").Description("Discord → Settings → Advanced → Developer mode, then copy your ID.").
 				Value(&an.Account.DiscordID).Validate(digits),
 			huh.NewInput().Title("Server password").Description("The password you set for hosting with the EchoVRCE bot.").
 				EchoMode(huh.EchoModePassword).Value(&an.Account.Password).Validate(notEmpty("the password")),
-		).Title("Password sign-in").WithHideFunc(func() bool { return signIn != "password" }),
+		).Title("EchoVRCE account").WithHideFunc(func() bool { return signIn != "password" }),
 		huh.NewGroup(
 			huh.NewInput().Title("How many servers?").Value(&servers).Validate(intRange(0, 64)),
 			huh.NewInput().Title("First UDP port").Description("Servers use consecutive ports from here. Forward them 1:1 (same numbers) if the host is behind NAT.").
@@ -484,10 +486,15 @@ func (m *model) updateAccount(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case "p":
 		return m, m.passwordForm()
 	case "l":
-		return m, m.linkDevice()
+		if core.DeviceLinkEnabled() {
+			return m, m.linkDevice()
+		}
 	}
 	return m, nil
 }
+
+// passwordNote says where the server password comes from.
+const passwordNote = "nevr-runtime 6.x signs in with the host account's Discord ID and server password\n(set it for hosting with the EchoVRCE bot); it refuses a server that has only a device link."
 
 // linkDevice links this host at echovrce.com/device and recreates the servers with it.
 func (m *model) linkDevice() tea.Cmd {
@@ -510,8 +517,7 @@ func (m *model) passwordForm() tea.Cmd {
 	app := m.app
 	discord, password := app.Secrets[config.EnvDiscordID], ""
 	f := huh.NewForm(huh.NewGroup(
-		huh.NewNote().Title("Password sign-in").Description("Use this if your EchoVRCE account has a server password.\n"+
-			"Without one, go back and press l to link this host instead."),
+		huh.NewNote().Title("Password sign-in").Description(passwordNote),
 		huh.NewInput().Title("Discord user ID").Description("Discord → Settings → Advanced → Developer mode, then copy your ID.").Value(&discord).Validate(digits),
 		huh.NewInput().Title("Server password").Description("The password you set for hosting with the EchoVRCE bot.").EchoMode(huh.EchoModePassword).Value(&password).Validate(notEmpty("the password")),
 	).Title("EchoVRCE account"))
@@ -524,6 +530,7 @@ func (m *model) passwordForm() tea.Cmd {
 }
 
 func (m *model) renderAccount() string {
+	linkOn := core.DeviceLinkEnabled()
 	var b strings.Builder
 	b.WriteString(m.header() + "  " + ui.Bold.Render("account") + "\n\n")
 	a := m.account
@@ -532,12 +539,19 @@ func (m *model) renderAccount() string {
 		b.WriteString(m.spin.View() + " signing in …\n")
 	case errors.Is(a.err, core.ErrNoAccount):
 		b.WriteString(ui.Warning.Render("Not signed in yet: the servers cannot register with EchoVRCE.") + "\n\n")
-		b.WriteString("Press " + ui.KeyStyle.Render("l") + " to link this host at echovrce.com/device (recommended, no password).\n")
-		b.WriteString(ui.Subtle.Render(m.wrap(core.ResetPasswordNote, 0)) + "\n\n")
-		b.WriteString("Or press " + ui.KeyStyle.Render("p") + " to sign in with your Discord ID and server password.\n")
+		b.WriteString("Press " + ui.KeyStyle.Render("p") + " to sign in with your Discord ID and server password.\n")
+		b.WriteString(ui.Subtle.Render(m.wrap(passwordNote, 0)) + "\n")
+		if linkOn {
+			b.WriteString("\nOr press " + ui.KeyStyle.Render("l") + " to link this host at echovrce.com/device (nevr-runtime 5.x only).\n")
+			b.WriteString(ui.Subtle.Render(m.wrap(core.ResetPasswordNote, 0)) + "\n")
+		}
 	case a.err != nil:
 		b.WriteString(ui.Error.Render(m.wrap(a.err.Error(), 0)) + "\n\n")
-		b.WriteString(ui.Subtle.Render("Press l to link this host again, or p to use a password.") + "\n")
+		if linkOn {
+			b.WriteString(ui.Subtle.Render("Press p to use a password, or l to link this host again.") + "\n")
+		} else {
+			b.WriteString(ui.Subtle.Render("Press p to sign in with your Discord ID and server password.") + "\n")
+		}
 	default:
 		method := "device link"
 		if m.app.Secrets[config.EnvPassword] != "" {
@@ -560,7 +574,11 @@ func (m *model) renderAccount() string {
 			fmt.Fprintf(&b, "  %s  %-12s %-11s players %d\n", s.CreatedAt.Local().Format(time.DateTime), s.Region, s.LobbyType, s.Players)
 		}
 	}
-	b.WriteString(m.footer(ui.K("l", "link this host"), ui.K("p", "password sign-in"), ui.K("r", "refresh"), ui.K("esc", "back")))
+	keys := []ui.Key{ui.K("p", "password sign-in")}
+	if linkOn {
+		keys = append(keys, ui.K("l", "link this host"))
+	}
+	b.WriteString(m.footer(append(keys, ui.K("r", "refresh"), ui.K("esc", "back"))...))
 	return b.String()
 }
 

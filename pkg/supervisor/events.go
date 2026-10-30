@@ -41,12 +41,33 @@ const (
 	ReasonUDPUnreachable Reason = "udp_unreachable"
 	ReasonInvalidConfig  Reason = "invalid_config"
 	ReasonRegistration   Reason = "registration_rejected"
+	// ReasonRuntimeRefused: the host (6.x) did not load nevr-runtime.dll from the
+	// nEVR root (missing, or its signature refused) and stopped with exit 78.
+	ReasonRuntimeRefused Reason = "runtime_refused"
 	ReasonOther          Reason = "fatal"
 )
 
 // Retryable reports whether restarting can help.
 func (r Reason) Retryable() bool {
-	return r != ReasonBadCredentials && r != ReasonInvalidConfig
+	return r != ReasonBadCredentials && r != ReasonInvalidConfig && r != ReasonRuntimeRefused
+}
+
+// Exit codes the 6.x host and runtime use for a stop that repeats on every
+// start (nevr-runtime's README and example-config.yaml).
+const (
+	ExitConfigUnreadable = 64 // -config-file names no readable file
+	ExitRuntimeRefused   = 78 // the host refused or could not find nevr-runtime.dll
+)
+
+// exitReason classifies an exit code no log line explained.
+func exitReason(code int) (Reason, string) {
+	switch code {
+	case ExitRuntimeRefused:
+		return ReasonRuntimeRefused, "exit code 78: the nEVR host refused or could not find nevr-runtime.dll in the nEVR root (see the root's logs/nevr-bootstrap.jsonl)"
+	case ExitConfigUnreadable:
+		return ReasonInvalidConfig, "exit code 64: the config file named by -config-file could not be read"
+	}
+	return ReasonNone, ""
 }
 
 // Event is one interesting log line.
@@ -68,6 +89,15 @@ var (
 	sessionRe    = regexp.MustCompile(`session_id=(\S+)`)
 )
 
+// hostStop is the host's one-line stop record (6.x), printed as bare JSON:
+// {"tag":"NEVR.STOP",...,"code":78,"reason":"runtime_refused","detail":"..."}.
+type hostStop struct {
+	Tag    string `json:"tag"`
+	Code   int    `json:"code"`
+	Reason string `json:"reason"`
+	Detail string `json:"detail"`
+}
+
 // Clean strips colour codes and a JSONL wrapper so every source yields the same text.
 func Clean(raw string) string {
 	s := strings.TrimRight(ansiRe.ReplaceAllString(raw, ""), "\r\n")
@@ -87,6 +117,17 @@ func Parse(raw string) Event {
 	line := Clean(raw)
 	ev := Event{Line: line}
 	switch {
+	case strings.HasPrefix(line, "{") && strings.Contains(line, `"NEVR.STOP"`):
+		var st hostStop
+		if json.Unmarshal([]byte(line), &st) == nil && st.Tag == "NEVR.STOP" {
+			ev.Kind, ev.Reason = KindFatal, ReasonOther
+			if st.Reason == string(ReasonRuntimeRefused) || st.Code == ExitRuntimeRefused {
+				ev.Reason = ReasonRuntimeRefused
+			}
+			if st.Detail != "" {
+				ev.Line = "nEVR host stopped the game (" + st.Reason + "): " + st.Detail
+			}
+		}
 	case strings.Contains(line, "NEVR-BUILD "):
 		if m := versionRe.FindStringSubmatch(line); m != nil {
 			ev.Kind, ev.Version = KindRuntimeVersion, m[1]
@@ -132,7 +173,8 @@ func Parse(raw string) Event {
 
 func classifyFatal(line string) Reason {
 	switch {
-	case strings.Contains(line, "HTTP 401"), strings.Contains(line, "no valid token"):
+	case strings.Contains(line, "HTTP 401"), strings.Contains(line, "no valid token"),
+		strings.Contains(line, "the service refused the credential"):
 		return ReasonBadCredentials
 	case strings.Contains(line, "registration rejected") && strings.Contains(line, "code=10"):
 		return ReasonUDPUnreachable

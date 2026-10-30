@@ -126,10 +126,11 @@ func options() (supervisor.Options, error) {
 		if _, err := config.Parse(o.ConfigYAML); err != nil {
 			return o, fmt.Errorf("%s: %w", path, err)
 		}
+		o.ConfigYAMLRoot = o.ConfigYAML // the operator's own file, for either layout
 		return o, nil
 	}
 	// A device link (refresh token from echovrce.com/device) can stand in for
-	// the password.
+	// the password on a 5.x runtime.
 	linked := false
 	if _, err := os.Stat(filepath.Join(o.Home, "root", "_local", ".credentials.json")); err == nil {
 		linked = true
@@ -139,27 +140,48 @@ func options() (supervisor.Options, error) {
 			return o, fmt.Errorf("%s is not set (EchoVRCE host account)", k)
 		}
 	}
+	noPassword := strings.TrimSpace(os.Getenv(config.EnvPassword)) == ""
 	c := config.Default()
-	if strings.TrimSpace(os.Getenv(config.EnvPassword)) == "" {
+	if noPassword {
 		c.Auth.Password, c.DeviceLinked = "", true
 		o.DeviceLinked = true
-		fmt.Println("[evr] no password set: signing in with the device link in _local/.credentials.json")
+		fmt.Println("[evr] no password set: signing in with the device link in _local/.credentials.json (nevr-runtime 5.x only)")
 	}
 	c.Services.SocketURI = env("NEVR_SOCKET_URI", c.Services.SocketURI)
 	c.Services.ServerDBURI = env("NEVR_SERVERDB_URI", c.Services.ServerDBURI)
 	c.Auth.HTTPURI = env("NEVR_HTTP_URI", c.Auth.HTTPURI)
 	c.Auth.HTTPKey = env(config.EnvHTTPKey, config.DefaultHTTPKey)
+	// A two-file runtime (6.x) has EchoVRCE's addresses and key built in: its
+	// file names them only when the operator overrides them.
+	r := config.RootDefault()
+	r.Services.SocketURI = os.Getenv("NEVR_SOCKET_URI")
+	r.Services.ServerDBURI = os.Getenv("NEVR_SERVERDB_URI")
+	r.Auth.HTTPURI = os.Getenv("NEVR_HTTP_URI")
+	r.Auth.HTTPKey = os.Getenv(config.EnvHTTPKey)
 	if c.Network.TickRateHz, err = intEnv("NEVR_TICK_RATE", config.DefaultTickRate); err != nil {
 		return o, err
 	}
 	if c.Network.EmptyServerTTLSeconds, err = intEnv("NEVR_EMPTY_TTL", 0); err != nil {
 		return o, err
 	}
-	if err := c.SetMatchmaking(list("NEVR_REGIONS"), list("NEVR_GUILDS")); err != nil {
+	r.Network.TickRateHz, r.Network.EmptyServerTTLSeconds = c.Network.TickRateHz, c.Network.EmptyServerTTLSeconds
+	regions, guilds := list("NEVR_REGIONS"), list("NEVR_GUILDS")
+	if err := c.SetMatchmaking(regions, guilds); err != nil {
 		return o, err
 	}
-	o.ConfigYAML, err = c.Render()
-	return o, err
+	if err := r.SetMatchmaking(regions, guilds); err != nil {
+		return o, err
+	}
+	if o.ConfigYAML, err = c.Render(); err != nil {
+		return o, err
+	}
+	if noPassword {
+		r.Auth.Password = ""
+	}
+	if o.ConfigYAMLRoot, err = r.Render(); err != nil {
+		o.ConfigYAMLRoot, o.RootConfigErr = nil, err.Error()
+	}
+	return o, nil
 }
 
 func env(k, def string) string {
