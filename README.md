@@ -20,7 +20,8 @@ pre-release while there is no stable one; `EVR_VERSION=v2.0.0` picks one), offer
 and opens the setup wizard. The wizard asks for:
 
 - how the servers sign in to EchoVRCE: a **device link** (you approve a code at echovrce.com/device; no password,
-  the Discord ID comes from your account) or your Discord user ID and server password;
+  the Discord ID comes from your account) or your Discord user ID and server password. nevr-runtime 6.x needs the
+  password: it refuses a server that has only a device link;
 - how many servers to run and their first UDP port (default 6792);
 - where the game files come from: the public mirror (about 5 GB), a folder that is already on the host, or an archive.
 
@@ -50,18 +51,23 @@ echo "$PASSWORD" | sudo evr-docker init --discord-id 123456789012345678 --passwo
 /srv/echovr/
   game/34.4.631547.1/      the game, verified, shared read-only by all servers
   game/current → …
-  nevr/v5.4.2/             nevr-runtime (BugSplat64.dll), checksum-verified
-  nevr/current → v5.4.2    switched by updates; servers follow at their next match
+  nevr/v6.6.0/             nevr-runtime (BugSplat64.dll; from 6.0 also nevr-runtime.dll), checksum-verified
+  nevr/current → v6.6.0    switched by updates; servers follow at their next match
   instances/<name>/        each server's own files: Wine prefix, config, logs, status.json
 /etc/evr-docker/config.yaml  settings (edit by hand or with evr-docker)
 /etc/evr-docker/secrets.env  account and webhook (mode 0600)
 ```
 
 - **One game copy for every server.** Each container mounts it read-only and gets a small writable view of its own (a
-  "symlink farm"): its own `_local/config.yaml`, credentials, logs and Wine prefix.
+  "symlink farm"): its own `_local/config.yaml`, credentials, logs and Wine prefix. From nevr-runtime 6.0 on the
+  runtime, `config.yaml`, the sign-in and the logs live in the server's nEVR root instead
+  (`.wine/drive_c/users/container/AppData/Local/nevr/echovr`).
 - **`evr-supervisor`** runs inside each container and handles the runtime's quirks:
   - It writes the runtime config and the port. nevr-runtime 5.4.2 ignores `-port`, so the port goes into a per-server
     `netconfig_dedicatedserver.json`.
+  - For nevr-runtime 6.x it copies the signed `nevr-runtime.dll` and the config into the server's nEVR root before each
+    start. 6.x has EchoVRCE's addresses built in, so that config carries only the account and the server's settings, and
+    6.x needs the account's password: it refuses a device link alone.
   - It starts the game under Wine and follows its log. It restarts the game after every match, because the runtime
     exits when a match ends.
   - It detects rejected logins, unreachable ports and stuck registrations.
@@ -70,7 +76,8 @@ echo "$PASSWORD" | sudo evr-docker init --discord-id 123456789012345678 --passwo
   backend registers a server at the address it connects from and the port the game bound; a forwarded port with a
   different number would point players at the wrong place.
 
-The measured runtime behaviour this is built on is documented in [docs/nevr-5.4.2-findings.md](docs/nevr-5.4.2-findings.md).
+The measured runtime behaviour this is built on is documented in [docs/nevr-5.4.2-findings.md](docs/nevr-5.4.2-findings.md)
+and, for 6.x, [docs/nevr-6.6.0-findings.md](docs/nevr-6.6.0-findings.md).
 
 ## Dashboard
 
