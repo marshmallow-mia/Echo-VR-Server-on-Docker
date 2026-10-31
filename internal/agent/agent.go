@@ -17,6 +17,7 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/metrics"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/mods"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/notify"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/selfupdate"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
@@ -152,7 +153,7 @@ func Components(app *core.App, log func(string)) []updates.Component {
 	rt := &updates.Runtime{U: Updater(app, log), Policy: func() update.Policy {
 		return update.Policy{Channel: app.Cfg.Runtime.Channel, Pinned: app.Cfg.Runtime.Pinned}
 	}}
-	md := &updates.Mods{Host: app.ModHost, Servers: app.ModServers}
+	md := &updates.Mods{Host: app.ModHost, Servers: func(context.Context) ([]mods.ServerMods, error) { return app.ModServers(), nil }}
 	return []updates.Component{self, game, rt, md}
 }
 

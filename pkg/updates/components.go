@@ -178,14 +178,18 @@ func orNone(s string) string {
 // new versions on one idle server first, marked bad when they fail there.
 type Mods struct {
 	Host    func(log func(string)) mods.Host
-	Servers func() []mods.ServerMods
+	Servers func(ctx context.Context) ([]mods.ServerMods, error)
 }
 
 func (m *Mods) Name() string  { return "mods" }
 func (m *Mods) Title() string { return "server mods" }
 
 func (m *Mods) Check(ctx context.Context) (Status, error) {
-	plans, _, err := m.Host(nil).Plan(ctx, m.Servers(), false)
+	servers, err := m.Servers(ctx)
+	if err != nil {
+		return Status{Installed: "unknown"}, err
+	}
+	plans, _, err := m.Host(nil).Plan(ctx, servers, false)
 	if err != nil {
 		return Status{Installed: "unknown"}, err
 	}
@@ -216,7 +220,11 @@ func (m *Mods) Check(ctx context.Context) (Status, error) {
 func (m *Mods) Versions(context.Context) ([]string, error) { return nil, nil }
 
 func (m *Mods) Apply(ctx context.Context, _ string, say func(string)) error {
-	res, err := m.Host(say).Rollout(ctx, m.Servers())
+	servers, err := m.Servers(ctx)
+	if err != nil {
+		return err
+	}
+	res, err := m.Host(say).Rollout(ctx, servers)
 	if err != nil {
 		return err
 	}
