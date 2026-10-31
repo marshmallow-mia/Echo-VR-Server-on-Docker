@@ -2,6 +2,8 @@ package core
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"sort"
@@ -82,21 +84,48 @@ type modFleet struct{ a *App }
 func (f modFleet) Statuses(ctx context.Context) ([]status.Status, error) { return f.a.Statuses(ctx) }
 
 func (f modFleet) ReadLock(server string) (mods.Lock, error) {
-	return mods.ReadLock(filepath.Join(f.a.Cfg.InstanceDir(server), LockName))
+	var l mods.Lock
+	root, err := os.OpenRoot(f.a.Cfg.InstanceDir(server))
+	if errors.Is(err, os.ErrNotExist) {
+		return l, nil
+	}
+	if err != nil {
+		return l, err
+	}
+	defer root.Close()
+	b, err := root.ReadFile(LockName)
+	if errors.Is(err, os.ErrNotExist) {
+		return l, nil
+	}
+	if err != nil {
+		return l, err
+	}
+	return l, json.Unmarshal(b, &l)
 }
 
+// WriteLock writes through an os.Root of the instance directory, which the
+// container can write: a link it put there can't lead outside it.
 func (f modFleet) WriteLock(server string, l mods.Lock) error {
 	if err := f.a.prepareInstanceDir(server); err != nil {
 		return err
 	}
-	p := filepath.Join(f.a.Cfg.InstanceDir(server), LockName)
-	if err := mods.WriteLock(p, l); err != nil {
+	root, err := os.OpenRoot(f.a.Cfg.InstanceDir(server))
+	if err != nil {
 		return err
 	}
-	if err := os.Chown(p, f.a.Cfg.UID, f.a.Cfg.UID); err != nil && os.Geteuid() == 0 {
+	defer root.Close()
+	b, err := json.MarshalIndent(l, "", "  ")
+	if err != nil {
 		return err
 	}
-	return nil
+	tmp := LockName + ".tmp"
+	if err := root.WriteFile(tmp, b, 0o644); err != nil {
+		return err
+	}
+	if err := root.Lchown(tmp, f.a.Cfg.UID, f.a.Cfg.UID); err != nil && os.Geteuid() == 0 {
+		return err
+	}
+	return root.Rename(tmp, LockName)
 }
 
 func (f modFleet) Restart(ctx context.Context, server string) error {
@@ -134,7 +163,7 @@ func (a *App) ModRows(ctx context.Context, only string) ([]ModRow, error) {
 		if only != "" && in.Name != only {
 			continue
 		}
-		lock, err := mods.ReadLock(filepath.Join(a.Cfg.InstanceDir(in.Name), LockName))
+		lock, err := modFleet{a}.ReadLock(in.Name)
 		if err != nil {
 			return nil, err
 		}

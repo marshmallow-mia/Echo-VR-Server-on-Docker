@@ -214,9 +214,14 @@ the mods update setting on auto): one idle server tries them first.`,
 			return fmt.Errorf("local on or local off")
 		}
 		if args[0] == "on" && server != "" {
-			dir := filepath.Join(a.Cfg.InstanceDir(server), "mods", "local")
-			if err := os.MkdirAll(dir, 0o755); err == nil {
-				g.say("put the DLLs into %s", dir)
+			// Through an os.Root: the container can write its instance directory.
+			if root, err := os.OpenRoot(a.Cfg.InstanceDir(server)); err == nil {
+				if root.MkdirAll("mods/local", 0o755) == nil {
+					_ = root.Lchown("mods", a.Cfg.UID, a.Cfg.UID)
+					_ = root.Lchown("mods/local", a.Cfg.UID, a.Cfg.UID)
+					g.say("put the DLLs into %s", filepath.Join(a.Cfg.InstanceDir(server), "mods", "local"))
+				}
+				root.Close()
 			}
 		}
 		return a.SetLocalPlugins(server, args[0] == "on")
