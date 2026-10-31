@@ -76,6 +76,9 @@ type Locked struct {
 	// Shipped comes with the game's files (bin/win10/plugins): taken from there.
 	Shipped bool   `json:"shipped,omitempty"`
 	Source  string `json:"source,omitempty"`
+	// Nevr is the nEVR range it needs (the catalogue's requires.nevr): a server whose
+	// runtime changed since the lock was written leaves it out.
+	Nevr string `json:"nevr,omitempty"`
 	// Entry is what the catalogue said (for the store to fetch it).
 	Entry Entry `json:"-"`
 }
@@ -241,7 +244,7 @@ func Resolve(c *Catalog, specs []Spec, runtime string) (Lock, []Problem) {
 		}
 		pack = p.e.ID
 		lock.Mods = append(lock.Mods, Locked{
-			ID: ov.ID, Name: ov.Name, Version: ov.Version, Plugins: []string{ov.File},
+			ID: ov.ID, Name: ov.Name, Version: ov.Version, Plugins: []string{ov.File}, Nevr: ov.Requires.Nevr,
 			Early: true, Args: map[string]string{"active": p.e.Pack.Content}, Source: ov.Source, Entry: ov,
 		})
 		lock.Mods = append(lock.Mods, locked(p.e, p.spec))
@@ -255,7 +258,7 @@ func Resolve(c *Catalog, specs []Spec, runtime string) (Lock, []Problem) {
 }
 
 func locked(e Entry, s Spec) Locked {
-	l := Locked{ID: e.ID, Name: e.Name, Version: e.Version, Shipped: e.Shipped, Source: e.Source, Entry: e}
+	l := Locked{ID: e.ID, Name: e.Name, Version: e.Version, Shipped: e.Shipped, Source: e.Source, Nevr: e.Requires.Nevr, Entry: e}
 	if e.Pack != nil {
 		l.Plugins = append([]string(nil), e.Pack.Plugins...)
 		l.Content = e.Pack.Content

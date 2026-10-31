@@ -1,8 +1,14 @@
 package main
 
 import (
+	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/mods"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
 
 func setEnv(t *testing.T, kv map[string]string) {
@@ -60,5 +66,20 @@ func TestOptionsWithPassword(t *testing.T) {
 	setEnv(t, map[string]string{"NEVR_PASSWORD": "x"})
 	if o, _ = options(); o.ConfigYAMLRoot != nil || !strings.Contains(o.RootConfigErr, "identity.discord_id") {
 		t.Errorf("root config without Discord ID: %q %q", o.ConfigYAMLRoot, o.RootConfigErr)
+	}
+}
+
+// An operator's own config.yaml with a plugins list can't take the server's mods.
+func TestOptionsOwnPluginsAndMods(t *testing.T) {
+	dir := t.TempDir()
+	own := filepath.Join(dir, "config.yaml")
+	os.WriteFile(own, []byte("version: 1\nplugins:\n  - name: Mine\n    file: Mine.dll\n"), 0o644)
+	setEnv(t, map[string]string{"EVR_CONFIG_YAML": own, "EVR_HOME": dir})
+	if _, err := options(); err != nil {
+		t.Fatalf("without mods: %v", err)
+	}
+	mods.WriteLock(filepath.Join(dir, "mods.lock.json"), mods.Lock{Mods: []mods.Locked{{ID: "x", Version: "1.0.0", Plugins: []string{"X.dll"}}}})
+	if _, err := options(); !errors.Is(err, config.ErrOwnPlugins) {
+		t.Errorf("with mods: %v", err)
 	}
 }

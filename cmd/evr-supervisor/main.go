@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/mods"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/supervisor"
 )
@@ -38,7 +39,10 @@ Environment:
   NEVR_REGIONS, NEVR_GUILDS                       comma-separated lists (optional)
   NEVR_TICK_RATE (120), NEVR_EMPTY_TTL (0), NEVR_PUBLISHER_LOCK (echovrce)
   NEVR_SOCKET_URI, NEVR_SERVERDB_URI, NEVR_HTTP_URI   backend overrides
-  EVR_CONFIG_YAML          use this config.yaml as-is instead of generating one
+  EVR_CONFIG_YAML          use this config.yaml as-is instead of generating one (without a
+                           plugins list when the server has mods)
+  EVR_MODS_LOCK            the server's mods, as the host tool wrote them (default $EVR_HOME/mods.lock.json)
+  EVR_MODS_DIR             the host's downloaded mods, read-only (default /opt/echovr/mods)
   EVR_REGISTER_TIMEOUT     seconds until an unregistered server is restarted (180)
   EVR_LOG                  "default" hides noisy runtime lines, "all" shows everything
 `
@@ -98,6 +102,8 @@ func options() (supervisor.Options, error) {
 		Commands:       os.Stdin,
 		ControlFile:    filepath.Join(env("EVR_HOME", env("HOME", "/home/container")), "control"),
 		Env:            []string{"USER=" + env("USER", "container")},
+		ModsLock:       os.Getenv("EVR_MODS_LOCK"),
+		ModsStore:      env("EVR_MODS_DIR", "/opt/echovr/mods"),
 	}
 	var err error
 	if o.Port, err = intEnv("EVR_PORT", intOr(os.Getenv("SERVER_PORT"), 0)); err != nil {
@@ -125,8 +131,18 @@ func options() (supervisor.Options, error) {
 		if o.ConfigYAML, err = os.ReadFile(path); err != nil {
 			return o, err
 		}
-		if _, err := config.Parse(o.ConfigYAML); err != nil {
+		own, err := config.Parse(o.ConfigYAML)
+		if err != nil {
 			return o, fmt.Errorf("%s: %w", path, err)
+		}
+		if len(own.Plugins) > 0 {
+			lockPath := o.ModsLock
+			if lockPath == "" {
+				lockPath = filepath.Join(o.Home, "mods.lock.json")
+			}
+			if lock, err := mods.ReadLock(lockPath); err == nil && (len(lock.Mods) > 0 || lock.LocalPlugins) {
+				return o, fmt.Errorf("%s: %w", path, config.ErrOwnPlugins)
+			}
 		}
 		o.ConfigYAMLRoot = o.ConfigYAML // the operator's own file, for either layout
 		return o, nil

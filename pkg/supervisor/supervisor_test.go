@@ -3,6 +3,9 @@ package supervisor
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +15,8 @@ import (
 	"time"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/mods"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 )
 
@@ -398,5 +403,105 @@ func TestRunOnceCompressesOldLogs(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), "[evr] logs: compressed 1, removed 0") {
 		t.Errorf("no logs line:\n%s", out)
+	}
+}
+
+// A two-file runtime gets the lock's mods in the nEVR root's plugins and content
+// folders, and config.yaml lists them; a mod for another nEVR is left out, and
+// a later start without it takes its file away again.
+func TestRunOnceTwoFileMods(t *testing.T) {
+	o, out := testOptions(t, "v6.6.0-no-password.log", 6792)
+	twoFile(t, &o, "v6.6.0-no-password.log", 1)
+	o.ModsStore = filepath.Join(filepath.Dir(o.Home), "mods")
+	sha := func(b string) string { s := sha256.Sum256([]byte(b)); return hex.EncodeToString(s[:]) }
+	store := func(id, ver string, files map[string]string) {
+		m := mods.Installed{ID: id, Version: ver, Files: map[string]string{}}
+		for rel, body := range files {
+			p := filepath.Join(o.ModsStore, id, ver, rel)
+			os.MkdirAll(filepath.Dir(p), 0o755)
+			os.WriteFile(p, []byte(body), 0o644)
+			m.Files[rel] = sha(body)
+		}
+		b, _ := json.Marshal(m)
+		os.WriteFile(filepath.Join(o.ModsStore, id, ver, "manifest.json"), b, 0o644)
+	}
+	store("server-patches", "0.4.1", map[string]string{"plugins/NvrServerPatches.dll": "patches"})
+	store("content-overlay", "1.1.0", map[string]string{"plugins/NvrContentOverlay.dll": "overlay"})
+	store("echo-combat", "1.0.0", map[string]string{"content/echo-combat/a.pak": "pak"})
+	store("old", "1.0.0", map[string]string{"plugins/Old.dll": "old"})
+	lock := mods.Lock{Mods: []mods.Locked{
+		{ID: "content-overlay", Version: "1.1.0", Plugins: []string{"NvrContentOverlay.dll"}, Early: true, Args: map[string]string{"active": "echo-combat"}},
+		{ID: "echo-combat", Version: "1.0.0", Content: "echo-combat"},
+		{ID: "server-patches", Version: "0.4.1", Plugins: []string{"NvrServerPatches.dll"}, Args: map[string]string{"teamsize": "6"}, Nevr: ">=6.0.0"},
+		{ID: "old", Version: "1.0.0", Plugins: []string{"Old.dll"}, Nevr: "<6.0.0"},
+	}}
+	if err := mods.WriteLock(filepath.Join(o.Home, "mods.lock.json"), lock); err != nil {
+		t.Fatal(err)
+	}
+	s := newSup(t, o)
+	s.runOnce(context.Background())
+	root := game.NevrRoot(filepath.Join(o.Home, ".wine"), "container")
+	for rel, want := range map[string]string{"plugins/NvrServerPatches.dll": "patches", "plugins/NvrContentOverlay.dll": "overlay", "content/echo-combat/a.pak": "pak"} {
+		if b, err := os.ReadFile(filepath.Join(root, rel)); err != nil || string(b) != want {
+			t.Errorf("root %s = %q %v", rel, b, err)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(root, "plugins/Old.dll")); !os.IsNotExist(err) {
+		t.Error("a mod for nEVR <6 was placed")
+	}
+	c, err := config.Parse(mustRead(t, filepath.Join(root, "config.yaml")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(c.Plugins) != 2 || c.Plugins[0].File != "NvrContentOverlay.dll" || !c.Plugins[0].Early || c.Plugins[1].Args["teamsize"] != "6" {
+		t.Errorf("plugins list %+v", c.Plugins)
+	}
+	st := s.Status()
+	if len(st.Mods) != 3 || len(st.ModsSkipped) != 1 || !strings.Contains(st.ModsSkipped[0], "needs nEVR <6.0.0") {
+		t.Errorf("status mods %+v skipped %v\n%s", st.Mods, st.ModsSkipped, out)
+	}
+	// nEVR's load lines reach status.json.
+	s.modEvent(Parse("[NEVR.PLUGIN] NvrServerPatches (NvrServerPatches.dll): init failed code=3 — optional, continuing"))
+	s.modEvent(Parse("[NEVR.PLUGIN] plugin load complete: 1/2 loaded"))
+	if st := s.Status(); st.Mods[0].ID != "content-overlay" || !st.Mods[0].Loaded || !st.Mods[1].Loaded || st.Mods[2].Loaded || st.Mods[2].Error != "init failed code=3" {
+		t.Errorf("load results %+v", st.Mods)
+	}
+	// Without the pack, its files go; the plugins list follows.
+	lock.Mods = lock.Mods[2:3]
+	mods.WriteLock(filepath.Join(o.Home, "mods.lock.json"), lock)
+	s.runOnce(context.Background())
+	if _, err := os.Stat(filepath.Join(root, "content/echo-combat")); !os.IsNotExist(err) {
+		t.Error("the pack's content stayed")
+	}
+	if _, err := os.Stat(filepath.Join(root, "plugins/NvrContentOverlay.dll")); !os.IsNotExist(err) {
+		t.Error("the overlay stayed")
+	}
+	if c, _ := config.Parse(mustRead(t, filepath.Join(root, "config.yaml"))); len(c.Plugins) != 1 {
+		t.Errorf("plugins list %+v", c.Plugins)
+	}
+	// A store file changed since download is refused.
+	os.WriteFile(filepath.Join(o.ModsStore, "server-patches/0.4.1/plugins/NvrServerPatches.dll"), []byte("tampered"), 0o644)
+	os.Remove(filepath.Join(root, "plugins/NvrServerPatches.dll"))
+	if res := s.runOnce(context.Background()); res.reason != ReasonInvalidConfig || !strings.Contains(res.detail, "checksum") {
+		t.Errorf("tampered store: %+v", res)
+	}
+}
+
+func mustRead(t *testing.T, p string) []byte {
+	t.Helper()
+	b, err := os.ReadFile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
+}
+
+func TestParsePluginLines(t *testing.T) {
+	ev := Parse("[NEVR.FATAL] Required plugin NvrServerPatches (NvrServerPatches.dll) failed: init returned 3 — a server must not run without a plugin it declared required")
+	if ev.Kind != KindFatal || ev.Reason != ReasonModFailed || ev.File != "NvrServerPatches.dll" || ev.Error != "init returned 3" || ev.Reason.Retryable() {
+		t.Errorf("%+v", ev)
+	}
+	if ev := Parse("[NEVR.PLUGIN] plugin load complete: 2/3 loaded"); ev.Kind != KindPluginsLoaded || ev.Loaded != 2 || ev.Enabled != 3 {
+		t.Errorf("%+v", ev)
 	}
 }

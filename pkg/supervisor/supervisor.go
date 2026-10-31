@@ -60,6 +60,11 @@ type Options struct {
 	ExtraArgs    []string // appended to the game's command line
 	DeviceLinked bool     // signs in with _local/.credentials.json instead of a password
 	Env          []string // added to the game's environment
+	// ModsLock is the server's mods lock (written by the host tool; none = no
+	// mods), ModsStore the host's mod downloads (read-only), LocalPlugins the
+	// server's own DLLs, placed only when the lock turns local plugins on.
+	// Defaults: Home/mods.lock.json, /opt/echovr/mods, Home/mods/local.
+	ModsLock, ModsStore, LocalPlugins string
 
 	RegisterTimeout time.Duration // start → registered; default 180s
 	TeardownGrace   time.Duration // after "CTRL+C teardown complete"; default 3s
@@ -105,6 +110,15 @@ func (o *Options) defaults() {
 	}
 	if o.Console == nil {
 		o.Console = os.Stdout
+	}
+	if o.ModsLock == "" {
+		o.ModsLock = filepath.Join(o.Home, "mods.lock.json")
+	}
+	if o.ModsStore == "" {
+		o.ModsStore = "/opt/echovr/mods"
+	}
+	if o.LocalPlugins == "" {
+		o.LocalPlugins = filepath.Join(o.Home, "mods", "local")
 	}
 	if o.Filter == nil {
 		o.Filter = DefaultFilter
@@ -260,6 +274,13 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 		}
 	}
 	farm := game.Farm{GameDir: s.o.GameDir, Root: s.root(), RuntimeDLL: dll, Port: s.o.Port, PublisherLock: s.o.PublisherLock, ConfigYAML: s.o.ConfigYAML}
+	if !twoFile {
+		// A one-file runtime loads mods from the instance's bin/win10/plugins (a
+		// real folder: the farm never links the game's).
+		if farm.ConfigYAML, err = s.placeMods(false, version, s.o.ConfigYAML); err != nil {
+			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "mods: " + err.Error()}
+		}
+	}
 	if twoFile {
 		// The runtime never reads _local/config.yaml, and it would copy one into
 		// a root that has none; the root gets its own below.
@@ -275,7 +296,12 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 		return result{exitCode: -1, reason: ReasonOther, detail: "preparing Wine prefix: " + err.Error()}
 	}
 	if twoFile {
-		root := game.Root{Dir: s.NevrRoot(), RuntimeDLL: filepath.Join(runtimeDir, game.RuntimeName), ConfigYAML: s.o.ConfigYAMLRoot,
+		// After seeding: the nEVR root is inside the prefix.
+		cfg, err := s.placeMods(true, version, s.o.ConfigYAMLRoot)
+		if err != nil {
+			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "mods: " + err.Error()}
+		}
+		root := game.Root{Dir: s.NevrRoot(), RuntimeDLL: filepath.Join(runtimeDir, game.RuntimeName), ConfigYAML: cfg,
 			LegacyCredentials: filepath.Join(s.root(), "_local", game.CredentialsName)}
 		if err := root.Prepare(); err != nil {
 			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "preparing the nEVR root: " + err.Error()}
@@ -485,7 +511,12 @@ func (s *Supervisor) handle(ev Event, res *result, register *time.Timer, schedul
 			res.clean = true
 		}
 		scheduleKill(s.o.ShutdownGrace)
+	case KindPluginFailed, KindPluginsLoaded:
+		s.modEvent(ev)
 	case KindLoginFailed, KindFatal:
+		if ev.Reason == ReasonModFailed {
+			s.modEvent(ev)
+		}
 		if res.reason == ReasonNone || ev.Kind == KindFatal {
 			res.reason, res.detail = ev.Reason, ev.Line
 		}

@@ -57,6 +57,20 @@ type Status struct {
 	// SignInURL and SignInExpires are set in StateAwaitingApproval only.
 	SignInURL     string    `json:"sign_in_url,omitempty"`
 	SignInExpires time.Time `json:"sign_in_expires,omitzero"`
+	// Mods are the mods this start placed (its lock), and whether nEVR loaded them.
+	Mods []Mod `json:"mods,omitempty"`
+	// ModsSkipped are mods of the lock that could not be placed, with the reason.
+	ModsSkipped []string `json:"mods_skipped,omitempty"`
+}
+
+// Mod is one mod of a server's lock.
+type Mod struct {
+	ID      string   `json:"id"`
+	Version string   `json:"version"`
+	Files   []string `json:"files"`
+	// Loaded: nEVR loaded every file (its "plugin load complete" line, no failure for them).
+	Loaded bool   `json:"loaded"`
+	Error  string `json:"error,omitempty"`
 }
 
 // Write stores s at path atomically.

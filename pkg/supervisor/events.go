@@ -26,12 +26,14 @@ const (
 	KindFatal
 	KindSignInCode
 	KindSignInEnded
+	KindPluginFailed
+	KindPluginsLoaded
 )
 
 func (k Kind) String() string {
 	return [...]string{"none", "runtime_version", "login_success", "login_failed", "authenticated", "bound",
 		"serverdb_error", "registered", "session_start", "session_end", "teardown", "shutdown", "fatal",
-		"sign_in_code", "sign_in_ended"}[k]
+		"sign_in_code", "sign_in_ended", "plugin_failed", "plugins_loaded"}[k]
 }
 
 // Reason classifies a fatal error; retryable reasons get a restart with
@@ -50,12 +52,15 @@ const (
 	// ReasonSignIn: a server without a password (v6.9.0 on) ended its device
 	// sign-in without a token, because the service could not be asked. Retried.
 	ReasonSignIn Reason = "sign_in"
-	ReasonOther  Reason = "fatal"
+	// ReasonModFailed: a plugin the config marks required failed to load, which
+	// ends a server (nEVR's FailPluginLoad). It needs another mod version.
+	ReasonModFailed Reason = "mod_failed"
+	ReasonOther     Reason = "fatal"
 )
 
 // Retryable reports whether restarting can help.
 func (r Reason) Retryable() bool {
-	return r != ReasonBadCredentials && r != ReasonInvalidConfig && r != ReasonRuntimeRefused
+	return r != ReasonBadCredentials && r != ReasonInvalidConfig && r != ReasonRuntimeRefused && r != ReasonModFailed
 }
 
 // Exit codes the 6.x host and runtime use for a stop that repeats on every
@@ -88,6 +93,10 @@ type Event struct {
 	Expires int    // KindSignInCode: seconds the code is valid
 	OK      bool   // KindSignInEnded: approved
 	Reason  Reason // KindFatal, KindLoginFailed
+	File    string // KindPluginFailed: the plugin's file
+	Error   string // KindPluginFailed: why
+	Loaded  int    // KindPluginsLoaded: how many of Enabled loaded
+	Enabled int
 }
 
 var (
@@ -96,6 +105,10 @@ var (
 	boundRe      = regexp.MustCompile(`Dedicated: broadcaster initialized at \[[^\]:]*:(\d+)\]`)
 	registeredRe = regexp.MustCompile(`Dedicated: registered as \S+ at \[[^/\]]*/([^:\]]+):(\d+)\]`)
 	sessionRe    = regexp.MustCompile(`session_id=(\S+)`)
+	// nevr-runtime's plugin loader (src/runtime/ext/plugin_loader.cpp).
+	pluginFailRe  = regexp.MustCompile(`\[NEVR\.PLUGIN\] \S+ \(([^()]+)\): (.*) — optional, continuing`)
+	pluginFatalRe = regexp.MustCompile(`Required plugin \S+ \(([^()]+)\) failed: (.*?)(?: — a server must not run|$)`)
+	pluginsDoneRe = regexp.MustCompile(`\[NEVR\.PLUGIN\] plugin load complete: (\d+)/(\d+) loaded`)
 )
 
 // hostStop is the host's one-line stop record (6.x), printed as bare JSON:
@@ -193,6 +206,21 @@ func Parse(raw string) Event {
 		ev.Kind = KindTeardown
 	case strings.Contains(line, "Graceful shutdown complete"), strings.Contains(line, "Graceful shutdown initiated"):
 		ev.Kind = KindShutdown
+	case strings.Contains(line, "Required plugin ") && strings.Contains(line, ") failed: "):
+		ev.Kind, ev.Reason = KindFatal, ReasonModFailed
+		if m := pluginFatalRe.FindStringSubmatch(line); m != nil {
+			ev.File, ev.Error = m[1], m[2]
+		}
+	case strings.Contains(line, "— optional, continuing"):
+		if m := pluginFailRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.File, ev.Error = KindPluginFailed, m[1], m[2]
+		}
+	case strings.Contains(line, "[NEVR.PLUGIN] plugin load complete:"):
+		if m := pluginsDoneRe.FindStringSubmatch(line); m != nil {
+			ev.Kind = KindPluginsLoaded
+			ev.Loaded, _ = strconv.Atoi(m[1])
+			ev.Enabled, _ = strconv.Atoi(m[2])
+		}
 	case strings.Contains(line, "[NEVR.FATAL]"):
 		ev.Kind, ev.Reason = KindFatal, classifyFatal(line)
 	}

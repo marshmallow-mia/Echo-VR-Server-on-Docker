@@ -141,6 +141,12 @@ func newer(a, b string) bool {
 	return oka && okb && va.cmp(vb) > 0
 }
 
+// ParsesAsVersion reports whether text is a version InRange can compare.
+func ParsesAsVersion(text string) bool {
+	_, ok := parseVersion(text)
+	return ok
+}
+
 // InRange reports whether ver is in range rng: space-separated comparators
 // (>=, >, <=, <, =, ^, ~, or a bare version), all of which must hold; "*",
 // "all" or nothing is every version. A prerelease is in a range only when

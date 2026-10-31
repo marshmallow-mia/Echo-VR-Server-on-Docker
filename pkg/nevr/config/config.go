@@ -56,6 +56,9 @@ type Config struct {
 	Guilds    List       `yaml:"guilds,omitempty,flow"`
 	Telemetry *Telemetry `yaml:"telemetry,omitempty"`
 	Arena     *Arena     `yaml:"arena,omitempty"`
+	// Plugins are the mods nEVR loads, from the plugins folder (the nEVR root's
+	// from v6.0.0 on). Without a list nEVR loads none.
+	Plugins []Plugin `yaml:"plugins,omitempty"`
 
 	// DeviceLinked means the instance has a device-link refresh token in
 	// _local/.credentials.json, so a missing password is not rejected here.
@@ -89,6 +92,14 @@ type Network struct {
 	TickRateHz            int    `yaml:"tick_rate_hz,omitempty"`
 	EmptyServerTTLSeconds int    `yaml:"empty_server_ttl_seconds,omitempty"`
 	SessionRouter         string `yaml:"session_router,omitempty"`
+}
+
+// Plugin is one entry of config.yaml's plugins list.
+type Plugin struct {
+	Name  string            `yaml:"name"`
+	File  string            `yaml:"file,omitempty"`
+	Early bool              `yaml:"early,omitempty"`
+	Args  map[string]string `yaml:"args,omitempty"`
 }
 
 type Telemetry struct {
@@ -212,6 +223,7 @@ func (c Config) Validate() error {
 			errs = append(errs, fmt.Errorf("network.regions entry %q is invalid", r))
 		}
 	}
+	errs = append(errs, checkPlugins(c.Plugins)...)
 	return errors.Join(errs...)
 }
 
@@ -277,4 +289,70 @@ func Parse(data []byte) (Config, error) {
 var allowedTopLevel = map[string]bool{
 	"version": true, "identity": true, "auth": true, "services": true, "network": true, "assets": true,
 	"arena": true, "guilds": true, "telemetry": true, "plugins": true, "profiles": true, "social": true, "diagnostics": true,
+}
+
+// checkPlugins mirrors nEVR's checks of the plugins list.
+func checkPlugins(ps []Plugin) []error {
+	var errs []error
+	seen := map[string]bool{}
+	for _, p := range ps {
+		file := strings.ToLower(p.File)
+		if file == "" {
+			file = strings.ToLower(p.Name) + ".dll"
+		}
+		if p.Name == "" || strings.ContainsAny(file, `/\`) || !strings.HasSuffix(file, ".dll") || seen[file] {
+			errs = append(errs, fmt.Errorf("plugins entry %q (%s) is invalid or listed twice", p.Name, p.File))
+		}
+		seen[file] = true
+		for k, v := range p.Args {
+			// nEVR reads ${...} as an environment variable; an unset one stops the server.
+			if strings.Contains(k, "${") || strings.Contains(v, "${") {
+				errs = append(errs, fmt.Errorf("plugins entry %s: argument %s holds ${...}", p.Name, k))
+			}
+		}
+	}
+	return errs
+}
+
+// ErrOwnPlugins: the operator's own config.yaml lists plugins while the server
+// also has mods; one list must go.
+var ErrOwnPlugins = errors.New("the config.yaml from EVR_CONFIG_YAML has its own plugins list while the server has mods: take one of them out")
+
+// WithPlugins returns doc (a rendered or the operator's config.yaml) with ps as
+// its plugins list, everything else kept as written. No plugins keep doc as is.
+func WithPlugins(doc []byte, ps []Plugin) ([]byte, error) {
+	if len(ps) == 0 {
+		return doc, nil
+	}
+	var top map[string]yaml.Node
+	if err := yaml.Unmarshal(doc, &top); err != nil {
+		return nil, err
+	}
+	if _, ok := top["plugins"]; ok {
+		return nil, ErrOwnPlugins
+	}
+	if err := errors.Join(checkPlugins(ps)...); err != nil {
+		return nil, err
+	}
+	var buf bytes.Buffer
+	buf.Write(doc)
+	if len(doc) > 0 && doc[len(doc)-1] != '\n' {
+		buf.WriteByte('\n')
+	}
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+	if err := enc.Encode(struct {
+		Plugins []Plugin `yaml:"plugins"`
+	}{ps}); err != nil {
+		return nil, err
+	}
+	if err := enc.Close(); err != nil {
+		return nil, err
+	}
+	// A file whose top level isn't a block mapping can't take the list this way.
+	back, err := Parse(buf.Bytes())
+	if err != nil || len(back.Plugins) != len(ps) {
+		return nil, fmt.Errorf("cannot add the plugins list to this config.yaml (%v)", err)
+	}
+	return buf.Bytes(), nil
 }

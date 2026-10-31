@@ -155,3 +155,67 @@ func TestRootDeviceCode(t *testing.T) {
 		t.Errorf("device-code config with a Discord ID: %v", err)
 	}
 }
+
+func TestRenderPlugins(t *testing.T) {
+	r := RootDefault()
+	r.Auth.Password, r.Identity.DiscordID = "", ""
+	r.Plugins = []Plugin{
+		{Name: "NvrContentOverlay", File: "NvrContentOverlay.dll", Early: true, Args: map[string]string{"active": "echo-combat"}},
+		{Name: "NvrServerPatches", File: "NvrServerPatches.dll"},
+	}
+	got, err := r.Render()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(got)
+	for _, want := range []string{"plugins:", "- name: NvrContentOverlay", "file: NvrContentOverlay.dll", "early: true", "active: echo-combat", "- name: NvrServerPatches"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("rendered config lacks %q:\n%s", want, s)
+		}
+	}
+	back, err := Parse(got)
+	if err != nil || len(back.Plugins) != 2 || back.Plugins[0].Args["active"] != "echo-combat" {
+		t.Errorf("round trip: %+v %v", back.Plugins, err)
+	}
+	for name, p := range map[string]Plugin{
+		"no name":   {File: "a.dll"},
+		"path":      {Name: "a", File: "x/a.dll"},
+		"not a dll": {Name: "a", File: "a.exe"},
+		"env":       {Name: "a", File: "a.dll", Args: map[string]string{"k": "${HOME}"}},
+	} {
+		c := RootDefault()
+		c.Auth.Password, c.Identity.DiscordID = "", ""
+		c.Plugins = []Plugin{p}
+		if err := c.Validate(); err == nil {
+			t.Errorf("%s: expected an error", name)
+		}
+	}
+	c := RootDefault()
+	c.Auth.Password, c.Identity.DiscordID = "", ""
+	c.Plugins = []Plugin{{Name: "A", File: "a.dll"}, {Name: "A2", File: "A.dll"}}
+	if err := c.Validate(); err == nil {
+		t.Error("the same file twice: expected an error")
+	}
+}
+
+func TestWithPlugins(t *testing.T) {
+	own := []byte("version: 1\nnetwork:\n  tick_rate_hz: 60\nx-notes: mine\n")
+	ps := []Plugin{{Name: "NvrServerPatches", File: "NvrServerPatches.dll", Args: map[string]string{"teamsize": "6"}}}
+	got, err := WithPlugins(own, ps)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, err := Parse(got)
+	if err != nil || c.Network.TickRateHz != 60 || len(c.Plugins) != 1 || c.Plugins[0].Args["teamsize"] != "6" || !strings.Contains(string(got), "x-notes: mine") {
+		t.Errorf("%s %v", got, err)
+	}
+	if same, _ := WithPlugins(own, nil); string(same) != string(own) {
+		t.Error("no plugins changed the file")
+	}
+	if _, err := WithPlugins([]byte("plugins: []\n"), ps); err != ErrOwnPlugins {
+		t.Errorf("own plugins list: got %v", err)
+	}
+	if _, err := WithPlugins([]byte("{version: 1}"), ps); err == nil {
+		t.Error("a flow mapping: expected an error")
+	}
+}
