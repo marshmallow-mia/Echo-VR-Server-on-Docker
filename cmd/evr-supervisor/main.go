@@ -42,7 +42,8 @@ Environment:
   EVR_CONFIG_YAML          use this config.yaml as-is instead of generating one (without a
                            plugins list when the server has mods)
   EVR_MODS_LOCK            the server's mods, as the host tool wrote them (default $EVR_HOME/mods.lock.json)
-  EVR_MODS_DIR             the host's downloaded mods, read-only (default /opt/echovr/mods)
+  EVR_MODS_DIR             the host's downloaded mods, read-only (default /opt/echovr/mods when
+                           mounted, else $EVR_HOME/mods/store, where evr-ptero copies them)
   EVR_REGISTER_TIMEOUT     seconds until an unregistered server is restarted (180)
   EVR_LOG                  "default" hides noisy runtime lines, "all" shows everything
 `
@@ -103,7 +104,10 @@ func options() (supervisor.Options, error) {
 		ControlFile:    filepath.Join(env("EVR_HOME", env("HOME", "/home/container")), "control"),
 		Env:            []string{"USER=" + env("USER", "container")},
 		ModsLock:       os.Getenv("EVR_MODS_LOCK"),
-		ModsStore:      env("EVR_MODS_DIR", "/opt/echovr/mods"),
+	}
+	o.ModsStore = env("EVR_MODS_DIR", "/opt/echovr/mods")
+	if _, err := os.Stat(o.ModsStore); err != nil && os.Getenv("EVR_MODS_DIR") == "" {
+		o.ModsStore = filepath.Join(o.Home, "mods", "store")
 	}
 	var err error
 	if o.Port, err = intEnv("EVR_PORT", intOr(os.Getenv("SERVER_PORT"), 0)); err != nil {
