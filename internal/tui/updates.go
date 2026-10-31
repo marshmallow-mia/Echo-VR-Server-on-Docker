@@ -136,6 +136,7 @@ func (m *model) applyForm(msg versionsMsg) tea.Cmd {
 		"self":    "evr-docker is replaced (checksum-verified, the old one kept as .prev) and restarts; servers move to the new image after their current match.",
 		"game":    "Missing or changed files are fetched from the mirror and verified; servers use them from their next restart.",
 		"runtime": "The version is tried on one idle server first; only if it registers do the others switch, at their next match boundary.",
+		"mods":    "New mod versions are tried on one idle server first; only if it registers with all of them loaded do the others get them, at their next match boundary.",
 	}[c.Name()]
 	group = append(group, huh.NewConfirm().Title("Install now?").Description(what).Value(&ok))
 	f := huh.NewForm(huh.NewGroup(group...).Title("Update"))
@@ -187,6 +188,7 @@ func (m *model) updateSettingsForm() tea.Cmd {
 			mode("evr-docker itself", "", &u.Self),
 			mode("Game files", "Repairs missing or changed files from the mirror.", &u.Game),
 			mode("nevr-runtime", "Tried on one idle server first, then rolled out at match boundaries.", &u.Runtime),
+			mode("Server mods", "New versions are tried on one idle server first, then rolled out at match boundaries.", &u.Mods),
 		).Title("How should each part be updated?"),
 		huh.NewGroup(
 			huh.NewInput().Title("Check every … hours").Value(&hours).Validate(intRange(1, 168)),

@@ -294,6 +294,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.afterEdit(msg)
 	case versionsMsg:
 		return m, m.applyForm(msg)
+	case modCatalogMsg:
+		return m, m.addModForm(msg)
 	case updatesMsg:
 		m.updChecking = false
 		if m.screen == scrUpdates {

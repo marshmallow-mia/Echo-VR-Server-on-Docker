@@ -92,7 +92,7 @@ func agentCmd(g *globals) *cobra.Command {
 
 // component finds an updatable part by name.
 func component(comps []updates.Component, name string) (updates.Component, error) {
-	alias := map[string]string{"evr-docker": "self", "nevr-runtime": "runtime", "nevr": "runtime"}
+	alias := map[string]string{"evr-docker": "self", "nevr-runtime": "runtime", "nevr": "runtime", "mod": "mods"}
 	if a, ok := alias[name]; ok {
 		name = a
 	}
@@ -145,10 +145,11 @@ func updateCmd(g *globals) *cobra.Command {
 	}
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Updates of evr-docker itself, the game files and nevr-runtime",
+		Short: "Updates of evr-docker itself, the game files, nevr-runtime and the servers' mods",
 		Long: `Without a subcommand: check every part. Parts: self (evr-docker), game
 (the shared game files; repairs them from the mirror), runtime (nevr-runtime,
-rolled out on one idle server first). "update settings" chooses per part:
+rolled out on one idle server first), mods (new versions of the servers' mods,
+also tried on one idle server first). "update settings" chooses per part:
 off, notify (check and alert) or auto (install; needs the agent).`,
 		Args: cobra.NoArgs,
 		RunE: check,
@@ -205,7 +206,7 @@ off, notify (check and alert) or auto (install; needs the agent).`,
 	}
 	apply.Flags().StringVar(&version, "version", "", "version to install (default: the newest; see update ls)")
 	cmd.AddCommand(apply)
-	var self, game, rt, window string
+	var self, game, rt, md, window string
 	var hours int
 	settings := &cobra.Command{
 		Use: "settings", Short: "Show or change how each part is updated",
@@ -220,7 +221,7 @@ off, notify (check and alert) or auto (install; needs the agent).`,
 				flag string
 				dst  *string
 				val  string
-			}{{"self", &u.Self, self}, {"game", &u.Game, game}, {"runtime", &u.Runtime, rt}, {"window", &u.Window, window}} {
+			}{{"self", &u.Self, self}, {"game", &u.Game, game}, {"runtime", &u.Runtime, rt}, {"mods", &u.Mods, md}, {"window", &u.Window, window}} {
 				if fl.Changed(f.flag) {
 					*f.dst = f.val
 				}
@@ -234,7 +235,7 @@ off, notify (check and alert) or auto (install; needs the agent).`,
 				}
 			}
 			return g.print(u, func(w io.Writer) {
-				fmt.Fprintf(w, "self:        %s\ngame:        %s\nruntime:     %s\nwindow:      %s\ncheck every: %s\n", u.Self, u.Game, u.Runtime, orDash(u.Window), a.Cfg.Updates.Settings().Interval())
+				fmt.Fprintf(w, "self:        %s\ngame:        %s\nruntime:     %s\nmods:        %s\nwindow:      %s\ncheck every: %s\n", u.Self, u.Game, u.Runtime, u.Mods, orDash(u.Window), a.Cfg.Updates.Settings().Interval())
 				if !agent.ServiceInstalled() {
 					fmt.Fprintln(w, "\nThe agent is not installed: nothing is checked or installed in the background (evr-docker agent install).")
 				}
@@ -245,6 +246,7 @@ off, notify (check and alert) or auto (install; needs the agent).`,
 	sf.StringVar(&self, "self", "", "evr-docker itself: off, notify or auto")
 	sf.StringVar(&game, "game", "", "game files: off, notify or auto")
 	sf.StringVar(&rt, "runtime", "", "nevr-runtime: off, notify or auto")
+	sf.StringVar(&md, "mods", "", "the servers' mods: off, notify or auto")
 	sf.StringVar(&window, "window", "", `automatic installs only in this local time window, e.g. 04:00-06:00 ("" = any time)`)
 	sf.IntVar(&hours, "check-hours", 0, "hours between checks")
 	cmd.AddCommand(settings)

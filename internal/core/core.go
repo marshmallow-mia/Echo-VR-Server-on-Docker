@@ -228,6 +228,7 @@ func (a *App) spec(in hostcfg.Instance) docker.ContainerSpec {
 			a.Cfg.InstanceDir(in.Name) + ":/home/container",
 			a.Cfg.GameDir() + ":/opt/echovr/game:ro",
 			a.Cfg.NevrDir() + ":/opt/echovr/nevr:ro",
+			a.Cfg.ModsDir() + ":/opt/echovr/mods:ro",
 		},
 		Ports:       ports,
 		NanoCPUs:    int64(res.CPUs * 1e9),
@@ -262,6 +263,14 @@ func (a *App) Apply(ctx context.Context, force bool, progress func(string)) ([]s
 	if len(a.Cfg.Instances) > 0 {
 		if err := a.ensureImage(ctx, progress); err != nil {
 			return nil, err
+		}
+	}
+	if a.usesMods() {
+		// New servers get the defaults' mods; the others keep their versions.
+		if _, changed, err := a.SyncMods(ctx, nil); err != nil {
+			say("mods: %v (the servers keep the mods they have)", err)
+		} else if len(changed) > 0 {
+			say("mods: new for %v from their next start", changed)
 		}
 	}
 	if a.Secrets[config.EnvDiscordID] == "" && a.DeviceLinked() && len(a.Cfg.Instances) > 0 {
@@ -335,6 +344,10 @@ func (a *App) Apply(ctx context.Context, force bool, progress func(string)) ([]s
 
 func (a *App) create(ctx context.Context, in hostcfg.Instance) error {
 	if err := a.prepareInstanceDir(in.Name); err != nil {
+		return err
+	}
+	// Docker would make a missing bind source as root.
+	if err := os.MkdirAll(a.Cfg.ModsDir(), 0o755); err != nil {
 		return err
 	}
 	d, err := a.Docker()

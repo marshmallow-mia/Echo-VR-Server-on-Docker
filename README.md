@@ -99,12 +99,12 @@ and how many matches and restarts it has had.
 | `r` / `R` | restart only the game (fast) / restart the container |
 | `a` / `e` / `d` | add servers / edit one (port, regions, guilds, tick rate, runtime pin, on/off) / delete |
 | `A` | apply the configuration (after editing `config.yaml` by hand) |
-| `U` | updates of evr-docker, the game files and nevr-runtime: install, pick a version, settings |
+| `U` | updates of evr-docker, the game files, nevr-runtime and the servers' mods: install, pick a version, settings |
 | `u` | runtime versions: install (`enter`), roll back (`b`), delete (`x`), check for and roll out an update (`u`), update settings (`c`) |
 | `c` | account: sign-in state and registered servers; `p` signs in with your Discord ID and server password, `c` goes back to each server's console code |
 | `D` | doctor: checks of Docker, disk, game, runtime, account, ports, public IP, with the key that fixes each |
 | `g` | install the game files |
-| `m` | more: alerts and the background service, number of servers, show or edit the configuration, a compose file, moving a v1 installation |
+| `m` | more: server mods, alerts and the background service, number of servers, show or edit the configuration, a compose file, moving a v1 installation |
 
 ![The nevr-runtime screen](docs/images/docker-runtime.svg)
 
@@ -128,7 +128,10 @@ evr-docker game install [--from-dir DIR | --archive FILE] / game status
 evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|remove TAG|channel pre|stable|pinned [TAG]
 evr-docker account code|set|test|servers   console code (default) or password sign-in
 evr-docker agent install|uninstall|run|webhook URL   metrics, Discord alerts, automatic updates
-evr-docker update [check|ls|apply|settings]   evr-docker itself, game files, nevr-runtime
+evr-docker update [check|ls|apply|settings]   evr-docker itself, game files, nevr-runtime, mods
+evr-docker mods ls|search|info ID     the servers' mods and the catalogues
+evr-docker mods add ID[@VERSION] [--arg K=V] [--server NAME] / rm ID / pin ID [VERSION] / local on|off
+evr-docker mods update [--check] / sync / dev-code ls|add|rm
 evr-docker migrate detect|run         take over a v1 (bash run.sh) installation
 evr-docker export compose             a docker-compose.yml of the same setup
 evr-docker config show|edit
@@ -145,21 +148,58 @@ the version), `c` checks again, `s` sets how each part is updated:
 
 | Part | What an update does | Default |
 |---|---|---|
-| `evr-docker` | downloads the new release, checks it against `checksums.txt`, replaces the binary (the old one stays as `evr-docker.prev`) and restarts; servers move to the new image after their current match | notify |
+| `evr-docker` | downloads the new release, checks it against `checksums.txt`, replaces the binary (the old one stays as `evr-docker.prev`) and restarts; servers move to the new image after their current match | auto |
 | game files | fetches missing or changed files from the mirror and verifies the build; servers use them from their next restart. Echo VR no longer changes, so this is a repair | notify |
 | nevr-runtime | installs the version of the runtime channel (`u` screen) and tries it on one idle server first; only if that server registers do the others switch, at their next match boundary. A version that fails is skipped | auto |
+| mods | downloads the newest version of each server's mods (see [Mods](#mods)) and tries the new ones on one idle server first; only if it registers with every mod loaded do the others get them, at their next match boundary. A version that fails is marked bad and skipped | auto |
 
 Each part is `off`, `notify` (checked; shown in the dashboard and sent as a Discord alert) or `auto` (installed by the
-background service), optionally only inside a time window such as `04:00-06:00`. The same with commands:
+background service), optionally only inside a time window such as `04:00-06:00`. Setup asks once whether evr-docker,
+nevr-runtime and the mods update themselves (yes by default; `evr-docker init --auto-updates=false` only notifies). A
+`config.yaml` that names a mode keeps it. The same with commands:
 
 ```
 evr-docker update                       check everything
 evr-docker update ls self|game|runtime  versions to choose from
-evr-docker update apply self|game|runtime [--version V]
-evr-docker update settings --self auto --game notify --runtime auto --window 04:00-06:00 --check-hours 6
+evr-docker update apply self|game|runtime|mods [--version V]
+evr-docker update settings --self auto --game notify --runtime auto --mods auto --window 04:00-06:00 --check-hours 6
 ```
 
-Mods will be one more part here.
+## Mods
+
+The servers run mods from the same catalogues as the Echo VR launcher: `release.echovr.de`, every file checked against
+its signed index, with the community catalogue, pulled and blocked versions, and launcher dev codes. A mod marked for
+players' games only is left out; one marked for servers only never reaches players.
+
+```
+evr-docker mods search                          what servers can run
+evr-docker mods add server-patches --arg teamsize=6        for every server
+evr-docker mods rm server-patches --server echo-2          …except this one
+evr-docker mods add echocombat --server echo-3             a content pack on one server
+evr-docker mods pin server-patches 0.4.1        keep a version (pin server-patches: follow the newest again)
+evr-docker mods ls                              what each server runs, and whether nEVR loaded it
+```
+
+In the dashboard: `m` → Server mods. A change reaches each server at its next start, after its match (now:
+`evr-docker server restart NAME`). An edit keeps the other mods at the versions the servers run; new versions come as
+updates (above).
+
+How it works: the host downloads each mod into `/srv/echovr/mods` (checked like the launcher checks them), mounted
+read-only into every container, and writes each server's list as `instances/NAME/mods.lock.json`. At each start
+`evr-supervisor` copies the files into the server's nEVR root (`plugins/`, a content pack's data into `content/`;
+nevr-runtime 5.x: the server's `bin/win10/plugins`), checks them again, and lists them in `config.yaml`. Files it placed
+earlier that the list no longer has are taken away. `status.json` shows each mod and whether nEVR loaded it; a mod the
+server declares required that fails stops the server with `mod_failed`.
+
+- **Arguments** go over the catalogue's defaults. A value with `${…}` is refused (nEVR would read it as an environment
+  variable and stop when it is unset).
+- **Own DLLs:** `evr-docker mods local on --server NAME` also loads the DLLs in `instances/NAME/mods/local`. They are
+  not checked; use only DLLs you trust.
+- **Dev codes:** `evr-docker mods dev-code add CODE` (kept in `secrets.env`). Gated codes, behind the EchoVRCE sign-in,
+  work only in the launcher.
+- A mod that comes with the game's files (such as NvrAssetPatches) runs on a server only when the list names it: the
+  game's copy can't be checked here, and an old one can stop a nEVR 6 server.
+- With your own `EVR_CONFIG_YAML`, leave its `plugins:` list out while a server has mods; the supervisor refuses both.
 
 ## Alerts and metrics
 

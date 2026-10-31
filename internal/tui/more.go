@@ -32,8 +32,9 @@ type legacyMsg struct {
 func (m *model) menu() tea.Cmd {
 	choice := "updates"
 	f := huh.NewForm(huh.NewGroup(huh.NewSelect[string]().Title("What do you want to do?").Options(
-		huh.NewOption("Updates (evr-docker, game files, nevr-runtime)", "updates"),
+		huh.NewOption("Updates (evr-docker, game files, nevr-runtime, mods)", "updates"),
 		huh.NewOption("Runtime versions", "runtime"),
+		huh.NewOption("Server mods", "mods"),
 		huh.NewOption("EchoVRCE account", "account"),
 		huh.NewOption("Discord alerts and the background service", "alerts"),
 		huh.NewOption("Number of servers", "scale"),
@@ -51,6 +52,8 @@ func (m *model) menu() tea.Cmd {
 		case "runtime":
 			m.screen = scrRuntime
 			return m.loadRuntimes()
+		case "mods":
+			return m.modsMenu()
 		case "account":
 			return m.openAccount()
 		case "alerts":

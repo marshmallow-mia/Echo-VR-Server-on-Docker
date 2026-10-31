@@ -144,15 +144,16 @@ func UpdateEvent(e updates.Event, host string) notify.Event {
 		Text: "Installed: " + st.Installed + ". Install it in evr-docker (U: updates) or with `evr-docker update apply " + e.Component.Name() + "`."}
 }
 
-// Components are the parts evr-docker updates: itself, the game files and
-// nevr-runtime.
+// Components are the parts evr-docker updates: itself, the game files,
+// nevr-runtime and the servers' mods.
 func Components(app *core.App, log func(string)) []updates.Component {
 	self := &updates.Self{U: &selfupdate.Updater{Repo: core.Repo, Binary: "evr-docker", Current: core.Version}, After: PostUpdate(app.Dir)}
 	game := &updates.Game{In: app.Games(nil)}
 	rt := &updates.Runtime{U: Updater(app, log), Policy: func() update.Policy {
 		return update.Policy{Channel: app.Cfg.Runtime.Channel, Pinned: app.Cfg.Runtime.Pinned}
 	}}
-	return []updates.Component{self, game, rt}
+	md := &updates.Mods{Host: app.ModHost, Servers: app.ModServers}
+	return []updates.Component{self, game, rt, md}
 }
 
 // PostUpdate runs the new binary's post-update step and restarts the agent
@@ -198,23 +199,7 @@ func (f fleet) Statuses(ctx context.Context) ([]status.Status, error) {
 	if err != nil {
 		return nil, err
 	}
-	servers, err := app.Servers(ctx)
-	if err != nil {
-		return nil, err
-	}
-	var out []status.Status
-	for _, s := range servers {
-		if s.Status == nil || !s.Running() {
-			continue
-		}
-		st := *s.Status
-		// a status written before the container was (re)created is not this run's
-		if s.State() == "starting" {
-			st.State = status.StateStarting
-		}
-		out = append(out, st)
-	}
-	return out, nil
+	return app.Statuses(ctx)
 }
 
 func (f fleet) Pin(ctx context.Context, instance, tag string) error {

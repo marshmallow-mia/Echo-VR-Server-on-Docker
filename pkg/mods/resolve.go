@@ -1,6 +1,7 @@
 package mods
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -106,6 +107,22 @@ func (p Problem) String() string { return p.ID + ": " + p.Why }
 // launcher leaves them out of a start (for players' games only, the wrong nEVR,
 // blocked, a conflict, or a mod it needs missing).
 func Resolve(c *Catalog, specs []Spec, runtime string) (Lock, []Problem) {
+	return ResolveKeeping(c, specs, runtime, nil)
+}
+
+// ResolveKeeping is Resolve that keeps a mod at its version in keep (id →
+// version, a server's current lock) while that version can still run and fits
+// its pin, instead of moving it to the newest: an edit changes only what it
+// names, and updates stay with the update setting.
+func ResolveKeeping(c *Catalog, specs []Spec, runtime string, keep map[string]string) (Lock, []Problem) {
+	choose := func(id, pin string, pre bool) (Entry, error) {
+		if v, ok := keep[id]; ok && (pin == "" || InRange(v, pin, true)) {
+			if e, err := c.Choose(id, v, true); err == nil && e.Version == v {
+				return e, nil
+			}
+		}
+		return c.Choose(id, pin, pre)
+	}
 	var probs []Problem
 	type pick struct {
 		e    Entry
@@ -118,7 +135,7 @@ func Resolve(c *Catalog, specs []Spec, runtime string) (Lock, []Problem) {
 			return
 		}
 		have[s.ID] = true
-		e, err := c.Choose(s.ID, s.Version, s.Prerelease)
+		e, err := choose(s.ID, s.Version, s.Prerelease)
 		if err != nil {
 			probs = append(probs, Problem{s.ID, err.Error()})
 			return
@@ -237,7 +254,7 @@ func Resolve(c *Catalog, specs []Spec, runtime string) (Lock, []Problem) {
 			probs = append(probs, Problem{p.e.ID, "the content overlay mod isn't in the catalogues"})
 			continue
 		}
-		ov, err := c.Choose(overlay, "", false)
+		ov, err := choose(overlay, "", false)
 		if err != nil {
 			probs = append(probs, Problem{p.e.ID, "its content overlay: " + err.Error()})
 			continue
@@ -324,4 +341,22 @@ func filter[T any](in []T, keep func(T) bool) []T {
 		}
 	}
 	return out
+}
+
+// Versions returns a lock's mods as id → version (shipped ones left out).
+func (l Lock) Versions() map[string]string {
+	out := map[string]string{}
+	for _, m := range l.Mods {
+		if !m.Shipped {
+			out[m.ID] = m.Version
+		}
+	}
+	return out
+}
+
+// Same reports whether two locks run the same files the same way.
+func (l Lock) Same(o Lock) bool {
+	a, _ := json.Marshal(l)
+	b, _ := json.Marshal(o)
+	return string(a) == string(b)
 }

@@ -502,3 +502,17 @@ func because(why string) string {
 	}
 	return " (" + why + ")"
 }
+
+// Without returns c without the versions drop names (such as those a rollout
+// marked bad); c itself is unchanged.
+func (c *Catalog) Without(drop func(id, version string) bool) *Catalog {
+	out := &Catalog{Versions: map[string][]Entry{}, Rollback: c.Rollback}
+	for id, vs := range c.Versions {
+		for _, e := range vs {
+			if !drop(id, e.Version) {
+				out.Versions[id] = append(out.Versions[id], e)
+			}
+		}
+	}
+	return out
+}

@@ -86,6 +86,7 @@ func (m *model) startWizard() {
 	an.PublicIP = "auto"
 	servers, firstPort, regions := "2", strconv.Itoa(hostcfg.FirstPort), ""
 	signIn := "code"
+	autoUpdates := true
 	signInOptions := []huh.Option[string]{
 		huh.NewOption("Sign-in code on each server's console (6.9.0+, no password stored)", "code"),
 		huh.NewOption("Discord ID and server password", "password"),
@@ -137,6 +138,10 @@ func (m *model) startWizard() {
 			huh.NewInput().Title("Path (folder or archive)").Description("Only needed for folder or archive; the folder must contain bin/win10/echovr.exe.").Value(&an.Game.Path),
 		).Title("Game"),
 		huh.NewGroup(
+			huh.NewConfirm().Title("Keep evr-docker, nevr-runtime and the mods up to date automatically?").
+				Description("New versions are tried on one idle server first and installed at match boundaries.\n"+
+					"No: you get a notice and install them yourself (Updates, U).").
+				Value(&autoUpdates).Affirmative("Yes").Negative("No"),
 			huh.NewConfirm().Title("Start the servers when setup is done?").Value(&an.Start).Affirmative("Yes").Negative("No"),
 		),
 	)
@@ -148,6 +153,7 @@ func (m *model) startWizard() {
 			an.Account.DiscordID, an.Account.Password = "", ""
 		}
 		an.Account.DeviceLink = signIn == "device"
+		an.AutoUpdates = &autoUpdates
 		an.Servers, _ = strconv.Atoi(servers)
 		an.FirstPort, _ = strconv.Atoi(firstPort)
 		an.Regions = splitList(regions)

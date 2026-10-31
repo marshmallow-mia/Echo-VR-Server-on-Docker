@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/mods"
 )
 
 // Settings configure one game server. Zero values mean "use the default".
@@ -22,6 +24,13 @@ type Settings struct {
 	HTTPURI         string   `yaml:"http_uri,omitempty" json:"http_uri,omitempty"`
 	RegisterTimeout int      `yaml:"register_timeout,omitempty" json:"register_timeout,omitempty"`
 	LogAll          bool     `yaml:"log_all,omitempty" json:"log_all,omitempty"`
+	// Mods are the mods it runs, from the launcher's catalogues. A server's list
+	// goes over the defaults' by id: it adds a mod, leaves one out (enabled:
+	// false), pins a version or sets arguments.
+	Mods []mods.Spec `yaml:"mods,omitempty" json:"mods,omitempty"`
+	// LocalPlugins also loads the DLLs in the server's mods/local folder,
+	// unchecked; nil keeps the default's.
+	LocalPlugins *bool `yaml:"local_plugins,omitempty" json:"local_plugins,omitempty"`
 }
 
 // Merge returns s with every non-zero field of over applied.
@@ -41,6 +50,10 @@ func (s Settings) Merge(over Settings) Settings {
 	setStr(&s.ServerDBURI, over.ServerDBURI)
 	setStr(&s.HTTPURI, over.HTTPURI)
 	s.LogAll = s.LogAll || over.LogAll
+	s.Mods = mods.MergeSpecs(s.Mods, over.Mods)
+	if over.LocalPlugins != nil {
+		s.LocalPlugins = over.LocalPlugins
+	}
 	return s
 }
 
@@ -66,6 +79,22 @@ func (s Settings) Validate() error {
 	}
 	if s.Runtime != "" && !tagRe.MatchString(s.Runtime) {
 		return fmt.Errorf("runtime must be \"current\" or a tag like v5.4.2, got %q", s.Runtime)
+	}
+	seen := map[string]bool{}
+	for _, m := range s.Mods {
+		if m.ID == "" || strings.ContainsAny(m.ID, " /\\") {
+			return fmt.Errorf("mod id %q is invalid", m.ID)
+		}
+		if seen[m.ID] {
+			return fmt.Errorf("mod %s is listed twice", m.ID)
+		}
+		seen[m.ID] = true
+		for k, v := range m.Args {
+			// nEVR reads ${...} as an environment variable; an unset one stops the server.
+			if k == "" || strings.Contains(k, "${") || strings.Contains(v, "${") {
+				return fmt.Errorf("mod %s: argument %q=%q can't be used", m.ID, k, v)
+			}
+		}
 	}
 	for _, l := range [][]string{s.Regions, s.Guilds} {
 		for _, v := range l {
@@ -119,3 +148,6 @@ func setStr(dst *string, v string) {
 		*dst = v
 	}
 }
+
+// Local reports whether the server loads its own DLLs.
+func (s Settings) Local() bool { return s.LocalPlugins != nil && *s.LocalPlugins }

@@ -44,6 +44,9 @@ const (
 // Secret names in secrets.env.
 const (
 	SecretWebhook = "EVR_DISCORD_WEBHOOK"
+	// SecretModDevCodes are launcher dev codes (comma-separated) whose mods go
+	// over the published ones; like a password, they stay out of config.yaml.
+	SecretModDevCodes = "EVR_MOD_DEV_CODES"
 )
 
 // Config is the host configuration.
@@ -102,12 +105,13 @@ type UpdatePolicy struct {
 	Self       string `yaml:"self"`                  // evr-docker itself
 	Game       string `yaml:"game"`
 	Runtime    string `yaml:"runtime"`
+	Mods       string `yaml:"mods"` // the servers' mods (new versions from the catalogues)
 }
 
 // Settings converts the policy for the updates package.
 func (u UpdatePolicy) Settings() updates.Settings {
 	return updates.Settings{CheckHours: u.CheckHours, Window: u.Window,
-		Modes: map[string]updates.Mode{"self": updates.Mode(u.Self), "game": updates.Mode(u.Game), "runtime": updates.Mode(u.Runtime)}}
+		Modes: map[string]updates.Mode{"self": updates.Mode(u.Self), "game": updates.Mode(u.Game), "runtime": updates.Mode(u.Runtime), "mods": updates.Mode(u.Mods)}}
 }
 
 // migrate moves settings from older config versions.
@@ -131,7 +135,7 @@ func (c *Config) migrate() {
 	for _, f := range []struct {
 		v   *string
 		def string
-	}{{&c.Updates.Self, d.Self}, {&c.Updates.Game, d.Game}, {&c.Updates.Runtime, d.Runtime}} {
+	}{{&c.Updates.Self, d.Self}, {&c.Updates.Game, d.Game}, {&c.Updates.Runtime, d.Runtime}, {&c.Updates.Mods, d.Mods}} {
 		if *f.v == "" {
 			*f.v = f.def
 		}
@@ -154,8 +158,10 @@ func New() *Config {
 		Version: 1, Project: DefaultProject, DataDir: DefaultDataDir, Image: DefaultImage, UID: DefaultUID,
 		Defaults: instance.Settings{TickRate: config.DefaultTickRate, PublisherLock: "echovrce", Runtime: "current"},
 		Runtime:  RuntimePolicy{Channel: "pre"},
-		Updates:  UpdatePolicy{CheckHours: 6, Self: "notify", Game: "notify", Runtime: "auto"},
-		Metrics:  Metrics{Listen: "127.0.0.1:9469"},
+		// The tool, nEVR and the mods update themselves unless setup or
+		// `update settings` turn it off; a config that names a mode keeps it.
+		Updates: UpdatePolicy{CheckHours: 6, Self: "auto", Game: "notify", Runtime: "auto", Mods: "auto"},
+		Metrics: Metrics{Listen: "127.0.0.1:9469"},
 	}
 }
 
@@ -241,7 +247,7 @@ func (c *Config) Validate() error {
 	default:
 		errs = append(errs, fmt.Errorf("runtime.channel must be pre, stable or pinned, got %q", c.Runtime.Channel))
 	}
-	for k, m := range map[string]string{"self": c.Updates.Self, "game": c.Updates.Game, "runtime": c.Updates.Runtime} {
+	for k, m := range map[string]string{"self": c.Updates.Self, "game": c.Updates.Game, "runtime": c.Updates.Runtime, "mods": c.Updates.Mods} {
 		if _, err := updates.ParseMode(m, updates.Notify); err != nil {
 			errs = append(errs, fmt.Errorf("updates.%s: %w", k, err))
 		}
@@ -321,6 +327,7 @@ func (c *Config) NextFree() (string, int) {
 // Paths under DataDir.
 func (c *Config) GameDir() string                { return filepath.Join(c.DataDir, "game") }
 func (c *Config) NevrDir() string                { return filepath.Join(c.DataDir, "nevr") }
+func (c *Config) ModsDir() string                { return filepath.Join(c.DataDir, "mods") }
 func (c *Config) InstanceDir(name string) string { return filepath.Join(c.DataDir, "instances", name) }
 
 // Secrets are KEY=VALUE pairs from secrets.env.
@@ -413,4 +420,24 @@ func writeAtomic(path string, data []byte, mode os.FileMode) error {
 		return err
 	}
 	return os.Rename(tmp.Name(), path)
+}
+
+// DevCodes are the mod dev codes in secrets.env.
+func (s Secrets) DevCodes() []string {
+	var out []string
+	for _, c := range strings.Split(s[SecretModDevCodes], ",") {
+		if c = strings.TrimSpace(c); c != "" {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+// SetDevCodes stores the mod dev codes (none removes the line).
+func (s Secrets) SetDevCodes(codes []string) {
+	if len(codes) == 0 {
+		delete(s, SecretModDevCodes)
+		return
+	}
+	s[SecretModDevCodes] = strings.Join(codes, ",")
 }

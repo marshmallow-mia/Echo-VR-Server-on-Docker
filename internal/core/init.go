@@ -48,6 +48,9 @@ type Answers struct {
 		Pinned  string `yaml:"pinned,omitempty"`
 	} `yaml:"runtime"`
 	Start bool `yaml:"start"`
+	// AutoUpdates keeps evr-docker, nevr-runtime and the servers' mods up to
+	// date by themselves (the default); false only notifies.
+	AutoUpdates *bool `yaml:"auto_updates,omitempty"`
 	// Instances are added as-is (used by migrate to keep the old ports).
 	Instances []hostcfg.Instance `yaml:"-"`
 }
@@ -134,6 +137,9 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	}
 	if an.Runtime.Channel != "" {
 		cfg.Runtime.Channel, cfg.Runtime.Pinned = an.Runtime.Channel, an.Runtime.Pinned
+	}
+	if an.AutoUpdates != nil {
+		SetAutoUpdates(cfg, *an.AutoUpdates)
 	}
 	sec, err := hostcfg.LoadSecrets(dir)
 	if err != nil {
@@ -252,4 +258,14 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 	}
 	say("Done", fmt.Sprintf("%d server(s) configured", len(a.Cfg.Instances)))
 	return a, nil
+}
+
+// SetAutoUpdates turns automatic updates of evr-docker, nevr-runtime and the
+// servers' mods on (auto) or off (notify). The game files keep their setting.
+func SetAutoUpdates(cfg *hostcfg.Config, on bool) {
+	mode := "notify"
+	if on {
+		mode = "auto"
+	}
+	cfg.Updates.Self, cfg.Updates.Runtime, cfg.Updates.Mods = mode, mode, mode
 }

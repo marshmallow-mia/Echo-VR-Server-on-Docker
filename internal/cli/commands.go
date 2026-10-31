@@ -86,6 +86,9 @@ Example:
 			if fl.Changed("start") || answersFile == "" {
 				an.Start = initStart
 			}
+			if fl.Changed("auto-updates") {
+				an.AutoUpdates = &initAuto
+			}
 			progress := func(step, detail string) { g.say("[%s] %s", step, detail) }
 			_, err := core.Init(cmd.Context(), g.configDir, an, progress)
 			if err == nil {
@@ -114,12 +117,14 @@ Example:
 	f.StringVar(&an.Runtime.Channel, "channel", "", "runtime channel: pre, stable or pinned")
 	f.StringVar(&an.Runtime.Pinned, "pin", "", "runtime tag when --channel pinned")
 	f.BoolVar(&initStart, "start", true, "start the servers at the end")
+	f.BoolVar(&initAuto, "auto-updates", true, "keep evr-docker, nevr-runtime and the servers' mods up to date automatically (false: only notify)")
 	return cmd
 }
 
 var (
 	initServers int
 	initStart   bool
+	initAuto    bool
 )
 
 func isTerminal() bool {

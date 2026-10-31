@@ -65,7 +65,7 @@ runtimes and per-server data in /srv/echovr.`,
 	root.PersistentFlags().BoolVar(&g.json, "json", false, "print machine-readable JSON")
 	root.PersistentFlags().BoolVarP(&g.yes, "yes", "y", false, "do not ask for confirmation")
 	root.AddCommand(initCmd(g), doctorCmd(g), serverCmd(g), gameCmd(g), runtimeCmd(g), accountCmd(g),
-		configCmd(g), exportCmd(g), agentCmd(g), updateCmd(g), migrateCmd(g), postUpdateCmd(g))
+		configCmd(g), exportCmd(g), agentCmd(g), updateCmd(g), migrateCmd(g), postUpdateCmd(g), modsCmd(g))
 	if err := root.ExecuteContext(ctx); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		if hint := hintFor(err); hint != "" {
