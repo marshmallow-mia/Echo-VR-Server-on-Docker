@@ -36,6 +36,7 @@ func (s *Supervisor) placeMods(twoFile bool, version string, cfg []byte) ([]byte
 	if twoFile {
 		d.Plugins = filepath.Join(s.NevrRoot(), "plugins")
 		d.Content = filepath.Join(s.NevrRoot(), "content")
+		d.ExeContent = filepath.Join(s.root(), game.BinDir, "content")
 		d.Record = filepath.Join(s.o.Home, "mods-placed.root.json")
 	} else {
 		d.Plugins = filepath.Join(s.root(), game.BinDir, "plugins")

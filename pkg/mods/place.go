@@ -24,6 +24,10 @@ type Dirs struct {
 	// Content is where a pack's data goes: beside Plugins (<root>/content, or
 	// bin/win10/content), where NvrContentOverlay reads it.
 	Content string
+	// ExeContent, when set, gets a second copy of each pack's data: bin/win10/content
+	// beside the exe, where NvrContentOverlay before 1.1.0 reads it (from nEVR 6 on,
+	// 1.1.0 reads Content in the root), as the launcher places packs.
+	ExeContent string
 	// Record notes what Place put there, so the next run takes away what the lock
 	// no longer has (and nothing else).
 	Record string
@@ -64,6 +68,13 @@ func Place(lock Lock, d Dirs) (Placed, error) {
 			return err
 		}
 		placed = append(placed, relTo(d, dst))
+		if d.ExeContent != "" && strings.HasPrefix(rel, "content/") {
+			exe := filepath.Join(d.ExeContent, filepath.FromSlash(strings.TrimPrefix(rel, "content/")))
+			if err := copyChecked(src, exe, want); err != nil {
+				return err
+			}
+			placed = append(placed, relTo(d, exe))
+		}
 		return nil
 	}
 	for _, m := range lock.Mods {
@@ -149,8 +160,14 @@ func taken(ls []Line, f string) bool {
 
 func stem(f string) string { return strings.TrimSuffix(f, filepath.Ext(f)) }
 
-// relTo names a placed file in the record: "plugins/<rel>" or "content/<rel>".
+// relTo names a placed file in the record: "plugins/<rel>", "content/<rel>" or
+// "exe-content/<rel>".
 func relTo(d Dirs, p string) string {
+	if d.ExeContent != "" {
+		if r, err := filepath.Rel(d.ExeContent, p); err == nil && !strings.HasPrefix(r, "..") {
+			return "exe-content/" + filepath.ToSlash(r)
+		}
+	}
 	if r, err := filepath.Rel(d.Content, p); err == nil && !strings.HasPrefix(r, "..") {
 		return "content/" + filepath.ToSlash(r)
 	}
@@ -173,18 +190,20 @@ func sweep(d Dirs, now []string) error {
 		if keep[f] || !SafePath(f) {
 			continue
 		}
-		var p string
+		var p, top string
 		switch {
 		case strings.HasPrefix(f, "plugins/"):
-			p = filepath.Join(d.Plugins, filepath.FromSlash(strings.TrimPrefix(f, "plugins/")))
+			p, top = filepath.Join(d.Plugins, filepath.FromSlash(strings.TrimPrefix(f, "plugins/"))), d.Plugins
 		case strings.HasPrefix(f, "content/"):
-			p = filepath.Join(d.Content, filepath.FromSlash(strings.TrimPrefix(f, "content/")))
+			p, top = filepath.Join(d.Content, filepath.FromSlash(strings.TrimPrefix(f, "content/"))), d.Content
+		case strings.HasPrefix(f, "exe-content/") && d.ExeContent != "":
+			p, top = filepath.Join(d.ExeContent, filepath.FromSlash(strings.TrimPrefix(f, "exe-content/"))), d.ExeContent
 		default:
 			continue
 		}
 		os.Remove(p)
 		// Folders a pack brought go once empty.
-		for dir := filepath.Dir(p); dir != d.Content && dir != d.Plugins && strings.HasPrefix(dir, d.Content); dir = filepath.Dir(dir) {
+		for dir := filepath.Dir(p); top != d.Plugins && dir != top && strings.HasPrefix(dir, top); dir = filepath.Dir(dir) {
 			if os.Remove(dir) != nil {
 				break
 			}

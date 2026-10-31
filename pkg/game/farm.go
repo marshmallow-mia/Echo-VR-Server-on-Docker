@@ -32,11 +32,12 @@ type Farm struct {
 }
 
 // skipInBin are game files the farm never links: the runtime replaces
-// BugSplat64.dll, a legacy dbgcore.dll is fatal, and the rest are written per
-// instance or are left-overs of older runtimes.
+// BugSplat64.dll, a legacy dbgcore.dll is fatal, content packs come from the
+// server's mods (a launcher's copy of the game may carry its own), and the rest
+// are written per instance or are left-overs of older runtimes.
 var skipInBin = map[string]bool{
 	"BugSplat64.dll": true, "dbgcore.dll": true, "logs": true, "_temp": true,
-	"plugins": true, "plugin_logs": true,
+	"plugins": true, "plugin_logs": true, "content": true,
 }
 
 // skipInLocal are per-instance files in _local that must not come from the

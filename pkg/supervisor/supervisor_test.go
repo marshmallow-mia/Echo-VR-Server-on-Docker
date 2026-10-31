@@ -446,6 +446,11 @@ func TestRunOnceTwoFileMods(t *testing.T) {
 			t.Errorf("root %s = %q %v", rel, b, err)
 		}
 	}
+	// NvrContentOverlay before 1.1.0 reads the pack beside the exe.
+	exeContent := filepath.Join(o.Home, "root", game.BinDir, "content")
+	if b, err := os.ReadFile(filepath.Join(exeContent, "echo-combat/a.pak")); err != nil || string(b) != "pak" {
+		t.Errorf("bin/win10 content %q %v", b, err)
+	}
 	if _, err := os.Stat(filepath.Join(root, "plugins/Old.dll")); !os.IsNotExist(err) {
 		t.Error("a mod for nEVR <6 was placed")
 	}
@@ -472,6 +477,9 @@ func TestRunOnceTwoFileMods(t *testing.T) {
 	s.runOnce(context.Background())
 	if _, err := os.Stat(filepath.Join(root, "content/echo-combat")); !os.IsNotExist(err) {
 		t.Error("the pack's content stayed")
+	}
+	if _, err := os.Stat(filepath.Join(exeContent, "echo-combat")); !os.IsNotExist(err) {
+		t.Error("the pack's content beside the exe stayed")
 	}
 	if _, err := os.Stat(filepath.Join(root, "plugins/NvrContentOverlay.dll")); !os.IsNotExist(err) {
 		t.Error("the overlay stayed")
