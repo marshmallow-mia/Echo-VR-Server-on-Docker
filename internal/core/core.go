@@ -430,11 +430,16 @@ func (a *App) Restart(ctx context.Context, name string, soft bool) error {
 		return a.Start(ctx, name)
 	}
 	if soft {
-		p := filepath.Join(a.Cfg.InstanceDir(name), "control")
-		if err := os.WriteFile(p, []byte("restart\n"), 0o644); err != nil {
+		// Through an os.Root: the container can write its instance directory.
+		root, err := os.OpenRoot(a.Cfg.InstanceDir(name))
+		if err != nil {
 			return err
 		}
-		return os.Chown(p, a.Cfg.UID, a.Cfg.UID)
+		defer root.Close()
+		if err := root.WriteFile("control", []byte("restart\n"), 0o644); err != nil {
+			return err
+		}
+		return root.Lchown("control", a.Cfg.UID, a.Cfg.UID)
 	}
 	d, _ := a.Docker()
 	return d.Restart(ctx, s.Container.ID, StopTimeout)
