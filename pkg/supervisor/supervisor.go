@@ -19,9 +19,11 @@ import (
 	"time"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/match"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/telemetry"
 )
 
 // ReadyMarker starts the line printed once the server is registered; the
@@ -66,12 +68,29 @@ type Options struct {
 	ShutdownGrace   time.Duration // after "Graceful shutdown …"; default 10s
 	StopTimeout     time.Duration // Ctrl+C → hard kill; default 25s
 	Heartbeat       time.Duration // status rewrite interval; default 15s
+	MatchPoll       time.Duration // /session poll interval in a match; default 2s
+	// LivePoll is how often /session is asked for live.json, the map's
+	// positions, between MatchPoll rounds; default 200ms, negative = no live.json.
+	LivePoll time.Duration
+
+	// TelemetryAddr is where the local telemetry ingest listens (default
+	// 127.0.0.1:6730); TelemetryRate is the -telemetry-rate the game gets when
+	// the instance has telemetry on (default 10 a second). TelemetryDump keeps
+	// the raw stream in <home>/telemetry-dump (for development).
+	// TelemetryPlays feeds the stream's player stat events (stun, save, …)
+	// into the play-by-play; off because nevr-runtime 6.16.4 reads most of
+	// them wrong (11 stuns in /session, 2 in the stream), so the play-by-play
+	// comes from /session's counters. Turn it on to check a fixed runtime.
+	TelemetryAddr  string
+	TelemetryRate  int
+	TelemetryDump  bool
+	TelemetryPlays bool
 
 	// Console receives the supervisor's own lines and the game lines Filter keeps.
 	Console io.Writer
 	// Filter decides which game lines reach Console; nil uses DefaultFilter.
 	Filter func(line string) bool
-	// Commands, when set, is read for console commands (status, restart, help).
+	// Commands, when set, is read for console commands (status, restart, api, help).
 	Commands io.Reader
 	// ControlFile, when set, is polled for one-shot commands written by host
 	// tools ("restart"); it is removed after reading.
@@ -91,6 +110,14 @@ func (o *Options) defaults() {
 	set(&o.ShutdownGrace, 10*time.Second)
 	set(&o.StopTimeout, 25*time.Second)
 	set(&o.Heartbeat, 15*time.Second)
+	set(&o.MatchPoll, 2*time.Second)
+	set(&o.LivePoll, 200*time.Millisecond)
+	if o.TelemetryAddr == "" {
+		o.TelemetryAddr = "127.0.0.1:6730"
+	}
+	if o.TelemetryRate == 0 {
+		o.TelemetryRate = 10
+	}
 	if o.Wine == "" {
 		o.Wine = "wine"
 	}
@@ -129,6 +156,8 @@ type Supervisor struct {
 	st      status.Status
 	proc    *os.Process
 	restart chan struct{}
+	notes   chan match.Note // log lines for the match tracker
+	tele    *telemetry.Ingest
 }
 
 // New validates opts and returns a supervisor.
@@ -144,6 +173,8 @@ func New(o Options) (*Supervisor, error) {
 		o:       o,
 		st:      status.Status{Instance: o.Instance, Port: o.Port, HTTPPort: o.HTTPPort, State: status.StateStopped},
 		restart: make(chan struct{}, 1),
+		notes:   make(chan match.Note, 512),
+		tele:    &telemetry.Ingest{Addr: o.TelemetryAddr},
 	}, nil
 }
 
@@ -189,14 +220,27 @@ func (s *Supervisor) Run(ctx context.Context) error {
 		go s.watchControl(ctx)
 	}
 	go s.heartbeat(ctx)
+	go s.matchLoop(ctx)
+	go s.serveTelemetry(ctx)
 	backoff := 5 * time.Second
 	for ctx.Err() == nil {
+		started := time.Now()
 		res := s.runOnce(ctx)
 		if ctx.Err() != nil {
 			break
 		}
 		code := res.exitCode
-		s.update(func(st *status.Status) { st.LastExitCode = &code; st.PID = 0; st.Session = "" })
+		s.update(func(st *status.Status) {
+			st.LastExitCode = &code
+			st.PID = 0
+			st.Session, st.GameType, st.Map = "", "", ""
+			st.ServerDB, st.ServerDBSince, st.ServerDBReconnects = "", time.Time{}, 0
+			e := status.Exit{At: time.Now().UTC(), Code: code, Clean: res.clean, Uptime: int(time.Since(started).Seconds())}
+			if !res.clean {
+				e.Reason = orDefault(res.detail, orDefault(string(res.reason), "unexpected exit"))
+			}
+			st.AddExit(e)
+		})
 		var wait time.Duration
 		switch {
 		case res.clean:
@@ -274,8 +318,13 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 	if err := s.seedPrefix(); err != nil {
 		return result{exitCode: -1, reason: ReasonOther, detail: "preparing Wine prefix: " + err.Error()}
 	}
+	api := s.applyAPISetting()
+	rootYAML, tele := s.o.ConfigYAMLRoot, false
+	if twoFile && match.LoadSettings(s.o.Home).TelemetryOn() {
+		rootYAML, tele = withTelemetry(rootYAML, s.tele.URI(), s.tele.NewToken())
+	}
 	if twoFile {
-		root := game.Root{Dir: s.NevrRoot(), RuntimeDLL: filepath.Join(runtimeDir, game.RuntimeName), ConfigYAML: s.o.ConfigYAMLRoot,
+		root := game.Root{Dir: s.NevrRoot(), RuntimeDLL: filepath.Join(runtimeDir, game.RuntimeName), ConfigYAML: rootYAML,
 			LegacyCredentials: filepath.Join(s.root(), "_local", game.CredentialsName)}
 		if err := root.Prepare(); err != nil {
 			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "preparing the nEVR root: " + err.Error()}
@@ -293,6 +342,9 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 	args := []string{"./" + game.ExeName, "-server", "-headless", "-noovr", "-no-console", "-nosymbollookup", "-port", fmt.Sprint(s.o.Port)}
 	if s.o.HTTPPort != 0 {
 		args = append(args, "-httpport", fmt.Sprint(s.o.HTTPPort))
+	}
+	if tele {
+		args = append(args, "-telemetry-rate", fmt.Sprint(s.o.TelemetryRate))
 	}
 	args = append(args, s.o.ExtraArgs...)
 	cmd := exec.Command(s.o.Wine, args...)
@@ -319,6 +371,8 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 	s.logf("starting %s on port %d (runtime %s)", s.o.Instance, s.o.Port, version)
 	s.update(func(st *status.Status) {
 		st.State, st.PID, st.RuntimeVersion, st.Reason, st.LastError, st.NextStart = status.StateStarting, cmd.Process.Pid, version, "", "", time.Time{}
+		st.SessionAPI, st.SessionAPINext, st.HTTPPort, st.GameType, st.Map = status.OnOff(api), "", s.o.HTTPPort, "", ""
+		st.Telemetry = status.OnOff(tele)
 	})
 
 	exited := make(chan int, 1)
@@ -474,6 +528,28 @@ func (s *Supervisor) handle(ev Event, res *result, register *time.Timer, schedul
 		s.update(func(st *status.Status) {
 			st.State, st.Session, st.SessionsTotal = status.StateInSession, ev.Session, st.SessionsTotal+1
 		})
+	case KindGameType:
+		s.update(func(st *status.Status) { st.GameType = ev.GameType })
+	case KindLevel:
+		s.update(func(st *status.Status) { st.GameType, st.Map = ev.GameType, ev.Level })
+	case KindHTTPPort:
+		s.update(func(st *status.Status) { st.HTTPPort = ev.Port })
+	case KindPhase, KindTeam, KindSpawn, KindDisconnect, KindPingStats, KindPeerGone:
+		if n, ok := ev.Note(); ok {
+			s.note(n)
+		}
+	case KindServerDB:
+		s.update(func(st *status.Status) {
+			want := map[bool]string{true: "connected", false: "disconnected"}[ev.OK]
+			if st.ServerDB != want {
+				st.ServerDB, st.ServerDBSince = want, time.Now().UTC()
+			}
+			st.ServerDBReconnects = ev.Count
+		})
+	case KindServerID:
+		s.update(func(st *status.Status) { st.ServerID = ev.ServerID })
+	case KindCrashRecovered:
+		s.update(func(st *status.Status) { st.CrashRecoveries++ })
 	case KindSessionEnd:
 		res.clean = true
 		s.update(func(st *status.Status) { st.State = status.StateStopping })
@@ -643,7 +719,26 @@ func (s *Supervisor) watchControl(ctx context.Context) {
 }
 
 func (s *Supervisor) command(text string) {
-	switch strings.ToLower(strings.TrimSpace(text)) {
+	cmd := strings.Join(strings.Fields(strings.ToLower(text)), " ")
+	switch cmd {
+	case "api", "api status":
+		st := s.Status()
+		s.logf("match stats API: %s (setting: %s)", orDefault(st.SessionAPI, "not started"), status.OnOff(match.LoadSettings(s.o.Home).APIOn()))
+		return
+	case "api on", "api off":
+		s.setAPI(cmd == "api on")
+		return
+	case "telemetry", "telemetry status":
+		st := s.Status()
+		tc := s.tele.Stats()
+		s.logf("telemetry: %s, connected %v, %d records (setting: %s)", orDefault(st.Telemetry, "not started"), st.TelemetryConnected, tc.Envelopes,
+			status.OnOff(match.LoadSettings(s.o.Home).TelemetryOn()))
+		return
+	case "telemetry on", "telemetry off":
+		s.setTelemetry(cmd == "telemetry on")
+		return
+	}
+	switch cmd {
 	case "":
 	case "status":
 		st := s.Status()
@@ -652,9 +747,9 @@ func (s *Supervisor) command(text string) {
 		s.logf("restart requested")
 		s.Restart()
 	case "help":
-		s.logf("commands: status, restart, help (stop with the panel's stop button or Ctrl+C)")
+		s.logf("commands: status, restart, api on|off|status (match stats), telemetry on|off|status (play-by-play from nevr-runtime), help (stop with the panel's stop button or Ctrl+C)")
 	default:
-		s.logf("unknown command %q (try: status, restart, help)", strings.TrimSpace(text))
+		s.logf("unknown command %q (try: status, restart, api on|off, help)", strings.TrimSpace(text))
 	}
 }
 

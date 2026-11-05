@@ -57,6 +57,60 @@ type Status struct {
 	// SignInURL and SignInExpires are set in StateAwaitingApproval only.
 	SignInURL     string    `json:"sign_in_url,omitempty"`
 	SignInExpires time.Time `json:"sign_in_expires,omitzero"`
+	// GameType and Map describe the match in StateInSession (from the log).
+	GameType string `json:"game_type,omitempty"`
+	Map      string `json:"map,omitempty"`
+	// SessionAPI is "on" or "off": whether the running game's HTTP API (match
+	// stats) is switched on. SessionAPINext differs from it when the setting
+	// changed and the game picks it up at its next start (after the match).
+	SessionAPI     string `json:"session_api,omitempty"`
+	SessionAPINext string `json:"session_api_next,omitempty"`
+
+	// Health, from the runtime's log. ServerDB is the matchmaker's socket:
+	// "connected" or "disconnected" since ServerDBSince; ServerDBReconnects
+	// counts its reconnects in this game process. ServerID is the
+	// matchmaker's id for the server. CrashRecoveries counts the game loop
+	// crashes the runtime survived since the supervisor started. Exits are
+	// the last game process exits, newest first.
+	ServerDB           string    `json:"serverdb,omitempty"`
+	ServerDBSince      time.Time `json:"serverdb_since,omitzero"`
+	ServerDBReconnects int       `json:"serverdb_reconnects,omitempty"`
+	ServerID           string    `json:"server_id,omitempty"`
+	CrashRecoveries    int       `json:"crash_recoveries,omitempty"`
+	Exits              []Exit    `json:"exits,omitempty"`
+	// Telemetry is "on" when the running game streams nevr-runtime's
+	// telemetry to the supervisor, "off" when not; TelemetryConnected while
+	// its connection is open.
+	Telemetry          string `json:"telemetry,omitempty"`
+	TelemetryConnected bool   `json:"telemetry_connected,omitempty"`
+}
+
+// ExitsMax is how many exits Status keeps.
+const ExitsMax = 10
+
+// Exit is one end of the game process.
+type Exit struct {
+	At     time.Time `json:"at"`
+	Code   int       `json:"code"`
+	Clean  bool      `json:"clean"`            // ended normally (match over, stop asked)
+	Reason string    `json:"reason,omitempty"` // why it stopped when it was not clean
+	Uptime int       `json:"uptime_s"`
+}
+
+// AddExit puts e first in s.Exits, keeping ExitsMax.
+func (s *Status) AddExit(e Exit) {
+	s.Exits = append([]Exit{e}, s.Exits...)
+	if len(s.Exits) > ExitsMax {
+		s.Exits = s.Exits[:ExitsMax]
+	}
+}
+
+// OnOff is "on" or "off".
+func OnOff(b bool) string {
+	if b {
+		return "on"
+	}
+	return "off"
 }
 
 // Write stores s at path atomically.

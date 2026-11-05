@@ -1,0 +1,313 @@
+2026-11-04T18:08:13.277Z info [NEVR.GAMESERVER] session game type stored game_type=echo_arena source=session_create session=acdbb7fe-3245-40d9-bc6e-bb2c8abd9fd6 previous=none round_time_reads_without_type=0
+2026-11-04T18:08:13.277Z info [NEVR.GAMESERVER] session game type stored game_type=echo_arena source=legacy_session_start session=ACDBB7FE-3245-40D9-BC6E-BB2C8ABD9FD6 previous=echo_arena round_time_reads_without_type=0
+2026-11-04T18:08:13.278Z info [NEVR.GAMESERVER] session starting session_id=acdbb7fe-3245-40d9-bc6e-bb2c8abd9fd6
+2026-11-04T18:08:13.279Z info [EVR] [NETLOBBY] Starting session (gametype echo_arena, level mpl_arena_a)
+2026-11-04T18:08:19.282Z info [EVR] [NETGAME] Server Assigning Team for '...': 4
+2026-11-04T18:08:19.414Z info [EVR] [NETGAME] User OVR-ORG-100001 (Player01) spawned
+2026-11-04T18:08:20.689Z info [EVR] [DEBUGPRINT] enter state 'pre_match_enter'
+2026-11-04T18:08:20.890Z info [EVR] [NETGAME] Server Assigning Team for 'Player02': 0
+2026-11-04T18:08:20.965Z info [EVR] [NETGAME] Server Assigning Team for 'Player03': 1
+2026-11-04T18:08:21.040Z info [EVR] [NETGAME] Server Assigning Team for 'Player04': 0
+2026-11-04T18:08:21.106Z info [EVR] [NETGAME] Server Assigning Team for 'Player05': 1
+2026-11-04T18:08:21.339Z info [EVR] [NETGAME] Server Assigning Team for 'Player06': 1
+2026-11-04T18:08:21.673Z info [EVR] [NETGAME] Server Assigning Team for 'Player07': 0
+2026-11-04T18:08:23.032Z info [EVR] [NETGAME] User 'Player04' disconnected
+2026-11-04T18:08:23.033Z info [EVR] [NETGAME] User 'Player04' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:08:23.035Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 4 est: 49998.00 min: 49998 max: 58331 std: 2703.58 med: 49998
+2026-11-04T18:08:23.047Z info [EVR] R15NetDedicatedServer: Destroy Peer 1 [203.0.113.7:13334] (disconnect timeout), max send interval: 7478563, rcvd: 7478183
+2026-11-04T18:08:23.505Z info [EVR] [NETGAME] User OVR-ORG-100003 (Player03) spawned
+2026-11-04T18:08:24.839Z info [EVR] [NETGAME] User OVR-ORG-100005 (Player05) spawned
+2026-11-04T18:08:24.914Z info [EVR] [NETGAME] User OVR-ORG-100002 (Player02) spawned
+2026-11-04T18:08:25.380Z info [EVR] [NETGAME] User OVR-ORG-100007 (Player07) spawned
+2026-11-04T18:08:28.130Z info [EVR] [NETGAME] User OVR-ORG-100006 (Player06) spawned
+2026-11-04T18:08:48.047Z info [EVR] [NETGAME] Server Assigning Team for 'Player04': 0
+2026-11-04T18:08:49.904Z info [EVR] R15NetDedicatedServer: Destroy Peer 36 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:08:50.871Z info [EVR] [NETGAME] User OVR-ORG-100004 (Player04) spawned
+2026-11-04T18:09:05.713Z info [EVR] [DEBUGPRINT] enter state 'round_start'
+2026-11-04T18:09:05.721Z info [EVR] [DEBUGPRINT] enter state 'team_room_wait_enter'
+2026-11-04T18:09:05.738Z info [EVR] [DEBUGPRINT] enter state 'transition_to_launch_enter`
+2026-11-04T18:09:10.254Z info [EVR] [DEBUGPRINT] enter state 'pre_launch_enter'
+2026-11-04T18:09:25.271Z info [EVR] [DEBUGPRINT] enter state 'main_loop_enter'
+2026-11-04T18:09:37.352Z info [EVR] R15NetDedicatedServer: Destroy Peer 106 [203.0.113.7:13334] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:09:51.198Z info [EVR] [NETGAME] Server Assigning Team for 'Player08': 0
+2026-11-04T18:09:55.237Z info [EVR] [NETGAME] User OVR-ORG-100008 (Player08) spawned
+2026-11-04T18:10:05.098Z info [EVR] [DEBUGPRINT] enter state 'point_score_enter'
+2026-11-04T18:10:20.112Z info [EVR] [DEBUGPRINT] enter state ''post_score_replay_enter'
+2026-11-04T18:10:20.130Z info [EVR] [DEBUGPRINT] enter state 'team_room_wait_enter'
+2026-11-04T18:10:20.146Z info [EVR] [DEBUGPRINT] enter state 'transition_to_launch_enter`
+2026-11-04T18:10:24.662Z info [EVR] [DEBUGPRINT] enter state 'pre_launch_enter'
+2026-11-04T18:10:39.689Z info [EVR] [DEBUGPRINT] enter state 'main_loop_enter'
+2026-11-04T18:11:13.396Z info [EVR] [NETGAME] Server Assigning Team for 'Player09': 2
+2026-11-04T18:11:16.169Z info [EVR] [NETGAME] User DMO-100009 (Player09) spawned
+2026-11-04T18:11:21.111Z info [EVR] [NETGAME] Server Assigning Team for 'Player10': 1
+2026-11-04T18:11:24.802Z info [EVR] [NETGAME] User OVR-ORG-100010 (Player10) spawned
+2026-11-04T18:11:27.146Z info [EVR] [DEBUGPRINT] enter state 'point_score_enter'
+2026-11-04T18:11:42.162Z info [EVR] [DEBUGPRINT] enter state ''post_score_replay_enter'
+2026-11-04T18:11:42.180Z info [EVR] [DEBUGPRINT] enter state 'team_room_wait_enter'
+2026-11-04T18:11:42.196Z info [EVR] [DEBUGPRINT] enter state 'transition_to_launch_enter`
+2026-11-04T18:11:46.713Z info [EVR] [DEBUGPRINT] enter state 'pre_launch_enter'
+2026-11-04T18:12:01.732Z info [EVR] [DEBUGPRINT] enter state 'main_loop_enter'
+2026-11-04T18:14:25.488Z info [EVR] [DEBUGPRINT] enter state 'round_over_enter'
+2026-11-04T18:14:37.757Z info [EVR] R15NetDedicatedServer: Destroy Peer 559 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:14:39.191Z info [EVR] [NETGAME] User 'Player04' disconnected
+2026-11-04T18:14:39.192Z info [EVR] [NETGAME] User 'Player04' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:14:39.194Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 4 est: 49998.00 min: 49998 max: 66664 std: 3142.57 med: 49998
+2026-11-04T18:14:39.195Z info [EVR] R15NetDedicatedServer: Destroy Peer 32 [203.0.113.7:13334] (disconnect received), max send interval: 175438, rcvd: 1608319
+2026-11-04T18:14:40.533Z info [EVR] [DEBUGPRINT] enter state 'post_match_celebration_enter'
+2026-11-04T18:14:53.558Z info [EVR] [DEBUGPRINT] enter state 'post_match_celebration_personal_stats_enter'
+2026-11-04T18:15:07.665Z info [EVR] [NETGAME] User 'Player08' disconnected
+2026-11-04T18:15:07.666Z info [EVR] [NETGAME] User 'Player08' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:07.668Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 7 est: 158327.00 min: 149994 max: 174993 std: 4175.75 med: 158327
+2026-11-04T18:15:07.669Z info [EVR] R15NetDedicatedServer: Destroy Peer 116 [203.0.113.7:6794] (disconnect received), max send interval: 7420745, rcvd: 7420374
+2026-11-04T18:15:07.815Z info [EVR] R15NetDedicatedServer: Destroy Peer 591 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:15:08.574Z info [EVR] [DEBUGPRINT] enter state 'waiting_to_return_to_lobby'
+2026-11-04T18:15:11.715Z info [EVR] [NETGAME] User 'Player02' disconnected
+2026-11-04T18:15:11.715Z info [EVR] [NETGAME] User 'Player02' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:11.718Z info [EVR] R15NetDedicatedServer: Destroy Peer 3 [203.0.113.7:6794] (disconnect received), max send interval: 7353768, rcvd: 7353125
+2026-11-04T18:15:11.773Z info [EVR] [NETGAME] User 'Player07' disconnected
+2026-11-04T18:15:11.774Z info [EVR] [NETGAME] User 'Player07' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:11.777Z info [EVR] R15NetDedicatedServer: Destroy Peer 2 [203.0.113.7:6794] (disconnect received), max send interval: 7545099, rcvd: 7544741
+2026-11-04T18:15:11.781Z info [EVR] [NETGAME] User 'Player09' disconnected
+2026-11-04T18:15:11.782Z info [EVR] [NETGAME] User 'Player09' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:11.823Z info [EVR] [NETGAME] User 'Player10' disconnected
+2026-11-04T18:15:11.823Z info [NEVR.LOGFILTER] repeated count=1 window_s=4 msg="[EVR] R15NetDedicatedServer: Destroy Peer 116 [203.0.113.7:6794] (disconnect received), max send interval: 7420745, rcvd: 742"
+2026-11-04T18:15:11.824Z info [EVR] [NETGAME] User 'Player10' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:11.826Z info [EVR] R15NetDedicatedServer: Destroy Peer 253 [203.0.113.7:6794] (disconnect received), max send interval: 7383815, rcvd: 7383115
+2026-11-04T18:15:11.889Z info [EVR] [NETGAME] User 'Player06' disconnected
+2026-11-04T18:15:11.890Z info [EVR] [NETGAME] User 'Player06' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:11.892Z info [EVR] R15NetDedicatedServer: Destroy Peer 5 [203.0.113.7:6794] (disconnect received), max send interval: 7778941, rcvd: 7778482
+2026-11-04T18:15:11.973Z info [EVR] [NETGAME] User 'Player05' disconnected
+2026-11-04T18:15:11.973Z info [EVR] [NETGAME] User 'Player05' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:11.975Z info [EVR] R15NetDedicatedServer: Destroy Peer 0 [203.0.113.7:6794] (disconnect received), max send interval: 7437414, rcvd: 7436865
+2026-11-04T18:15:12.314Z info [EVR] R15NetDedicatedServer: Destroy Peer 642 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:15:18.014Z info [EVR] R15NetDedicatedServer: Destroy Peer 4 [203.0.113.7:6794] (communication timeout), max send interval: 7378704, rcvd: 7378122
+2026-11-04T18:15:18.015Z info [EVR] [NETGAME] User 'Player03' disconnected
+2026-11-04T18:15:18.016Z info [EVR] [NETGAME] User 'Player03' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:18.019Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 1 est: 124995.00 min: 116662 max: 266656 std: 7606.95 med: 124995
+2026-11-04T18:15:18.020Z info [EVR] Dedicated: session ended (no participants)
+2026-11-04T18:15:18.022Z info [EVR] [NETGAME] User 'Player01' disconnected
+2026-11-04T18:15:18.022Z info [EVR] [NETGAME] User 'Player01' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:15:23.789Z info [NEVR.SERVERDB] Connected to ServerDB reconnect_count=0
+2026-11-04T18:15:25.984Z info [NEVR.GAMESERVER] Received registration success via protobuf: server_id=1234567890123456789, ip=203.0.113.7
+2026-11-04T18:15:25.984Z info [EVR] [NSLOBBY] registration successful
+2026-11-04T18:15:30.293Z info [NEVR.GAMESERVER] session game type stored game_type=social_2.0 source=session_create session=44d418f2-9625-4855-8f07-dbcb4e21beaa previous=none round_time_reads_without_type=0
+2026-11-04T18:15:30.294Z info [NEVR.GAMESERVER] session game type stored game_type=social_2.0 source=legacy_session_start session=44D418F2-9625-4855-8F07-DBCB4E21BEAA previous=social_2.0 round_time_reads_without_type=0
+2026-11-04T18:15:30.294Z info [NEVR.GAMESERVER] session starting session_id=44d418f2-9625-4855-8f07-dbcb4e21beaa
+2026-11-04T18:15:30.295Z info [EVR] [NETLOBBY] Starting session (gametype social_2.0, level mpl_lobby_b2)
+2026-11-04T18:15:31.022Z info [EVR] [NETGAME] Server Assigning Team for 'Player02': 3
+2026-11-04T18:15:34.793Z info [EVR] [NETGAME] Server Assigning Team for '...': 4
+2026-11-04T18:15:34.925Z info [EVR] [NETGAME] User OVR-ORG-100001 (Player01) spawned
+2026-11-04T18:15:36.233Z info [EVR] [NETGAME] User OVR-ORG-100002 (Player02) spawned
+2026-11-04T18:15:50.789Z info [EVR] [NETGAME] Server Assigning Team for 'Player11': 3
+2026-11-04T18:15:55.287Z info [EVR] [NETGAME] User OVR-ORG-100011 (Player11) spawned
+2026-11-04T18:16:12.813Z info [EVR] [NETGAME] Server Assigning Team for 'Player12': 3
+2026-11-04T18:16:14.655Z info [EVR] [NETGAME] Server Assigning Team for 'Player13': 3
+2026-11-04T18:16:21.078Z info [EVR] [NETGAME] User 'Player02' disconnected
+2026-11-04T18:16:21.079Z info [EVR] [NETGAME] User 'Player02' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:16:21.081Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 0 est: 49998.00 min: 49998 max: 108329 std: 6584.89 med: 49998
+2026-11-04T18:16:21.081Z info [EVR] R15NetDedicatedServer: Destroy Peer 2 [203.0.113.7:6794] (disconnect received), max send interval: 175040, rcvd: 174582
+2026-11-04T18:16:21.170Z info [EVR] [NETGAME] User 'Player11' disconnected
+2026-11-04T18:16:21.171Z info [EVR] [NETGAME] User 'Player11' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:16:21.174Z info [EVR] R15NetDedicatedServer: Destroy Peer 8 [203.0.113.7:6794] (disconnect received), max send interval: 292422, rcvd: 292019
+2026-11-04T18:16:21.528Z info [EVR] R15NetDedicatedServer: Destroy Peer 27 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:16:21.861Z info [EVR] R15NetDedicatedServer: Destroy Peer 35 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:16:24.520Z info [EVR] [NETGAME] User OVR-ORG-100013 (Player13) spawned
+2026-11-04T18:16:24.686Z info [EVR] [NETGAME] User OVR-ORG-100012 (Player12) spawned
+2026-11-04T18:16:41.078Z info [EVR] [NETGAME] Server Assigning Team for 'Player14': 3
+2026-11-04T18:16:41.253Z info [EVR] [NETGAME] Server Assigning Team for 'Player15': 3
+2026-11-04T18:16:41.271Z info [EVR] [NETGAME] Server Assigning Team for 'Player16': 3
+2026-11-04T18:16:41.328Z info [EVR] [NETGAME] Server Assigning Team for 'Player17': 3
+2026-11-04T18:16:41.354Z info [EVR] [NETGAME] Server Assigning Team for 'Player18': 3
+2026-11-04T18:16:41.495Z info [EVR] [NETGAME] Server Assigning Team for 'Player19': 3
+2026-11-04T18:16:41.520Z info [EVR] [NETGAME] Server Assigning Team for 'Player20': 3
+2026-11-04T18:16:50.873Z info [EVR] [NETGAME] User OVR-ORG-100014 (Player14) spawned
+2026-11-04T18:16:51.775Z info [EVR] [NETGAME] Server Assigning Team for 'Player21': 3
+2026-11-04T18:16:52.081Z info [EVR] [NETGAME] User OVR-ORG-100020 (Player20) spawned
+2026-11-04T18:16:52.365Z info [EVR] [NETGAME] User OVR-ORG-100018 (Player18) spawned
+2026-11-04T18:16:56.090Z info [EVR] [NETGAME] User OVR-ORG-100016 (Player16) spawned
+2026-11-04T18:16:56.106Z info [EVR] [NETGAME] User OVR-ORG-100015 (Player15) spawned
+2026-11-04T18:16:57.523Z info [EVR] [NETGAME] User OVR-ORG-100019 (Player19) spawned
+2026-11-04T18:16:57.573Z info [EVR] [NETGAME] User OVR-ORG-100017 (Player17) spawned
+2026-11-04T18:17:01.906Z info [EVR] [NETGAME] User OVR-ORG-100021 (Player21) spawned
+2026-11-04T18:17:21.165Z info [EVR] [NETGAME] User 'Player18' disconnected
+2026-11-04T18:17:21.165Z info [EVR] [NETGAME] User 'Player18' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:17:21.168Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 6 est: 166660.00 min: 158327 max: 174993 std: 3788.23 med: 166660
+2026-11-04T18:17:21.168Z info [EVR] R15NetDedicatedServer: Destroy Peer 64 [203.0.113.7:6794] (disconnect received), max send interval: 225070, rcvd: 1408759
+2026-11-04T18:17:21.233Z info [EVR] [NETGAME] User 'Player12' disconnected
+2026-11-04T18:17:21.233Z info [EVR] [NETGAME] User 'Player12' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:17:21.237Z info [EVR] R15NetDedicatedServer: Destroy Peer 9 [203.0.113.7:6794] (disconnect received), max send interval: 359061, rcvd: 358578
+2026-11-04T18:17:21.459Z info [EVR] [NETGAME] User 'Player14' disconnected
+2026-11-04T18:17:21.460Z info [EVR] [NETGAME] User 'Player14' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:17:21.462Z info [EVR] R15NetDedicatedServer: Destroy Peer 61 [203.0.113.7:6794] (disconnect received), max send interval: 300607, rcvd: 874892
+2026-11-04T18:17:21.792Z info [EVR] [NETGAME] User 'Player15' disconnected
+2026-11-04T18:17:21.792Z info [EVR] [NETGAME] User 'Player15' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:17:21.925Z info [EVR] [NETGAME] User 'Player19' disconnected
+2026-11-04T18:17:21.926Z info [EVR] [NETGAME] User 'Player19' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:17:50.950Z info [EVR] [NETGAME] User 'Player21' disconnected
+2026-11-04T18:17:50.951Z info [EVR] [NETGAME] User 'Player21' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:17:50.954Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 10 est: 49998.00 min: 41665 max: 74997 std: 6871.57 med: 49998
+2026-11-04T18:17:50.954Z info [NEVR.LOGFILTER] repeated count=2 window_s=29 msg="[EVR] R15NetDedicatedServer: Destroy Peer 64 [203.0.113.7:6794] (disconnect received), max send interval: 225070, rcvd: 140"
+2026-11-04T18:17:50.954Z info [EVR] R15NetDedicatedServer: Destroy Peer 111 [203.0.113.7:6794] (disconnect received), max send interval: 225873, rcvd: 225208
+2026-11-04T18:18:19.108Z info [EVR] R15NetDedicatedServer: Destroy Peer 468 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:19:06.538Z info [EVR] R15NetDedicatedServer: Destroy Peer 562 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:20:20.737Z info [EVR] [NETGAME] User 'Player20' disconnected
+2026-11-04T18:20:20.737Z info [EVR] [NETGAME] User 'Player20' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:20:20.741Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 8 est: 199992.00 min: 191659 max: 216658 std: 4063.38 med: 199992
+2026-11-04T18:20:20.741Z info [EVR] R15NetDedicatedServer: Destroy Peer 65 [203.0.113.7:6794] (disconnect received), max send interval: 241797, rcvd: 650068
+2026-11-04T18:20:21.021Z info [EVR] [NETGAME] User 'Player16' disconnected
+2026-11-04T18:20:21.022Z info [EVR] [NETGAME] User 'Player16' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:20:21.024Z info [EVR] R15NetDedicatedServer: Destroy Peer 63 [203.0.113.7:6794] (disconnect received), max send interval: 208736, rcvd: 1516400
+2026-11-04T18:20:34.496Z info [EVR] [NETGAME] Server Assigning Team for 'Player10': 3
+2026-11-04T18:20:39.520Z info [EVR] [NETGAME] User OVR-ORG-100010 (Player10) spawned
+2026-11-04T18:20:41.021Z info [EVR] [NETGAME] Server Assigning Team for 'Player22': 3
+2026-11-04T18:20:42.271Z info [EVR] [NETGAME] Server Assigning Team for 'Player23': 3
+2026-11-04T18:20:49.936Z info [EVR] [NETGAME] User OVR-ORG-100022 (Player22) spawned
+2026-11-04T18:20:51.261Z info [EVR] [NETGAME] User OVR-ORG-100023 (Player23) spawned
+2026-11-04T18:20:54.780Z info [EVR] [NETGAME] Server Assigning Team for 'Player08': 3
+2026-11-04T18:20:59.313Z info [EVR] [NETGAME] Server Assigning Team for 'Player02': 3
+2026-11-04T18:21:03.595Z info [EVR] [NETGAME] User OVR-ORG-100008 (Player08) spawned
+2026-11-04T18:21:04.104Z info [EVR] [NETGAME] User OVR-ORG-100002 (Player02) spawned
+2026-11-04T18:21:08.439Z info [EVR] [NETGAME] Server Assigning Team for 'Player07': 3
+2026-11-04T18:21:10.281Z info [EVR] [NETGAME] Server Assigning Team for 'Player24': 3
+2026-11-04T18:21:13.322Z info [EVR] [NETGAME] Server Assigning Team for 'Player20': 3
+2026-11-04T18:21:18.731Z info [EVR] [NETGAME] User OVR-ORG-100007 (Player07) spawned
+2026-11-04T18:21:21.340Z info [EVR] [NETGAME] User OVR-ORG-100024 (Player24) spawned
+2026-11-04T18:21:23.482Z info [EVR] [NETGAME] User OVR-ORG-100020 (Player20) spawned
+2026-11-04T18:21:24.788Z info [EVR] [NETGAME] User 'Player07' disconnected
+2026-11-04T18:21:24.789Z info [EVR] [NETGAME] User 'Player07' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:21:24.791Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 8 est: 49998.00 min: 41665 max: 83330 std: 5457.25 med: 49998
+2026-11-04T18:21:24.791Z info [EVR] R15NetDedicatedServer: Destroy Peer 792 [203.0.113.7:6794] (disconnect received), max send interval: 175298, rcvd: 1038672
+2026-11-04T18:22:20.776Z info [EVR] [NETGAME] User 'Player08' disconnected
+2026-11-04T18:22:20.777Z info [EVR] [NETGAME] User 'Player08' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:22:20.779Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 5 est: 158327.00 min: 149994 max: 183326 std: 4175.75 med: 158327
+2026-11-04T18:22:20.780Z info [EVR] R15NetDedicatedServer: Destroy Peer 776 [203.0.113.7:6794] (disconnect received), max send interval: 200498, rcvd: 199924
+2026-11-04T18:22:20.786Z info [EVR] [NETGAME] User 'Player23' disconnected
+2026-11-04T18:22:20.786Z info [EVR] [NETGAME] User 'Player23' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:22:20.789Z info [EVR] R15NetDedicatedServer: Destroy Peer 763 [203.0.113.7:51058] (disconnect received), max send interval: 209196, rcvd: 208630
+2026-11-04T18:22:20.803Z info [EVR] [NETGAME] User 'Player22' disconnected
+2026-11-04T18:22:20.803Z info [EVR] [NETGAME] User 'Player22' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:22:20.806Z info [EVR] R15NetDedicatedServer: Destroy Peer 760 [203.0.113.7:6794] (disconnect received), max send interval: 217456, rcvd: 216812
+2026-11-04T18:22:50.913Z info [EVR] [NETGAME] User 'Player10' disconnected
+2026-11-04T18:22:50.913Z info [EVR] [NETGAME] User 'Player10' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:22:50.916Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 0 est: 141661.00 min: 124995 max: 149994 std: 4513.17 med: 141661
+2026-11-04T18:22:50.916Z info [EVR] R15NetDedicatedServer: Destroy Peer 753 [203.0.113.7:6794] (disconnect received), max send interval: 266959, rcvd: 266500
+2026-11-04T18:23:03.653Z info [EVR] R15NetDedicatedServer: Destroy Peer 1079 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:23:19.495Z info [EVR] R15NetDedicatedServer: Destroy Peer 1110 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:23:20.896Z info [EVR] [NETGAME] User 'Player02' disconnected
+2026-11-04T18:23:20.897Z info [EVR] [NETGAME] User 'Player02' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:23:20.900Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 6 est: 49998.00 min: 49998 max: 58331 std: 4044.34 med: 49998
+2026-11-04T18:23:20.900Z info [EVR] R15NetDedicatedServer: Destroy Peer 782 [203.0.113.7:6794] (disconnect received), max send interval: 175476, rcvd: 875076
+2026-11-04T18:23:21.938Z info [EVR] [NETGAME] User 'Player17' disconnected
+2026-11-04T18:23:21.938Z info [EVR] [NETGAME] User 'Player17' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:23:21.941Z info [EVR] R15NetDedicatedServer: Destroy Peer 66 [203.0.113.7:6794] (disconnect received), max send interval: 166765, rcvd: 3708421
+2026-11-04T18:23:22.337Z info [EVR] R15NetDedicatedServer: Destroy Peer 1132 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:25:41.768Z info [EVR] R15NetDedicatedServer: Destroy Peer 1348 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:26:50.859Z info [EVR] [NETGAME] User 'Player20' disconnected
+2026-11-04T18:26:50.860Z info [EVR] [NETGAME] User 'Player20' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:26:50.863Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 10 est: 199992.00 min: 191659 max: 233324 std: 5015.21 med: 199992
+2026-11-04T18:26:50.863Z info [EVR] R15NetDedicatedServer: Destroy Peer 802 [203.0.113.7:6794] (disconnect received), max send interval: 250059, rcvd: 730864
+2026-11-04T18:26:51.059Z info [EVR] [NETGAME] User 'Player24' disconnected
+2026-11-04T18:26:51.059Z info [EVR] [NETGAME] User 'Player24' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:26:51.063Z info [EVR] R15NetDedicatedServer: Destroy Peer 795 [203.0.113.7:6794] (disconnect received), max send interval: 217145, rcvd: 516566
+2026-11-04T18:29:23.112Z info [EVR] R15NetDedicatedServer: Destroy Peer 1552 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:31:00.134Z info [EVR] [NETGAME] User 'Player13' disconnected
+2026-11-04T18:31:00.134Z info [EVR] [NETGAME] User 'Player13' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:31:00.137Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 4 est: 174993.00 min: 166660 max: 183326 std: 5045.88 med: 174993
+2026-11-04T18:31:00.138Z info [EVR] R15NetDedicatedServer: Destroy Peer 10 [203.0.113.7:6794] (disconnect received), max send interval: 233568, rcvd: 883122
+2026-11-04T18:31:00.138Z info [EVR] Dedicated: session ended (no participants)
+2026-11-04T18:31:00.141Z info [EVR] [NETGAME] User 'Player01' disconnected
+2026-11-04T18:31:00.142Z info [EVR] [NETGAME] User 'Player01' disconnected IsServer 1, gameOver: 0
+2026-11-04T18:31:06.435Z info [NEVR.SERVERDB] Connected to ServerDB reconnect_count=0
+2026-11-04T18:31:08.624Z info [NEVR.GAMESERVER] Received registration success via protobuf: server_id=1234567890123456789, ip=203.0.113.7
+2026-11-04T18:31:08.624Z info [EVR] [NSLOBBY] registration successful
+2026-11-04T18:35:43.333Z info [NEVR.GAMESERVER] session game type stored game_type=echo_combat source=session_create session=aa2eb88f-0182-45a3-b7fe-1d37c6c48ff3 previous=none round_time_reads_without_type=0
+2026-11-04T18:35:43.334Z info [NEVR.GAMESERVER] session game type stored game_type=echo_combat source=legacy_session_start session=AA2EB88F-0182-45A3-B7FE-1D37C6C48FF3 previous=echo_combat round_time_reads_without_type=0
+2026-11-04T18:35:43.334Z info [NEVR.GAMESERVER] session starting session_id=aa2eb88f-0182-45a3-b7fe-1d37c6c48ff3
+2026-11-04T18:35:43.335Z info [EVR] [NETLOBBY] Starting session (gametype echo_combat, level mpl_combat_dyson)
+2026-11-04T18:35:49.811Z info [EVR] [NETGAME] Server Assigning Team for '...': 4
+2026-11-04T18:35:49.943Z info [EVR] [NETGAME] User OVR-ORG-99 (...) spawned
+2026-11-04T18:35:50.711Z info [EVR] [DEBUGPRINT] enter state 'pre_match_enter'
+2026-11-04T18:35:50.719Z info [EVR] [DEBUGPRINT] enter state 'pre_match_wait_for_ready_enter'
+2026-11-04T18:35:50.853Z info [EVR] [NETGAME] Server Assigning Team for 'Player25': 1
+2026-11-04T18:35:50.869Z info [EVR] [NETGAME] Server Assigning Team for 'Player21': 1
+2026-11-04T18:35:51.777Z info [EVR] [NETGAME] Server Assigning Team for 'Player17': 0
+2026-11-04T18:35:56.101Z info [EVR] [NETGAME] User OVR-ORG-100025 (Player25) spawned
+2026-11-04T18:35:58.243Z info [EVR] R15NetDedicatedServer: Destroy Peer 9 UNKNOWN (connect timeout), max send interval: 0, rcvd: 0
+2026-11-04T18:36:03.815Z info [EVR] [NETGAME] User OVR-ORG-100021 (Player21) spawned
+2026-11-04T18:36:06.832Z info [EVR] [NETGAME] User OVR-ORG-100017 (Player17) spawned
+2026-11-04T18:36:08.592Z info [EVR] [NETGAME] Server Assigning Team for 'Player26': 2
+2026-11-04T18:36:13.565Z info [EVR] [NETGAME] User DMO-100026 (Player26) spawned
+2026-11-04T18:36:20.740Z info [EVR] [DEBUGPRINT] enter state 'round_start'
+2026-11-04T18:36:20.749Z info [EVR] [DEBUGPRINT] enter state 'team_room_wait_enter'
+2026-11-04T18:36:29.998Z info [EVR] R15NetDedicatedServer: Destroy Peer 62 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:36:35.765Z info [EVR] [DEBUGPRINT] enter state 'main_loop_enter'
+2026-11-04T18:36:51.590Z info [EVR] [NETGAME] Server Assigning Team for 'Player18': 0
+2026-11-04T18:37:07.088Z info [EVR] [NETGAME] User OVR-ORG-100018 (Player18) spawned
+2026-11-04T18:40:11.301Z info [EVR] R15NetDedicatedServer: Destroy Peer 495 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:40:27.117Z info [EVR] R15NetDedicatedServer: Destroy Peer 526 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:41:00.636Z info [EVR] [DEBUGPRINT] enter state 'round_over_enter'
+2026-11-04T18:41:14.544Z info [EVR] R15NetDedicatedServer: Destroy Peer 621 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:41:15.653Z info [EVR] [DEBUGPRINT] enter state 'round_start'
+2026-11-04T18:41:15.661Z info [EVR] [DEBUGPRINT] enter state 'team_room_wait_enter'
+2026-11-04T18:41:30.678Z info [EVR] [DEBUGPRINT] enter state 'main_loop_enter'
+2026-11-04T18:41:51.486Z info [EVR] [NETGAME] Server Assigning Team for 'Player13': 0
+2026-11-04T18:41:51.703Z info [EVR] [NETGAME] Server Assigning Team for 'Player24': 1
+2026-11-04T18:42:06.934Z info [EVR] [NETGAME] User OVR-ORG-100013 (Player13) spawned
+2026-11-04T18:42:08.176Z info [EVR] [NETGAME] User OVR-ORG-100024 (Player24) spawned
+2026-11-04T18:43:05.255Z info [EVR] R15NetDedicatedServer: Destroy Peer 920 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:45:17.722Z info [EVR] [DEBUGPRINT] enter state 'round_over_enter'
+2026-11-04T18:45:32.743Z info [EVR] [DEBUGPRINT] enter state 'round_start'
+2026-11-04T18:45:32.752Z info [EVR] [DEBUGPRINT] enter state 'team_room_wait_enter'
+2026-11-04T18:45:43.308Z info [EVR] R15NetDedicatedServer: Destroy Peer 1402 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:45:47.768Z info [EVR] [DEBUGPRINT] enter state 'main_loop_enter'
+2026-11-04T18:46:46.547Z info [EVR] R15NetDedicatedServer: Destroy Peer 1596 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0
+2026-11-04T18:48:14.349Z info [EVR] [DEBUGPRINT] enter state 'round_over_enter'
+2026-11-04T18:48:29.394Z info [EVR] [DEBUGPRINT] enter state 'post_match_celebration_enter'
+2026-11-04T18:48:39.410Z info [EVR] [DEBUGPRINT] enter state 'post_match_celebration_personal_stats_enter'
+2026-11-04T18:48:57.530Z info [EVR] [NETGAME] User 'Player26' disconnected
+2026-11-04T18:48:57.531Z info [EVR] [NETGAME] User 'Player26' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:48:57.534Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 4 est: 49998.00 min: 41665 max: 49998 std: 3017.32 med: 49998
+2026-11-04T18:48:57.535Z info [EVR] R15NetDedicatedServer: Destroy Peer 29 [203.0.113.7:6794] (disconnect received), max send interval: 175454, rcvd: 175160
+2026-11-04T18:48:57.556Z info [EVR] [NETGAME] User 'Player25' disconnected
+2026-11-04T18:48:57.557Z info [EVR] [NETGAME] User 'Player25' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:48:57.560Z info [EVR] R15NetDedicatedServer: Destroy Peer 10 [203.0.113.7:6794] (disconnect received), max send interval: 7368530, rcvd: 7368017
+2026-11-04T18:48:57.582Z info [EVR] [NETGAME] User 'Player21' disconnected
+2026-11-04T18:48:57.582Z info [EVR] [NETGAME] User 'Player21' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:48:57.585Z info [EVR] R15NetDedicatedServer: Destroy Peer 8 [203.0.113.7:6794] (disconnect received), max send interval: 7360102, rcvd: 7359651
+2026-11-04T18:48:57.756Z info [EVR] [NETGAME] User 'Player13' disconnected
+2026-11-04T18:48:57.757Z info [EVR] [NETGAME] User 'Player13' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:48:57.848Z info [EVR] [NETGAME] User 'Player18' disconnected
+2026-11-04T18:48:57.848Z info [EVR] [NETGAME] User 'Player18' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:48:58.040Z info [EVR] [NETGAME] User 'Player24' disconnected
+2026-11-04T18:48:58.040Z info [EVR] [NETGAME] User 'Player24' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:48:58.190Z info [EVR] [NETGAME] User 'Player17' disconnected
+2026-11-04T18:48:58.190Z info [EVR] [NETGAME] User 'Player17' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:48:58.415Z info [EVR] Dedicated: session ended (no participants)
+2026-11-04T18:48:58.416Z info [NEVR.LOGFILTER] repeated count=4 window_s=1 msg="[EVR] R15NetDedicatedServer: Destroy Peer 29 [203.0.113.7:6794] (disconnect received), max send interval: 175454, rcvd: 1751"
+2026-11-04T18:48:58.417Z info [EVR] [NETGAME] User 'Player01' disconnected
+2026-11-04T18:48:58.418Z info [EVR] [NETGAME] User 'Player01' disconnected IsServer 1, gameOver: 1
+2026-11-04T18:49:19.244Z info [NEVR.SERVERDB] Connected to ServerDB reconnect_count=0
+2026-11-04T18:49:21.438Z info [NEVR.GAMESERVER] Received registration success via protobuf: server_id=1234567890123456789, ip=203.0.113.7
+2026-11-04T18:49:21.438Z info [EVR] [NSLOBBY] registration successful
+2026-11-04T18:51:13.341Z info [NEVR.GAMESERVER] session game type stored game_type=echo_combat source=session_create session=fc182dac-e8c0-4942-aa77-f5e9fd704293 previous=none round_time_reads_without_type=0
+2026-11-04T18:51:13.341Z info [NEVR.GAMESERVER] session game type stored game_type=echo_combat source=legacy_session_start session=FC182DAC-E8C0-4942-AA77-F5E9FD704293 previous=echo_combat round_time_reads_without_type=0
+2026-11-04T18:51:13.342Z info [NEVR.GAMESERVER] session starting session_id=fc182dac-e8c0-4942-aa77-f5e9fd704293
+2026-11-04T18:51:13.343Z info [EVR] [NETLOBBY] Starting session (gametype echo_combat, level mpl_combat_fission)
+2026-11-04T18:51:19.722Z info [EVR] [NETGAME] Server Assigning Team for '...': 4
+2026-11-04T18:51:19.854Z info [EVR] [NETGAME] User OVR-ORG-100001 (Player01) spawned
+2026-11-04T18:51:21.046Z info [EVR] [DEBUGPRINT] enter state 'pre_match_enter'
+2026-11-04T18:51:21.054Z info [EVR] [DEBUGPRINT] enter state 'pre_match_wait_for_ready_enter'
+2026-11-04T18:51:21.339Z info [EVR] [NETGAME] Server Assigning Team for 'Player18': 0
+2026-11-04T18:51:21.455Z info [EVR] [NETGAME] Server Assigning Team for 'Player27': 1
+2026-11-04T18:51:21.514Z info [EVR] [NETGAME] Server Assigning Team for 'Player28': 1
+2026-11-04T18:51:21.930Z info [EVR] [NETGAME] Server Assigning Team for 'Player17': 0
+2026-11-04T18:51:35.203Z info [EVR] [NETGAME] User OVR-ORG-100018 (Player18) spawned
+2026-11-04T18:51:37.811Z info [EVR] [NETGAME] User OVR-ORG-100099 (Player99) spawned
+2026-11-04T18:51:38.195Z info [EVR] [NETGAME] User OVR-ORG-100028 (Player28) spawned
+2026-11-04T18:51:45.387Z info [EVR] [NETGAME] User OVR-ORG-100017 (Player17) spawned
+2026-11-04T18:51:51.070Z info [EVR] [DEBUGPRINT] enter state 'round_start'
+2026-11-04T18:51:51.079Z info [EVR] [DEBUGPRINT] enter state 'team_room_wait_enter'
+2026-11-04T18:52:06.094Z info [EVR] [DEBUGPRINT] enter state 'pre_launch_enter'
+2026-11-04T18:52:21.195Z info [EVR] [NETGAME] Server Assigning Team for 'Player21': 0
+2026-11-04T18:52:21.653Z info [EVR] [NETGAME] Server Assigning Team for 'Player29': 1
+2026-11-04T18:52:34.686Z info [EVR] [NETGAME] User OVR-ORG-100021 (Player21) spawned

@@ -41,6 +41,12 @@ Environment:
   EVR_CONFIG_YAML          use this config.yaml as-is instead of generating one
   EVR_REGISTER_TIMEOUT     seconds until an unregistered server is restarted (180)
   EVR_LOG                  "default" hides noisy runtime lines, "all" shows everything
+  EVR_LIVE_POLL            milliseconds between the live map's /session reads in a match (200; 0 = no live.json)
+  EVR_TELEMETRY_ADDR       local ingest for nevr-runtime's telemetry stream (127.0.0.1:6730);
+                           used when the instance has telemetry on (evr-settings.json, "telemetry on")
+  EVR_TELEMETRY_RATE       telemetry frames a second the game sends (10)
+  EVR_TELEMETRY_DUMP       1 keeps the raw stream in $EVR_HOME/telemetry-dump (development)
+  EVR_TELEMETRY_PLAYS      1 uses the stream's player stat events in the play-by-play (to check a fixed nevr-runtime)
 `
 
 func main() {
@@ -109,6 +115,20 @@ func options() (supervisor.Options, error) {
 	if o.HTTPPort, err = intEnv("EVR_HTTP_PORT", 0); err != nil {
 		return o, err
 	}
+	livePoll, err := intEnv("EVR_LIVE_POLL", 200)
+	if err != nil {
+		return o, err
+	}
+	o.LivePoll = time.Duration(livePoll) * time.Millisecond
+	if livePoll <= 0 {
+		o.LivePoll = -1 // off
+	}
+	o.TelemetryAddr = os.Getenv("EVR_TELEMETRY_ADDR")
+	if o.TelemetryRate, err = intEnv("EVR_TELEMETRY_RATE", 0); err != nil {
+		return o, err
+	}
+	o.TelemetryDump = os.Getenv("EVR_TELEMETRY_DUMP") == "1"
+	o.TelemetryPlays = os.Getenv("EVR_TELEMETRY_PLAYS") == "1"
 	timeout, err := intEnv("EVR_REGISTER_TIMEOUT", 180)
 	if err != nil {
 		return o, err

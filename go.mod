@@ -3,14 +3,17 @@ module github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2
 go 1.27.2
 
 require (
+	buf.build/gen/go/echotools/nevr-api/protocolbuffers/go v1.36.12-20261027024255-259a506a3e1b.2
 	charm.land/bubbles/v2 v2.2.1
 	charm.land/bubbletea/v2 v2.1.0
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.6
 	github.com/charmbracelet/x/ansi v0.11.9
+	github.com/coder/websocket v1.8.15
 	github.com/prometheus/client_golang v1.25.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/term v0.47.0
+	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -43,5 +46,4 @@ require (
 	github.com/xo/terminfo v1.0.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
-	google.golang.org/protobuf v1.36.12 // indirect
 )

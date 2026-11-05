@@ -3,6 +3,7 @@ package supervisor
 import (
 	"bufio"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -118,5 +119,71 @@ func TestDefaultFilterSignIn(t *testing.T) {
 	}
 	if !DefaultFilter("2026-10-30T14:08:12.000Z info [NEVR.AUTH] server sign-in: the code ran out before it was approved; requesting a new one (attempt 2)") {
 		t.Error("the renewal line is hidden")
+	}
+}
+
+func TestParseMatchLines(t *testing.T) {
+	// Lines from a live 6.16.4 server on echo (2026-11-04), as nEVR's jsonl carries them.
+	cases := []struct {
+		raw   string
+		kind  Kind
+		check func(Event) bool
+	}{
+		{`{"ts":"2026-11-04T17:30:03.060Z","run":"x","level":"info","msg":"[NEVR.GAMESERVER] session game type stored game_type=echo_arena source=session_create session=dccb76e5-cbae-45f4-a1cb-66b121a22104 previous=none round_time_reads_without_type=0\n"}`,
+			KindGameType, func(e Event) bool { return e.GameType == "echo_arena" }},
+		{`{"ts":"2026-11-04T17:30:03.061Z","run":"x","level":"info","msg":"[EVR] [NETLOBBY] Starting session (gametype echo_arena, level mpl_arena_a)\n"}`,
+			KindLevel, func(e Event) bool { return e.GameType == "echo_arena" && e.Level == "mpl_arena_a" }},
+		{`[EVR] [NETGAME] Bound HTTP listener to 127.0.0.1:6719, responding to /session`,
+			KindHTTPPort, func(e Event) bool { return e.Port == 6719 }},
+		{`[NEVR.PATCH] session API listening on 127.0.0.1:6722 (6721 was taken)`,
+			KindHTTPPort, func(e Event) bool { return e.Port == 6722 }},
+		{`[NEVR.GAMESERVER] session starting session_id=dccb76e5-cbae-45f4-a1cb-66b121a22104`,
+			KindSessionStart, func(e Event) bool { return e.Session == "dccb76e5-cbae-45f4-a1cb-66b121a22104" }},
+	}
+	for _, c := range cases {
+		ev := Parse(c.raw)
+		if ev.Kind != c.kind || !c.check(ev) {
+			t.Errorf("%q: got %v %+v", c.raw, ev.Kind, ev)
+		}
+	}
+}
+
+func TestParseHealthAndSessionEnd(t *testing.T) {
+	cases := []struct {
+		line string
+		want Kind
+		ok   bool
+		n    int
+		id   string
+	}{
+		{"2026-11-04T18:06:50.160Z info [NEVR.SERVERDB] Connected to ServerDB reconnect_count=2", KindServerDB, true, 2, ""},
+		{"2026-11-04T18:06:50.160Z info [NEVR.SERVERDB] Disconnected from ServerDB code=1006 reconnect_count=2", KindServerDB, false, 2, ""},
+		{"2026-11-04T18:06:52.000Z info [NEVR.GAMESERVER] Received registration success via protobuf: server_id=1234567890123456789, ip=203.0.113.7", KindServerID, false, 0, "1234567890123456789"},
+		{"2026-11-04T18:20:00.000Z info [NEVR.PATCH] game loop crash recovered count=3 recovery=ok", KindCrashRecovered, false, 3, ""},
+		{"2026-11-04T18:15:18.020Z info [EVR] Dedicated: session ended (no participants)", KindSessionEnd, false, 0, ""},
+	}
+	for _, c := range cases {
+		ev := Parse(c.line)
+		if ev.Kind != c.want || ev.OK != c.ok || ev.Count != c.n || ev.ServerID != c.id {
+			t.Errorf("%q: %v ok=%v n=%d id=%q", c.line, ev.Kind, ev.OK, ev.Count, ev.ServerID)
+		}
+	}
+	if ev := Parse("2026-11-04T18:08:23.035Z info [EVR] [NETGAME] [PINGSTATS]: entrantid: 4 est: 0.00 min: 0 max: 0 std: 0.00 med: 0"); ev.Kind != KindNone {
+		t.Errorf("the client's zero ping stats: %v", ev.Kind)
+	}
+	if ev := Parse("2026-11-04T18:08:49.904Z info [EVR] R15NetDedicatedServer: Destroy Peer 36 [203.0.113.7:6794] (no connect received), max send interval: 0, rcvd: 0"); ev.Kind != KindNone {
+		t.Errorf("a join that never happened: %v", ev.Kind)
+	}
+}
+
+func TestWithTelemetry(t *testing.T) {
+	base := []byte("version: 1\nauth:\n  http_key: x\n")
+	out, ok := withTelemetry(base, "ws://127.0.0.1:6730/ingest", "tok")
+	if !ok || !strings.Contains(string(out), "telemetry:\n  uri: \"ws://127.0.0.1:6730/ingest\"\n  token: \"tok\"\n") {
+		t.Fatalf("added: %v\n%s", ok, out)
+	}
+	own := []byte("version: 1\ntelemetry:\n  uri: wss://elsewhere/ingest\n")
+	if out, ok := withTelemetry(own, "ws://x", "tok"); ok || string(out) != string(own) {
+		t.Errorf("the operator's own telemetry section was changed:\n%s", out)
 	}
 }
