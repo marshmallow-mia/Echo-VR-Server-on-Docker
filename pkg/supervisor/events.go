@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/match"
 )
 
 // Kind is a log event the supervisor reacts to.
@@ -26,12 +28,27 @@ const (
 	KindFatal
 	KindSignInCode
 	KindSignInEnded
+	KindGameType // the session's game type (echo_arena, echo_combat, …)
+	KindLevel    // the session's game type and level from the game's lobby
+	KindHTTPPort // the game's HTTP API (/session) is listening
+	// Match timeline and players from the game's log (they work with the API off).
+	KindPhase      // the match's state machine entered Phase
+	KindTeam       // the server put Player on Team (join or switch)
+	KindSpawn      // Player (Account) spawned
+	KindDisconnect // Player disconnected; GameOver: after the match
+	KindPingStats  // the server's ping stats of the player in Slot, in ms
+	KindPeerGone   // a peer was dropped; Reason says why (left, connection lost)
+	// Server health.
+	KindServerDB       // the matchmaker's socket connected (OK) or closed; Count = reconnects
+	KindServerID       // the matchmaker's id for this server
+	KindCrashRecovered // the runtime recovered from a game loop crash; Count so far
 )
 
 func (k Kind) String() string {
 	return [...]string{"none", "runtime_version", "login_success", "login_failed", "authenticated", "bound",
 		"serverdb_error", "registered", "session_start", "session_end", "teardown", "shutdown", "fatal",
-		"sign_in_code", "sign_in_ended"}[k]
+		"sign_in_code", "sign_in_ended", "game_type", "level", "http_port", "phase", "team", "spawn", "disconnect",
+		"ping_stats", "peer_gone", "serverdb", "server_id", "crash_recovered"}[k]
 }
 
 // Reason classifies a fatal error; retryable reasons get a restart with
@@ -88,6 +105,19 @@ type Event struct {
 	Expires int    // KindSignInCode: seconds the code is valid
 	OK      bool   // KindSignInEnded: approved
 	Reason  Reason // KindFatal, KindLoginFailed
+	// GameType and Level: KindGameType, KindLevel.
+	GameType, Level string
+	// Match timeline and players.
+	Phase    string  // KindPhase: pre_match, round_start, main_loop, point_score, round_over, post_match, …
+	Player   string  // KindTeam, KindSpawn, KindDisconnect
+	Team     int     // KindTeam: 0 blue, 1 orange, 2 spectator, other: hidden
+	Account  string  // KindSpawn: OVR-ORG-123…
+	GameOver bool    // KindDisconnect
+	Slot     int     // KindPingStats
+	PingMs   float64 // KindPingStats: median
+	PingMax  float64 // KindPingStats: maximum
+	Count    int     // KindServerDB: reconnects; KindCrashRecovered
+	ServerID string  // KindServerID
 }
 
 var (
@@ -96,6 +126,26 @@ var (
 	boundRe      = regexp.MustCompile(`Dedicated: broadcaster initialized at \[[^\]:]*:(\d+)\]`)
 	registeredRe = regexp.MustCompile(`Dedicated: registered as \S+ at \[[^/\]]*/([^:\]]+):(\d+)\]`)
 	sessionRe    = regexp.MustCompile(`session_id=(\S+)`)
+	gameTypeRe   = regexp.MustCompile(`game_type=(\S+)`)
+	levelRe      = regexp.MustCompile(`Starting session \(gametype (\S+), level (\S+)\)`)
+	// The game's own line, and nevr-runtime's when it moved the listener to a free port.
+	httpPortRe = regexp.MustCompile(`(?:Bound HTTP listener to|session API listening on) [0-9.]+:(\d+)`)
+	// The game's state machine; some names come with a stray quote ('' or `).
+	phaseRe      = regexp.MustCompile(`\[DEBUGPRINT\] enter state '+([a-z_]+)`)
+	teamRe       = regexp.MustCompile(`Server Assigning Team for '(.*)': (\d+)$`)
+	spawnRe      = regexp.MustCompile(`\[NETGAME\] User (\S+) \((.*)\) spawned$`)
+	disconnectRe = regexp.MustCompile(`\[NETGAME\] User '(.*)' disconnected IsServer \d+, gameOver: (\d)`)
+	pingRe       = regexp.MustCompile(`\[PINGSTATS\]: entrantid: (\d+) est: [0-9.]+ min: \d+ max: (\d+) std: [0-9.]+ med: (\d+)`)
+	peerGoneRe   = regexp.MustCompile(`Destroy Peer \d+ \[[^\]]*\] \(([^)]+)\)`)
+	reconnectRe  = regexp.MustCompile(`reconnect_count=(\d+)`)
+	serverIDRe   = regexp.MustCompile(`registration success via protobuf: server_id=(\d+)`)
+	recoveredRe  = regexp.MustCompile(`game loop crash recovered count=(\d+)`)
+)
+
+// Peer drop reasons in KindPeerGone's Reason.
+const (
+	PeerLeft Reason = "left"            // the player's client said goodbye
+	PeerLost Reason = "connection lost" // it stopped answering
 )
 
 // hostStop is the host's one-line stop record (6.x), printed as bare JSON:
@@ -184,10 +234,77 @@ func Parse(raw string) Event {
 		if m := sessionRe.FindStringSubmatch(line); m != nil {
 			ev.Session = m[1]
 		}
-	case strings.Contains(line, "session ended by ServerDB"):
+	case strings.Contains(line, "session ended by ServerDB"), strings.Contains(line, "Dedicated: session ended"):
 		ev.Kind = KindSessionEnd
 		if m := sessionRe.FindStringSubmatch(line); m != nil {
 			ev.Session = m[1]
+		}
+	case strings.Contains(line, "session game type stored"):
+		if m := gameTypeRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.GameType = KindGameType, m[1]
+		}
+	case strings.Contains(line, "[NETLOBBY] Starting session (gametype"):
+		if m := levelRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.GameType, ev.Level = KindLevel, m[1], m[2]
+		}
+	case strings.Contains(line, "Bound HTTP listener to"), strings.Contains(line, "session API listening on"):
+		if m := httpPortRe.FindStringSubmatch(line); m != nil {
+			ev.Kind = KindHTTPPort
+			ev.Port, _ = strconv.Atoi(m[1])
+		}
+	case strings.Contains(line, "[DEBUGPRINT] enter state"):
+		if m := phaseRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.Phase = KindPhase, strings.TrimSuffix(m[1], "_enter")
+		}
+	case strings.Contains(line, "Server Assigning Team for"):
+		if m := teamRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.Player = KindTeam, m[1]
+			ev.Team, _ = strconv.Atoi(m[2])
+		}
+	case strings.HasSuffix(line, ") spawned"):
+		if m := spawnRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.Account, ev.Player = KindSpawn, m[1], m[2]
+		}
+	case strings.Contains(line, "disconnected IsServer"):
+		if m := disconnectRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.Player, ev.GameOver = KindDisconnect, m[1], m[2] == "1"
+		}
+	case strings.Contains(line, "[PINGSTATS]"):
+		// The client's stats come first and are zero; the server's follow.
+		if m := pingRe.FindStringSubmatch(line); m != nil && m[3] != "0" {
+			ev.Kind = KindPingStats
+			ev.Slot, _ = strconv.Atoi(m[1])
+			mx, _ := strconv.Atoi(m[2])
+			med, _ := strconv.Atoi(m[3])
+			ev.PingMs, ev.PingMax = float64(med)/1000, float64(mx)/1000 // µs
+		}
+	case strings.Contains(line, "Destroy Peer"):
+		if m := peerGoneRe.FindStringSubmatch(line); m != nil {
+			switch m[1] {
+			case "disconnect received":
+				ev.Kind, ev.Reason = KindPeerGone, PeerLeft
+			case "disconnect timeout", "communication timeout":
+				ev.Kind, ev.Reason = KindPeerGone, PeerLost
+			} // "no connect received": a join that never happened
+		}
+	case strings.Contains(line, "[NEVR.SERVERDB] Connected to ServerDB"):
+		ev.Kind, ev.OK = KindServerDB, true
+		if m := reconnectRe.FindStringSubmatch(line); m != nil {
+			ev.Count, _ = strconv.Atoi(m[1])
+		}
+	case strings.Contains(line, "[NEVR.SERVERDB] Disconnected from ServerDB"):
+		ev.Kind = KindServerDB
+		if m := reconnectRe.FindStringSubmatch(line); m != nil {
+			ev.Count, _ = strconv.Atoi(m[1])
+		}
+	case strings.Contains(line, "registration success via protobuf"):
+		if m := serverIDRe.FindStringSubmatch(line); m != nil {
+			ev.Kind, ev.ServerID = KindServerID, m[1]
+		}
+	case strings.Contains(line, "game loop crash recovered"):
+		if m := recoveredRe.FindStringSubmatch(line); m != nil {
+			ev.Kind = KindCrashRecovered
+			ev.Count, _ = strconv.Atoi(m[1])
 		}
 	case strings.Contains(line, "CTRL+C teardown complete"):
 		ev.Kind = KindTeardown
@@ -215,4 +332,23 @@ func classifyFatal(line string) Reason {
 		return ReasonInvalidConfig
 	}
 	return ReasonOther
+}
+
+// Note is the match tracker's note for a timeline or player event.
+func (ev Event) Note() (match.Note, bool) {
+	switch ev.Kind {
+	case KindPhase:
+		return match.Note{Kind: match.NotePhase, Phase: ev.Phase}, true
+	case KindTeam:
+		return match.Note{Kind: match.NoteTeam, Player: ev.Player, Team: match.TeamName(ev.Team)}, true
+	case KindSpawn:
+		return match.Note{Kind: match.NoteSpawn, Player: ev.Player, Account: ev.Account}, true
+	case KindDisconnect:
+		return match.Note{Kind: match.NoteLeave, Player: ev.Player, GameOver: ev.GameOver}, true
+	case KindPingStats:
+		return match.Note{Kind: match.NotePing, PingMs: ev.PingMs, PingMax: ev.PingMax}, true
+	case KindPeerGone:
+		return match.Note{Kind: match.NoteGone, Reason: string(ev.Reason)}, true
+	}
+	return match.Note{}, false
 }

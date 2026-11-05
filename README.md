@@ -96,6 +96,7 @@ and how many matches and restarts it has had.
 |---|---|
 | `enter` | live console (`f` follow, `a` show runtime noise, `/` filter) |
 | `s` / `x` | start / stop |
+| `t` / `T` | match stats (session API) / telemetry stream on or off |
 | `r` / `R` | restart only the game (fast) / restart the container |
 | `a` / `e` / `d` | add servers / edit one (port, regions, guilds, tick rate, runtime pin, on/off) / delete |
 | `A` | apply the configuration (after editing `config.yaml` by hand) |
@@ -124,6 +125,8 @@ evr-docker server logs NAME [-f]
 evr-docker server scale N             keep exactly N servers (removes idle ones from the end)
 evr-docker server apply [--force]     make containers match config.yaml
 evr-docker server rm NAME [--purge]
+evr-docker server match NAME          the current or last match (match stats)
+evr-docker server api|telemetry on|off|status NAME
 evr-docker game install [--from-dir DIR | --archive FILE] / game status
 evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|remove TAG|channel pre|stable|pinned [TAG]
 evr-docker account code|set|test|servers   console code (default) or password sign-in
@@ -135,6 +138,22 @@ evr-docker config show|edit
 ```
 
 Changes to a server that is hosting a match are applied after the match (or now with `--force`).
+
+## Match stats
+
+While a server is in a match, its supervisor reads the game's session API (`127.0.0.1`, inside the container) and keeps
+three files in the server's directory:
+
+| File | What | Updated |
+|---|---|---|
+| `match.json` | mode, map, score, clock, teams and players, events, play-by-play | every 2 s |
+| `live.json` | players' heads and the disc on the map, for a live map | 5 times a second (`EVR_LIVE_POLL`, ms; `0` = off) |
+| `match-history.json` | finished matches (social lobbies are left out) | at each match's end |
+
+The session API is the game's `EnableAPIAccess` setting. It is on by default and stays on across restarts. Switch it with
+`evr-docker server api on|off NAME` or with `t` in the dashboard. An idle game restarts to apply it; a game in a match
+applies it after that match. With it off, the log still gives mode, map and players. `evr-docker server telemetry on|off`
+(or `T`) switches nevr-runtime's telemetry stream to the supervisor. The stream stays inside the container.
 
 ## Updates
 

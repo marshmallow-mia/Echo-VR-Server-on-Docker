@@ -18,6 +18,7 @@ import (
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/core"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/match"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/supervisor"
@@ -489,6 +490,30 @@ func (m *model) updateDashboard(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m.quick(name+" restarted", func(ctx context.Context) error { return app.Restart(ctx, name, false) })
 			})
 		}
+	case "t":
+		if hasSel {
+			on, _, err := app.SessionAPI(context.Background(), name)
+			if err != nil {
+				m.setFlash(err.Error(), true)
+				return m, nil
+			}
+			word := map[bool]string{true: "on", false: "off"}[!on]
+			return m, m.quick(name+": match stats "+word+" (an idle game restarts now, one in a match after it)", func(ctx context.Context) error {
+				return app.SetSessionAPI(ctx, name, !on)
+			})
+		}
+	case "T":
+		if hasSel {
+			on, _, err := app.Telemetry(context.Background(), name)
+			if err != nil {
+				m.setFlash(err.Error(), true)
+				return m, nil
+			}
+			word := map[bool]string{true: "on", false: "off"}[!on]
+			return m, m.quick(name+": telemetry "+word+" (an idle game restarts now, one in a match after it)", func(ctx context.Context) error {
+				return app.SetTelemetry(ctx, name, !on)
+			})
+		}
 	case "a":
 		if !app.HasAccount() {
 			m.setFlash(signInFirst(), true)
@@ -645,15 +670,49 @@ func (m *model) render() string {
 	if s, ok := m.selected(); ok && s.Status != nil && s.Status.LastError != "" {
 		detail = "\n" + ui.Subtle.Render(ui.Truncate("last error: "+s.Status.LastError, m.width-2))
 	}
+	detail += m.matchDetail()
 	detail += m.approvalDetail()
 	detail += m.updatesNotice()
 	if !m.app.HasAccount() {
 		detail += "\n" + ui.Warning.Render("The servers have no EchoVRCE sign-in yet: press ") + ui.KeyStyle.Render("c") + ui.Warning.Render(" to sign in.")
 	}
 	return m.header() + "\n\n" + body + detail + "\n" + m.footer(
-		ui.K("enter", "logs"), ui.K("s", "start"), ui.K("x", "stop"), ui.K("r/R", "restart"),
+		ui.K("enter", "logs"), ui.K("s", "start"), ui.K("x", "stop"), ui.K("r/R", "restart"), ui.K("t", "stats API"), ui.K("T", "telemetry"),
 		ui.K("a", "add"), ui.K("e", "edit"), ui.K("d", "delete"), ui.K("A", "apply"),
 		ui.K("u", "runtime"), ui.K("U", "updates"), ui.K("c", "account"), ui.K("m", "more"), ui.K("q", "quit"))
+}
+
+// matchDetail describes the selected server's match and its stats switch.
+func (m *model) matchDetail() string {
+	s, ok := m.selected()
+	if !ok || m.app == nil {
+		return ""
+	}
+	name := s.Instance.Name
+	api := "on"
+	if !match.LoadSettings(m.app.Cfg.InstanceDir(name)).APIOn() {
+		api = "off"
+	}
+	if st := s.Status; st != nil && s.Running() && st.SessionAPI != "" && st.SessionAPI != api {
+		api += " (game: " + st.SessionAPI + " until its next start)"
+	}
+	line := "stats API " + api
+	tele := "off"
+	if match.LoadSettings(m.app.Cfg.InstanceDir(name)).TelemetryOn() {
+		tele = "on"
+	}
+	if st := s.Status; st != nil && s.Running() && st.Telemetry != "" && st.Telemetry != tele {
+		tele += " (game: " + st.Telemetry + " until its next start)"
+	}
+	line += " · telemetry " + tele
+	if mt, ok := m.app.Match(name); ok {
+		if mt.Active {
+			line = "match: " + match.Line(mt) + " · " + line
+		} else if !mt.EndedAt.IsZero() {
+			line = "last match " + mt.EndedAt.Local().Format("15:04") + ": " + match.Line(mt) + " · " + line
+		}
+	}
+	return "\n" + ui.Subtle.Render(ui.Truncate(name+" "+line, m.width-2))
 }
 
 // approvalDetail names the servers that wait for their sign-in code.

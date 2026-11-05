@@ -259,6 +259,8 @@ func serverCmd(g *globals) *cobra.Command {
 	restart.Flags().BoolVar(&soft, "soft", false, "only restart the game process, keep the container")
 	cmd.AddCommand(restart)
 
+	cmd.AddCommand(apiCmd(g), telemetryCmd(g), matchCmd(g))
+
 	var follow bool
 	var tail int
 	logs := &cobra.Command{

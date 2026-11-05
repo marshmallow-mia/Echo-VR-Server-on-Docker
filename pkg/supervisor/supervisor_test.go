@@ -204,10 +204,15 @@ func TestRunOnceTwoFileRoot(t *testing.T) {
 		t.Fatalf("result %+v\n%s", res, out)
 	}
 	root := game.NevrRoot(filepath.Join(o.Home, ".wine"), "container")
-	for name, want := range map[string]string{game.RuntimeName: "runtime", "config.yaml": "version: 1 # root\n", game.CredentialsName: `{"refresh_token":"old"}`} {
+	for name, want := range map[string]string{game.RuntimeName: "runtime", game.CredentialsName: `{"refresh_token":"old"}`} {
 		if b, err := os.ReadFile(filepath.Join(root, name)); err != nil || string(b) != want {
 			t.Errorf("root %s = %q %v", name, b, err)
 		}
+	}
+	// The root config is the server's, plus the telemetry section (on by default).
+	if b, err := os.ReadFile(filepath.Join(root, "config.yaml")); err != nil || !strings.HasPrefix(string(b), "version: 1 # root\n") ||
+		!strings.Contains(string(b), `uri: "ws://127.0.0.1:`) {
+		t.Errorf("root config.yaml = %q %v", b, err)
 	}
 	if _, err := os.Stat(filepath.Join(o.Home, "root/_local/config.yaml")); !os.IsNotExist(err) {
 		t.Error("_local/config.yaml left for a two-file runtime")
