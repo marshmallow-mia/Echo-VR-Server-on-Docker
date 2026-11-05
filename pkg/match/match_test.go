@@ -24,7 +24,7 @@ func sess(bluePts, orangePts float64, status string, blue, orange []APIPlayer) *
 
 var (
 	ava = APIPlayer{Name: "Ava", UserID: 1001, PlayerID: 2, Number: 7, Level: 50, Ping: 41, Stats: &Stats{}}
-	big   = APIPlayer{Name: "N", UserID: 1402761802751676571, PlayerID: 5, Number: 1, Level: 12, Ping: 80, Stats: &Stats{}}
+	big = APIPlayer{Name: "N", UserID: 1402761802751676571, PlayerID: 5, Number: 1, Level: 12, Ping: 80, Stats: &Stats{}}
 )
 
 func TestTrackerGoalsJoinsAndSummary(t *testing.T) {
