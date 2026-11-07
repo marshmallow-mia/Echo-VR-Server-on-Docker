@@ -147,13 +147,17 @@ three files in the server's directory:
 | File | What | Updated |
 |---|---|---|
 | `match.json` | mode, map, score, clock, teams and players, events, play-by-play | every 2 s |
-| `live.json` | players' heads and the disc on the map, for a live map | 5 times a second (`EVR_LIVE_POLL`, ms; `0` = off) |
+| `live.json` | players' heads and the disc on the map, for a live map; in a social lobby the heads come from the telemetry stream (below) | 5 times a second (`EVR_LIVE_POLL`, ms; `0` = off) |
 | `match-history.json` | finished matches (social lobbies are left out) | at each match's end |
 
 The session API is the game's `EnableAPIAccess` setting. It is on by default and stays on across restarts. Switch it with
 `evr-docker server api on|off NAME` or with `t` in the dashboard. An idle game restarts to apply it; a game in a match
 applies it after that match. With it off, the log still gives mode, map and players. `evr-docker server telemetry on|off`
 (or `T`) switches nevr-runtime's telemetry stream to the supervisor. The stream stays inside the container.
+
+In a social lobby the game's session API answers nothing, so a lobby's `live.json` comes from the telemetry stream: it
+needs telemetry on and a nevr-runtime that sends lobby players (nevr-runtime #2306). Without those, a lobby has no
+`live.json`.
 
 ## Updates
 
