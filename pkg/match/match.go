@@ -646,8 +646,11 @@ func teamColor(s string) string {
 }
 
 func sideName(side string) string {
-	if side == "spectator" {
+	switch side {
+	case "spectator":
 		return "the spectators"
+	case "social":
+		return "the lobby"
 	}
 	return title(side)
 }

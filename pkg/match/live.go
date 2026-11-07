@@ -24,7 +24,7 @@ type Live struct {
 // LivePlayer is one player's head on the map.
 type LivePlayer struct {
 	Name       string    `json:"name"`
-	Side       string    `json:"side"` // blue or orange
+	Side       string    `json:"side"` // blue or orange; social for a lobby's players
 	Pos        []float64 `json:"pos"`  // [x, y, z] in metres (y is up)
 	Stunned    bool      `json:"stunned,omitempty"`
 	Possession bool      `json:"possession,omitempty"`

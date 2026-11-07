@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"fmt"
+	"time"
 
 	tv2 "buf.build/gen/go/echotools/nevr-api/protocolbuffers/go/telemetry/v2"
 	"google.golang.org/protobuf/proto"
@@ -24,7 +25,7 @@ const (
 type Play struct {
 	Kind   string
 	Player string
-	Team   string // blue, orange, spectator, ""
+	Team   string // blue, orange, spectator, social, ""
 	Victim string // PlaySteal: whose disc it was
 	Total  int    // the player's count of this kind so far in the match
 	Points int    // PlayGoal
@@ -69,6 +70,9 @@ type Counts struct {
 // Decoder turns envelopes into plays; it remembers the roster to name slots.
 type Decoder struct {
 	OnPlay func(Play)
+	// Latest, when set, gets every frame's player positions (the live map's
+	// source in social lobbies).
+	Latest *Latest
 	roster map[int32]seat
 	Counts Counts
 }
@@ -83,6 +87,8 @@ func role(r tv2.Role) string {
 		return "orange"
 	case tv2.Role_ROLE_SPECTATOR:
 		return "spectator"
+	case tv2.Role_ROLE_SOCIAL_PARTICIPANT:
+		return "social"
 	}
 	return ""
 }
@@ -106,6 +112,9 @@ func (d *Decoder) Envelope(b []byte) error {
 		d.Counts.Headers++
 		d.Counts.GameType = h.GetGameType()
 		d.roster = map[int32]seat{}
+		if d.Latest != nil {
+			d.Latest.start(h)
+		}
 		if a := h.GetEchoArena(); a != nil {
 			d.Counts.Session = a.GetSessionId()
 			for _, p := range a.GetInitialRoster() {
@@ -118,6 +127,9 @@ func (d *Decoder) Envelope(b []byte) error {
 		if f := env.GetFrame().GetEchoArena(); f != nil {
 			for _, e := range f.GetEvents() {
 				d.event(e)
+			}
+			if d.Latest != nil {
+				d.Latest.frame(f, d.name, time.Now())
 			}
 		}
 	case env.GetFooter() != nil:

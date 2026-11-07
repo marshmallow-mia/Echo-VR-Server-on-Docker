@@ -5,11 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/match"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/telemetry"
 )
 
 // applyAPISetting writes the instance's session API switch into the game's
@@ -66,7 +68,8 @@ func (s *Supervisor) note(n match.Note) {
 // matchLoop follows matches: while one runs it asks the game's /session every
 // MatchPoll and keeps match.json up to date, and between those every LivePoll
 // for live.json (the map's positions); when it ends the match goes into
-// match-history.json and live.json goes away.
+// match-history.json and live.json goes away. In a social lobby, where the game
+// refuses /session, live.json comes from the telemetry stream's newest frame.
 func (s *Supervisor) matchLoop(ctx context.Context) {
 	home := s.o.Home
 	// A match.json left active by a container that went away is over.
@@ -137,15 +140,35 @@ func (s *Supervisor) matchLoop(ctx context.Context) {
 	}
 	_ = match.RemoveLive(home) // left by a container that went away
 	defer clearLive()
-	writeLive := func(sess *match.Session, now time.Time) {
-		if s.o.LivePoll <= 0 {
-			return
-		}
-		if err := match.WriteLive(home, match.LiveFrom(sess, now)); err != nil {
+	putLive := func(l match.Live) {
+		if err := match.WriteLive(home, l); err != nil {
 			s.logf("match stats: cannot write %s: %v", match.LiveFile, err)
 			return
 		}
 		liveOn = true
+	}
+	writeLive := func(sess *match.Session, now time.Time) {
+		if s.o.LivePoll > 0 {
+			putLive(match.LiveFrom(sess, now))
+		}
+	}
+	// A lobby's live.json follows the stream: a frame is written once, and
+	// none newer than lobbyStale means the stream stopped or sends no positions.
+	var lobbyAt time.Time
+	writeLobby := func(st status.Status, now time.Time) {
+		if s.o.LivePoll <= 0 {
+			return
+		}
+		l, ok := lobbyLive(s.latest.Get(), st, now)
+		if !ok {
+			clearLive()
+			lobbyAt = time.Time{}
+			return
+		}
+		if l.AtMS != lobbyAt.UnixMilli() {
+			putLive(l)
+			lobbyAt = time.UnixMilli(l.AtMS)
+		}
 	}
 	every := s.o.MatchPoll
 	if s.o.LivePoll > 0 && s.o.LivePoll < every {
@@ -178,6 +201,12 @@ func (s *Supervisor) matchLoop(ctx context.Context) {
 		// A full round (the tracker, match.json) once per MatchPoll; the
 		// ticks between only refresh live.json.
 		full := now.Sub(lastFull) >= s.o.MatchPoll-every/2
+		if match.IsLobby(st.GameType) && st.State != status.StateStopping {
+			writeLobby(st, now)
+			if !full {
+				continue
+			}
+		}
 		fetch := st.State != status.StateStopping && !match.IsLobby(st.GameType) &&
 			st.SessionAPI == status.OnOff(true) && st.HTTPPort != 0
 		if !full {
@@ -228,4 +257,30 @@ func (s *Supervisor) matchLoop(ctx context.Context) {
 		}
 		write(false)
 	}
+}
+
+// lobbyStale is how old the stream's newest frame may be for the lobby's map.
+const lobbyStale = 2 * time.Second
+
+// lobbyLive is the lobby's live.json from the stream's newest frame f: only
+// when f is of this session (a header without a session id is taken as it),
+// recent, and has at least one player with a position.
+func lobbyLive(f telemetry.Frame, st status.Status, now time.Time) (match.Live, bool) {
+	if f.At.IsZero() || now.Sub(f.At) > lobbyStale || len(f.Seats) == 0 {
+		return match.Live{}, false
+	}
+	if f.Session != "" && !strings.EqualFold(f.Session, st.Session) {
+		return match.Live{}, false
+	}
+	l := match.Live{SessionID: strings.ToLower(st.Session), AtMS: f.At.UnixMilli(), Map: st.Map, Players: []match.LivePlayer{}}
+	if l.Map == "" {
+		l.Map = f.Map
+	}
+	for _, p := range f.Seats {
+		if p.Side == "spectator" {
+			continue
+		}
+		l.Players = append(l.Players, match.LivePlayer{Name: p.Name, Side: p.Side, Pos: []float64{p.Pos[0], p.Pos[1], p.Pos[2]}})
+	}
+	return l, len(l.Players) > 0
 }

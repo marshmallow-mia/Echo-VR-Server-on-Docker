@@ -36,7 +36,7 @@ func (s *Supervisor) serveTelemetry(ctx context.Context) {
 	if s.o.TelemetryDump {
 		in.DumpDir = filepath.Join(s.o.Home, "telemetry-dump")
 	}
-	var dec telemetry.Decoder
+	dec := telemetry.Decoder{Latest: s.latest}
 	if s.o.TelemetryPlays {
 		dec.OnPlay = func(p telemetry.Play) {
 			s.note(match.Note{Kind: match.NotePlay, Player: p.Player, Team: p.Team, Play: p.Kind, Total: p.Total, Text: p.Text()})

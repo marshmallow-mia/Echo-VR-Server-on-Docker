@@ -53,7 +53,7 @@ type Note struct {
 	At       time.Time
 	Phase    string // NotePhase: pre_match, round_start, main_loop, point_score, round_over, post_match_celebration, …
 	Player   string
-	Team     string // NoteTeam: blue, orange, spectator; "" hidden
+	Team     string // NoteTeam: blue, orange, spectator, social; "" hidden
 	Account  string // NoteSpawn: OVR-ORG-123…
 	GameOver bool   // NoteLeave: after the match
 	PingMs   float64
@@ -64,8 +64,8 @@ type Note struct {
 	Text     string // NotePlay
 }
 
-// TeamName is a team number from the game's log as blue, orange or
-// spectator; "" for hidden players.
+// TeamName is a team number from the game's log as blue, orange, spectator
+// or social (everyone in a social lobby); "" for hidden players (4).
 func TeamName(n int) string {
 	switch n {
 	case 0:
@@ -74,6 +74,8 @@ func TeamName(n int) string {
 		return "orange"
 	case 2:
 		return "spectator"
+	case 3:
+		return "social"
 	}
 	return ""
 }

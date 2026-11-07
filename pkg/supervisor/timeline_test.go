@@ -74,6 +74,15 @@ func TestLogTimelineArenaLobbyCombat(t *testing.T) {
 	if !match.IsLobby(lobby.GameType) {
 		t.Errorf("second session: %s", lobby.GameType)
 	}
+	// The game puts everyone in a lobby on team 3.
+	if len(lobby.Players) == 0 {
+		t.Errorf("lobby: no players from the log")
+	}
+	for _, p := range lobby.Players {
+		if p.Team != "social" {
+			t.Errorf("lobby player on %q: %+v", p.Team, p)
+		}
+	}
 	if combat.GameType != "echo_combat" {
 		t.Errorf("third session: %s", combat.GameType)
 	}

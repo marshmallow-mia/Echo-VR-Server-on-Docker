@@ -158,6 +158,7 @@ type Supervisor struct {
 	restart chan struct{}
 	notes   chan match.Note // log lines for the match tracker
 	tele    *telemetry.Ingest
+	latest  *telemetry.Latest // the stream's newest positions (the lobby's live map)
 }
 
 // New validates opts and returns a supervisor.
@@ -175,6 +176,7 @@ func New(o Options) (*Supervisor, error) {
 		restart: make(chan struct{}, 1),
 		notes:   make(chan match.Note, 512),
 		tele:    &telemetry.Ingest{Addr: o.TelemetryAddr},
+		latest:  &telemetry.Latest{},
 	}, nil
 }
 

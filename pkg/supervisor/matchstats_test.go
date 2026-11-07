@@ -7,15 +7,21 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	spv1 "buf.build/gen/go/echotools/nevr-api/protocolbuffers/go/spatial/v1"
+	tv2 "buf.build/gen/go/echotools/nevr-api/protocolbuffers/go/telemetry/v2"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/match"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/telemetry"
 )
 
 func waitFor(t *testing.T, what string, f func() bool) {
@@ -209,4 +215,83 @@ func TestMatchLoopLiveOff(t *testing.T) {
 	if _, err := match.ReadLive(o.Home); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("live.json written with LivePoll off: %v", err)
 	}
+}
+
+func TestLobbyLiveFromTheStream(t *testing.T) {
+	now := time.Now()
+	st := status.Status{Session: "4C23-A", Map: "mpl_lobby_b2", GameType: "social_2.0"}
+	f := telemetry.Frame{Session: "4c23-a", Map: "header-map", At: now.Add(-300 * time.Millisecond), Seats: []telemetry.Seat{
+		{Name: "Ava", Side: "social", Pos: [3]float64{-12, 1.6, 3.1}},
+		{Name: "Spec", Side: "spectator", Pos: [3]float64{1, 1, 1}},
+		{Name: "Bo", Side: "blue", Pos: [3]float64{-60, 1, -30}},
+	}}
+	l, ok := lobbyLive(f, st, now)
+	if !ok || l.SessionID != "4c23-a" || l.Map != "mpl_lobby_b2" || l.AtMS != f.At.UnixMilli() || len(l.Players) != 2 {
+		t.Fatalf("live: %+v %v", l, ok)
+	}
+	if p := l.Players[0]; p.Name != "Ava" || p.Side != "social" || p.Pos[0] != -12 || p.Pos[2] != 3.1 {
+		t.Errorf("social player: %+v", p)
+	}
+	if p := l.Players[1]; p.Name != "Bo" || p.Side != "blue" {
+		t.Errorf("blue player: %+v", p)
+	}
+	st.Map = ""
+	if l, _ := lobbyLive(f, st, now); l.Map != "header-map" {
+		t.Errorf("no map from the log: %q", l.Map)
+	}
+	for name, g := range map[string]telemetry.Frame{
+		"no frame":        {},
+		"stale":           {Session: "4C23-A", At: now.Add(-3 * time.Second), Seats: f.Seats},
+		"other session":   {Session: "OLD", At: now, Seats: f.Seats},
+		"no positions":    {Session: "4C23-A", At: now},
+		"only spectators": {Session: "4C23-A", At: now, Seats: f.Seats[1:2]},
+	} {
+		if l, ok := lobbyLive(g, st, now); ok {
+			t.Errorf("%s: %+v", name, l)
+		}
+	}
+	if _, ok := lobbyLive(telemetry.Frame{At: now, Seats: f.Seats}, st, now); !ok {
+		t.Error("a header without a session id is taken as this session's")
+	}
+}
+
+func TestMatchLoopLobbyLiveFollowsTheStream(t *testing.T) {
+	o, _ := testOptions(t, "registered-sigint.jsonl", 6795)
+	o.MatchPoll = time.Hour
+	o.LivePoll = 20 * time.Millisecond
+	s := newSup(t, o)
+	runLoop(t, s)
+	s.update(func(st *status.Status) {
+		// No HTTP port: the game's /session is never asked in a lobby.
+		st.State, st.Session, st.SessionAPI, st.GameType, st.Map = status.StateInSession, "4C23-A", "on", "social_2.0", "mpl_lobby_b2"
+	})
+	d := telemetry.Decoder{Latest: s.latest}
+	send := func(m proto.Message) {
+		b, _ := proto.Marshal(m)
+		if err := d.Envelope(b); err != nil {
+			t.Fatal(err)
+		}
+	}
+	send(&tv2.Envelope{Message: &tv2.Envelope_Header{Header: &tv2.CaptureHeader{GameType: "social_2.0",
+		GameHeader: &tv2.CaptureHeader_EchoArena{EchoArena: &tv2.EchoArenaHeader{SessionId: "4C23-A", MapName: "mpl_lobby_b2"}}}}})
+	frame := func(z float32) *tv2.Envelope {
+		return &tv2.Envelope{Message: &tv2.Envelope_Frame{Frame: &tv2.Frame{Payload: &tv2.Frame_EchoArena{EchoArena: &tv2.EchoArenaFrame{
+			Events: []*tv2.EchoEvent{{Event: &tv2.EchoEvent_PlayerJoined{PlayerJoined: &tv2.PlayerJoined{Slot: 2, DisplayName: "Ava",
+				Role: tv2.Role_ROLE_SOCIAL_PARTICIPANT}}}},
+			Players: []*tv2.PlayerState{{Slot: 2, Head: &spv1.Pose{Position: &spv1.Vec3{X: -12, Y: 1.6, Z: z}}}}}}}}}
+	}
+	send(frame(3))
+	waitFor(t, "lobby live.json", func() bool { l, err := match.ReadLive(o.Home); return err == nil && len(l.Players) == 1 })
+	send(frame(8))
+	waitFor(t, "the player moves", func() bool { l, _ := match.ReadLive(o.Home); return len(l.Players) == 1 && l.Players[0].Pos[2] == 8 })
+	l, _ := match.ReadLive(o.Home)
+	if p := l.Players[0]; l.SessionID != "4c23-a" || l.Map != "mpl_lobby_b2" || p.Name != "Ava" || p.Side != "social" || p.Pos[0] != -12 {
+		t.Errorf("live.json: %+v", l)
+	}
+	if _, err := os.Stat(filepath.Join(o.Home, match.FileName)); err != nil {
+		t.Errorf("match.json: %v", err)
+	}
+
+	// The stream stops sending: the map goes away after lobbyStale.
+	waitFor(t, "stale live.json removed", func() bool { _, err := match.ReadLive(o.Home); return errors.Is(err, os.ErrNotExist) })
 }
