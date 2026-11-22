@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/supervisor"
 )
@@ -31,6 +32,10 @@ Environment:
   EVR_GAME_DIR             shared game tree (default /opt/echovr/game/current)
   EVR_NEVR_DIR             runtime directory with one folder per tag (default /opt/echovr/nevr)
   NEVR_VERSION             runtime tag or "current" (default current)
+  EVR_RUNTIME_UPDATER      who keeps nevr-runtime v6.17.0+ current: "nevr" (it updates itself to
+                           NEVR_UPDATE_CHANNEL's release) or "host" (default: the host tool does;
+                           the runtime runs with -no-update and update.enabled: false)
+  NEVR_UPDATE_CHANNEL      nEVR channel the runtime follows with EVR_RUNTIME_UPDATER=nevr (stable)
   NEVR_PASSWORD            host account's server password (optional: without it nevr-runtime
                            v6.9.0+ prints a sign-in code on the console to approve once)
   NEVR_DISCORD_ID          host account's Discord ID (needed with NEVR_PASSWORD)
@@ -99,6 +104,8 @@ func options() (supervisor.Options, error) {
 		GameDir:        env("EVR_GAME_DIR", "/opt/echovr/game/current"),
 		NevrDir:        env("EVR_NEVR_DIR", "/opt/echovr/nevr"),
 		Runtime:        env("NEVR_VERSION", "current"),
+		Updater:        env("EVR_RUNTIME_UPDATER", nevr.UpdaterHost),
+		UpdateChannel:  env("NEVR_UPDATE_CHANNEL", nevr.DefaultChannel),
 		PrefixTemplate: env("EVR_PREFIX_TEMPLATE", "/opt/wine-template"),
 		PublisherLock:  env("NEVR_PUBLISHER_LOCK", "echovrce"),
 		Commands:       os.Stdin,

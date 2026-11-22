@@ -111,8 +111,9 @@ Example:
 	f.StringVar(&gameSource, "game", "mirror", "game source: mirror, dir, archive or skip")
 	f.StringVar(&gamePath, "game-path", "", "directory or archive for --game dir/archive")
 	f.StringVar(&an.Game.Mirror, "mirror", "", "rsync mirror (default "+game.DefaultMirror+")")
-	f.StringVar(&an.Runtime.Channel, "channel", "", "runtime channel: pre, stable or pinned")
-	f.StringVar(&an.Runtime.Pinned, "pin", "", "runtime tag when --channel pinned")
+	f.StringVar(&an.Runtime.Updater, "updater", "", "who keeps nevr-runtime current: nevr (default; it updates itself from 6.17.0 on) or evr-docker")
+	f.StringVar(&an.Runtime.Channel, "channel", "", "nEVR channel the runtime follows (stable by default, beta, ...) or pinned")
+	f.StringVar(&an.Runtime.Pinned, "pin", "", "runtime tag when --channel pinned (evr-docker updates then)")
 	f.BoolVar(&initStart, "start", true, "start the servers at the end")
 	return cmd
 }
@@ -236,6 +237,10 @@ func runtimeCmd(g *globals) *cobra.Command {
 			if lerr != nil {
 				g.say("warning: cannot reach GitHub: %v", lerr)
 			}
+			names, chs, cerr := a.Channels(cmd.Context())
+			if cerr != nil {
+				g.say("warning: cannot read nEVR's channels: %v", cerr)
+			}
 			return g.print(rts, func(w io.Writer) {
 				var rows [][]string
 				for _, r := range rts {
@@ -259,11 +264,17 @@ func runtimeCmd(g *globals) *cobra.Command {
 					rows = append(rows, []string{r.Tag, published, state, note})
 				}
 				g.table("VERSION\tPUBLISHED\tSTATE\tNOTE", rows)
-				fmt.Fprintf(w, "\nChannel: %s", a.Cfg.Runtime.Channel)
-				if a.Cfg.Runtime.Channel == "pinned" {
-					fmt.Fprintf(w, " (%s)", a.Cfg.Runtime.Pinned)
+				fmt.Fprintf(w, "\nRuntime: %s; updates: %s\n", a.RuntimePolicyText(chs), a.Cfg.Updates.Runtime)
+				if note := a.SelfUpdateNote(chs); note != "" {
+					fmt.Fprintf(w, "Note: %s\n", note)
 				}
-				fmt.Fprintf(w, ", updates: %s\n", a.Cfg.Updates.Runtime)
+				if len(names) > 0 {
+					var list []string
+					for _, n := range names {
+						list = append(list, n+" "+chs[n])
+					}
+					fmt.Fprintf(w, "nEVR's channels: %s\n", strings.Join(list, ", "))
+				}
 			})
 		},
 	})
@@ -320,21 +331,72 @@ func runtimeCmd(g *globals) *cobra.Command {
 			return err
 		},
 	})
+	// applyPolicy saves a runtime policy and gives the servers its
+	// environment (idle ones now, the rest after their match).
+	applyPolicy := func(cmd *cobra.Command, updater, channel, pinned string) error {
+		a, err := g.app()
+		if err != nil {
+			return err
+		}
+		if err := a.SetRuntimePolicy(cmd.Context(), updater, channel, pinned); err != nil {
+			return err
+		}
+		_, chs, _ := a.Channels(cmd.Context())
+		g.say("nevr-runtime: %s", a.RuntimePolicyText(chs))
+		if note := a.SelfUpdateNote(chs); note != "" {
+			g.say("note: %s", note)
+		}
+		if len(a.Cfg.Instances) > 0 {
+			if _, err := a.Apply(cmd.Context(), false, func(s string) { g.say("%s", s) }); err != nil {
+				return err
+			}
+		}
+		if channel != "" {
+			g.say("`evr-docker update apply runtime` moves the servers to the channel's release now (else the next update check does, by updates.runtime)")
+		}
+		return nil
+	}
 	cmd.AddCommand(&cobra.Command{
-		Use: "channel pre|stable|pinned [TAG]", Short: "Choose which versions updates follow", Args: cobra.RangeArgs(1, 2),
+		Use: "channel NAME|pinned TAG", Short: "Choose the nEVR channel the runtime follows (stable, beta, ...) or pin a version",
+		Args: cobra.RangeArgs(1, 2),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
+			if len(args) > 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+			names, _, _ := (&core.App{}).Channels(cmd.Context())
+			return append(names, "pinned"), cobra.ShellCompDirectiveNoFileComp
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			pinned := ""
+			if args[0] == "pinned" {
+				if len(args) != 2 {
+					return errors.New("pinned needs the version: evr-docker runtime channel pinned v6.17.0")
+				}
+				pinned = args[1]
+			} else if len(args) == 2 {
+				return fmt.Errorf("only pinned takes a version")
+			}
+			return applyPolicy(cmd, "", args[0], pinned)
+		},
+	})
+	cmd.AddCommand(&cobra.Command{
+		Use: "updater nevr|evr-docker", Short: "Choose who keeps the runtime current: nEVR itself (6.17.0 on) or evr-docker",
+		Args: cobra.ExactArgs(1), ValidArgs: []string{hostcfg.UpdaterNevr, hostcfg.UpdaterHost},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return applyPolicy(cmd, args[0], "", "")
+		},
+	})
+	cmd.AddCommand(&cobra.Command{
+		Use: "unmark TAG", Short: "Allow a version again whose rollout failed", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := g.app()
 			if err != nil {
 				return err
 			}
-			a.Cfg.Runtime.Channel, a.Cfg.Runtime.Pinned = args[0], ""
-			if len(args) == 2 {
-				a.Cfg.Runtime.Pinned = args[1]
-			}
-			if err := a.Save(); err != nil {
+			if err := a.Store().Unmark(args[0]); err != nil {
 				return err
 			}
-			g.say("runtime channel set to %s", args[0])
+			g.say("nevr-runtime %s may be used again (`evr-docker runtime use %s`)", args[0], args[0])
 			return nil
 		},
 	})

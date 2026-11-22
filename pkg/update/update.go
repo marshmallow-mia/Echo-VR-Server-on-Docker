@@ -25,7 +25,10 @@ type Fleet interface {
 
 // Policy chooses the target release.
 type Policy struct {
-	Channel string // pre, stable or pinned
+	// Channel is one of nEVR's channels (stable, beta, ...: the release its
+	// manifest names for it) or "pinned" (Pinned). "pre", evr-docker's old
+	// "newest GitHub release", is stable (nevr.ChannelName).
+	Channel string
 	Pinned  string
 }
 
@@ -60,14 +63,10 @@ func (u *Updater) Target(ctx context.Context, p Policy) (nevr.Release, error) {
 	if c == nil {
 		c = &nevr.Client{}
 	}
-	switch p.Channel {
-	case "pinned":
+	if p.Channel == "pinned" {
 		return c.Find(ctx, p.Pinned)
-	case "stable":
-		return c.Newest(ctx, false)
-	default:
-		return c.Newest(ctx, true)
 	}
+	return c.Channel(ctx, p.Channel)
 }
 
 // Check reports whether an update is available without changing anything.

@@ -210,6 +210,7 @@ func (a *App) spec(in hostcfg.Instance) docker.ContainerSpec {
 		"EVR_GAME_DIR=/opt/echovr/game/" + game.CurrentLink,
 		"EVR_NEVR_DIR=/opt/echovr/nevr",
 	}, set.Env()...)
+	env = append(env, a.Cfg.Runtime.SelfUpdateEnv()...)
 	env = append(env, a.Secrets.GameEnv()...)
 	res := a.Cfg.EffectiveResources(in)
 	var ports []docker.Port

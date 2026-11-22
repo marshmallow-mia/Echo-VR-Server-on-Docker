@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -17,10 +18,10 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 	ui "github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/tui"
-	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/update"
 )
 
 // showForm opens a huh form; onSubmit runs when it is completed.
@@ -296,7 +297,8 @@ func (m *model) loadRuntimes() tea.Cmd {
 		ctx, cancel := context.WithTimeout(m.ctx, 20*time.Second)
 		defer cancel()
 		list, err := app.Runtimes(ctx)
-		return runtimesMsg{list, err}
+		names, versions, _ := app.Channels(ctx)
+		return runtimesMsg{list: list, err: err, channels: names, versions: versions}
 	}
 }
 
@@ -373,8 +375,19 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return tea.Batch(func() tea.Msg { return flashMsg{tag + " deleted", false} }, m.loadRuntimes())()
 			}
 		})
+	case "m":
+		if sel == nil || sel.Bad == "" {
+			return m, nil
+		}
+		tag := sel.Tag
+		return m, func() tea.Msg {
+			if err := app.Store().Unmark(tag); err != nil {
+				return flashMsg{err.Error(), true}
+			}
+			return tea.Batch(func() tea.Msg { return flashMsg{tag + " may be used again (enter uses it)", false} }, m.loadRuntimes())()
+		}
 	case "u":
-		pol := update.Policy{Channel: app.Cfg.Runtime.Channel, Pinned: app.Cfg.Runtime.Pinned}
+		pol := app.Policy()
 		return m, m.run("Checking for a newer nevr-runtime", func(ctx context.Context, say func(string)) error {
 			cur, target, available, err := agent.Updater(app, nil).Check(ctx, pol)
 			if err != nil {
@@ -401,32 +414,59 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return tea.Batch(func() tea.Msg { return flashMsg{"rolled back to " + tag, false} }, m.loadRuntimes())()
 		}
 	case "c":
-		channel, pinned := app.Cfg.Runtime.Channel, app.Cfg.Runtime.Pinned
+		updater, channel, pinned := app.Cfg.Runtime.Updater, app.Cfg.Runtime.Channel, app.Cfg.Runtime.Pinned
 		auto := app.Cfg.Updates.Runtime == "auto"
+		names := m.channels
+		if len(names) == 0 {
+			names = []string{nevr.DefaultChannel} // nEVR's manifest couldn't be read
+		}
+		var chOpts []huh.Option[string]
+		for _, n := range names {
+			label := n
+			if v := m.chVersions[n]; v != "" {
+				label += ": nEVR " + v
+			}
+			chOpts = append(chOpts, huh.NewOption(label, n))
+		}
+		if channel != "pinned" && !slices.Contains(names, channel) {
+			chOpts = append(chOpts, huh.NewOption(channel, channel))
+		}
+		chOpts = append(chOpts, huh.NewOption("pinned: stay on one version (evr-docker updates)", "pinned"))
 		f := huh.NewForm(huh.NewGroup(
-			huh.NewSelect[string]().Title("Update channel").Options(
-				huh.NewOption("pre: newest release incl. pre-releases (every 5.x release is one)", "pre"),
-				huh.NewOption("stable: full releases only", "stable"),
-				huh.NewOption("pinned: stay on one version", "pinned"),
-			).Value(&channel),
-			huh.NewInput().Title("Pinned version").Description("Only for the pinned channel, e.g. v5.4.2.").Value(&pinned),
+			huh.NewSelect[string]().Title("Who updates nevr-runtime").Options(
+				huh.NewOption("nEVR itself (from 6.17.0 on; evr-docker keeps the host DLL on the channel's release)", hostcfg.UpdaterNevr),
+				huh.NewOption("evr-docker (tried on one idle server first; nEVR's own update off)", hostcfg.UpdaterHost),
+			).Value(&updater),
+			huh.NewSelect[string]().Title("nEVR channel").Description("The release nEVR's manifest names for the channel.").Options(chOpts...).Value(&channel),
+			huh.NewInput().Title("Pinned version").Description("Only for pinned, e.g. v6.17.0.").Value(&pinned),
 			huh.NewConfirm().Title("Update automatically?").Description("Needs the background service (More → Discord alerts and the background service).").Value(&auto),
 		).Title("Runtime updates"))
 		return m, m.showForm(f, scrRuntime, func() tea.Cmd {
-			app.Cfg.Runtime.Channel, app.Cfg.Runtime.Pinned = channel, pinned
+			if channel != "pinned" {
+				pinned = ""
+			}
 			app.Cfg.Updates.Runtime = "notify"
 			if auto {
 				app.Cfg.Updates.Runtime = "auto"
 			}
-			if channel != "pinned" {
-				app.Cfg.Runtime.Pinned = ""
-			}
-			return func() tea.Msg {
-				if err := app.Save(); err != nil {
-					return flashMsg{err.Error(), true}
+			return m.run("Saving the runtime settings", func(ctx context.Context, say func(string)) error {
+				if channel == "pinned" && updater == hostcfg.UpdaterNevr {
+					say("pinned: evr-docker updates (nEVR would update itself away from the pin)")
+					updater = hostcfg.UpdaterHost
 				}
-				return flashMsg{"runtime channel: " + channel, false}
-			}
+				if err := app.SetRuntimePolicy(ctx, updater, channel, pinned); err != nil {
+					return err
+				}
+				say("nevr-runtime: " + app.RuntimePolicyText(m.chVersions))
+				if note := app.SelfUpdateNote(m.chVersions); note != "" {
+					say("note: " + note)
+				}
+				if len(app.Cfg.Instances) > 0 {
+					_, err := app.Apply(ctx, false, say)
+					return err
+				}
+				return nil
+			}, func() tea.Cmd { m.screen = scrRuntime; return m.loadRuntimes() })
 		})
 	}
 	var cmd tea.Cmd
@@ -435,11 +475,7 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) renderRuntime() string {
-	cfg := m.app.Cfg.Runtime
-	policy := "channel " + cfg.Channel
-	if cfg.Channel == "pinned" {
-		policy += " (" + cfg.Pinned + ")"
-	}
+	policy := m.app.RuntimePolicyText(m.chVersions)
 	auto := m.app.Cfg.Updates.Runtime == "auto"
 	if auto && agent.ServiceInstalled() {
 		policy += ", automatic updates on"
@@ -452,9 +488,12 @@ func (m *model) renderRuntime() string {
 	if m.runtimes == nil {
 		body = m.spin.View() + " checking GitHub …"
 	}
+	if note := m.app.SelfUpdateNote(m.chVersions); note != "" {
+		policy += "\n" + note
+	}
 	return m.header() + "  " + ui.Bold.Render("nevr-runtime") + "\n\n" + body + "\n\n" + ui.Subtle.Render(policy) + "\n" +
 		ui.Subtle.Render("Servers pick up a new current version at their next match boundary, so no match is cut short.") + "\n" +
-		m.footer(ui.K("enter", "install & use"), ui.K("b", "rollback"), ui.K("x", "delete"), ui.K("u", "check for updates"), ui.K("c", "update settings"), ui.K("esc", "back"))
+		m.footer(ui.K("enter", "install & use"), ui.K("b", "rollback"), ui.K("x", "delete"), ui.K("m", "allow a failed one again"), ui.K("u", "check for updates"), ui.K("c", "update settings"), ui.K("esc", "back"))
 }
 
 // Account screen.

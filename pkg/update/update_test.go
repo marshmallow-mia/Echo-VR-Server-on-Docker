@@ -20,10 +20,18 @@ import (
 )
 
 func releases(t *testing.T, tags ...string) *httptest.Server {
+	return releasesWith(t, map[string]string{"stable": strings.TrimPrefix(tags[0], "v")}, tags...)
+}
+
+// releasesWith serves GitHub's releases of tags and nEVR's manifest with channels.
+func releasesWith(t *testing.T, channels map[string]string, tags ...string) *httptest.Server {
 	t.Helper()
 	zips := map[string][]byte{}
 	var srv *httptest.Server
 	mux := http.NewServeMux()
+	mux.HandleFunc("/nevr-runtime/manifest.json", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{"schema_version": 1, "channels": channels})
+	})
 	mux.HandleFunc("/repos/EchoTools/nevr-runtime/releases", func(w http.ResponseWriter, r *http.Request) {
 		var out []map[string]any
 		for _, tag := range tags {
@@ -83,7 +91,7 @@ func (f *fakeFleet) Pin(_ context.Context, instance, tag string) error {
 func setup(t *testing.T, works bool) (*Updater, *fakeFleet) {
 	t.Helper()
 	srv := releases(t, "v5.4.3", "v5.4.2")
-	c := &nevr.Client{BaseURL: srv.URL}
+	c := &nevr.Client{BaseURL: srv.URL, ManifestURL: srv.URL + "/nevr-runtime/manifest.json"}
 	store := nevr.Store{Dir: filepath.Join(t.TempDir(), "nevr")}
 	rel, err := c.Find(context.Background(), "v5.4.2")
 	if err != nil {
@@ -144,5 +152,32 @@ func TestRolloutWaitsForIdleServer(t *testing.T) {
 	res, err := u.Run(context.Background(), Policy{Channel: "pre"})
 	if err != nil || res.Action != "installed_only" || u.Store.Current() != "v5.4.2" {
 		t.Fatalf("%+v %v", res, err)
+	}
+}
+
+// The target is the release nEVR's channel names, not GitHub's newest, and
+// it may be older than current: a channel that moves back is followed.
+func TestTargetFollowsNevrChannel(t *testing.T) {
+	srv := releasesWith(t, map[string]string{"stable": "6.16.5", "beta": "6.17.0"}, "v6.18.1", "v6.17.0", "v6.16.5")
+	u := &Updater{Client: &nevr.Client{BaseURL: srv.URL, ManifestURL: srv.URL + "/nevr-runtime/manifest.json"},
+		Store: nevr.Store{Dir: filepath.Join(t.TempDir(), "nevr")}}
+	for ch, want := range map[string]string{"": "v6.16.5", "pre": "v6.16.5", "stable": "v6.16.5", "beta": "v6.17.0"} {
+		rel, err := u.Target(context.Background(), Policy{Channel: ch})
+		if err != nil || rel.Tag != want {
+			t.Errorf("channel %q: %s %v, want %s", ch, rel.Tag, err, want)
+		}
+	}
+	if _, err := u.Target(context.Background(), Policy{Channel: "alpha"}); err == nil || !strings.Contains(err.Error(), "stable, beta") {
+		t.Errorf("unknown channel: %v", err)
+	}
+	if rel, err := u.Target(context.Background(), Policy{Channel: "pinned", Pinned: "v6.18.1"}); err != nil || rel.Tag != "v6.18.1" {
+		t.Errorf("pinned: %s %v", rel.Tag, err)
+	}
+	// A host on GitHub's newest (6.18.1) is offered stable's 6.16.5.
+	rel, _ := u.Client.Find(context.Background(), "v6.18.1")
+	u.Store.Install(context.Background(), rel)
+	u.Store.Use("v6.18.1")
+	if cur, target, available, err := u.Check(context.Background(), Policy{Channel: "stable"}); err != nil || !available || cur != "v6.18.1" || target.Tag != "v6.16.5" {
+		t.Errorf("downgrade: %s → %s available=%v %v", cur, target.Tag, available, err)
 	}
 }

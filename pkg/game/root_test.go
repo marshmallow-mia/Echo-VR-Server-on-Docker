@@ -3,6 +3,7 @@ package game
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -69,5 +70,74 @@ func TestHasRuntime(t *testing.T) {
 	os.WriteFile(filepath.Join(dir, RuntimeName), []byte("x"), 0o644)
 	if !HasRuntime(dir) {
 		t.Error("two-file folder")
+	}
+}
+
+// writeState writes update/state.json as nEVR's host and installer do.
+func writeState(t *testing.T, root, version, sha string) {
+	t.Helper()
+	os.MkdirAll(filepath.Join(root, UpdateDir), 0o755)
+	b := `{"channel":"beta","current":{"version":"` + version + `","runtime_sha256":"` + sha + `"},"owned":[],"quarantine":[]}`
+	if err := os.WriteFile(filepath.Join(root, UpdateDir, "state.json"), []byte(b), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSelfUpdated(t *testing.T) {
+	root := t.TempDir()
+	if _, ok := SelfUpdated(root); ok {
+		t.Error("no state: not self-updated")
+	}
+	os.WriteFile(filepath.Join(root, RuntimeName), []byte("nevr's 6.18.1"), 0o644)
+	sha, _ := fileSHA256(filepath.Join(root, RuntimeName))
+	writeState(t, root, "6.18.1", strings.ToUpper(sha))
+	if v, ok := SelfUpdated(root); !ok || v != "6.18.1" {
+		t.Errorf("got %q %v", v, ok)
+	}
+	// The host tool copied its own runtime over it: no longer nEVR's.
+	os.WriteFile(filepath.Join(root, RuntimeName), []byte("the store's 6.17.0"), 0o644)
+	if _, ok := SelfUpdated(root); ok {
+		t.Error("a runtime state.json doesn't name is not self-updated")
+	}
+	os.WriteFile(filepath.Join(root, UpdateDir, "state.json"), []byte("{not json"), 0o644)
+	if _, ok := SelfUpdated(root); ok {
+		t.Error("damaged state")
+	}
+}
+
+func TestRootPrepareSelfUpdate(t *testing.T) {
+	dir := t.TempDir()
+	rt := filepath.Join(dir, "store", RuntimeName)
+	os.MkdirAll(filepath.Dir(rt), 0o755)
+	os.WriteFile(rt, []byte("store"), 0o644)
+	root := filepath.Join(dir, "root")
+	read := func() string { b, _ := os.ReadFile(filepath.Join(root, RuntimeName)); return string(b) }
+
+	// KeepRuntime with an empty root still puts the store's runtime there.
+	r := Root{Dir: root, RuntimeDLL: rt, KeepRuntime: true}
+	if err := r.Prepare(); err != nil || read() != "store" {
+		t.Fatalf("%v %q", err, read())
+	}
+	os.WriteFile(filepath.Join(root, RuntimeName), []byte("nevr's"), 0o644)
+	if err := r.Prepare(); err != nil || read() != "nevr's" {
+		t.Fatalf("kept runtime replaced: %v %q", err, read())
+	}
+
+	// ClearUpdate removes what nEVR staged or swapped, keeps state.json.
+	writeState(t, root, "6.17.0", "00")
+	for _, name := range []string{"staged.json", "pending.json", "swap.json", "crashed"} {
+		os.WriteFile(filepath.Join(root, UpdateDir, name), []byte("{}"), 0o644)
+	}
+	os.MkdirAll(filepath.Join(root, UpdateDir, "staging", "6.18.1"), 0o755)
+	r = Root{Dir: root, RuntimeDLL: rt, ClearUpdate: true}
+	if err := r.Prepare(); err != nil {
+		t.Fatal(err)
+	}
+	if read() != "store" {
+		t.Errorf("runtime %q", read())
+	}
+	left, _ := os.ReadDir(filepath.Join(root, UpdateDir))
+	if len(left) != 1 || left[0].Name() != "state.json" {
+		t.Errorf("update folder after clearing: %v", left)
 	}
 }

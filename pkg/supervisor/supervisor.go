@@ -55,6 +55,13 @@ type Options struct {
 	// the host approves (nevr-runtime v6.9.0 on, DeviceCodeMin); older ones
 	// are not started.
 	DeviceCode bool
+	// Updater says who keeps a two-file runtime from v6.17.0 on current:
+	// nevr.UpdaterNevr lets it update itself to UpdateChannel's release;
+	// anything else (nevr.UpdaterHost, the default) turns its own update off
+	// (-no-update, update.enabled false) and clears what it staged, so the
+	// store's release is the one that runs.
+	Updater       string
+	UpdateChannel string
 	// User is the Wine prefix's user, whose AppData holds the nEVR root; default
 	// $USER, else "container".
 	User         string
@@ -325,9 +332,15 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 	if twoFile && match.LoadSettings(s.o.Home).TelemetryOn() {
 		rootYAML, tele = withTelemetry(rootYAML, s.tele.URI(), s.tele.NewToken())
 	}
+	upd := s.selfUpdateFor(twoFile, version)
 	if twoFile {
+		rootYAML, _ = withUpdate(rootYAML, upd)
 		root := game.Root{Dir: s.NevrRoot(), RuntimeDLL: filepath.Join(runtimeDir, game.RuntimeName), ConfigYAML: rootYAML,
-			LegacyCredentials: filepath.Join(s.root(), "_local", game.CredentialsName)}
+			LegacyCredentials: filepath.Join(s.root(), "_local", game.CredentialsName), ClearUpdate: upd.applies && !upd.nevr}
+		if have, keep := keepRuntime(upd, s.NevrRoot(), version); keep {
+			root.KeepRuntime = true
+			s.logf("nevr-runtime %s keeps itself current (channel %s): its runtime %s stays in place", version, upd.channel, have)
+		}
 		if err := root.Prepare(); err != nil {
 			return result{exitCode: -1, reason: ReasonInvalidConfig, detail: "preparing the nEVR root: " + err.Error()}
 		}
@@ -348,6 +361,7 @@ func (s *Supervisor) runOnce(ctx context.Context) result {
 	if tele {
 		args = append(args, "-telemetry-rate", fmt.Sprint(s.o.TelemetryRate))
 	}
+	args = append(args, upd.args()...)
 	args = append(args, s.o.ExtraArgs...)
 	cmd := exec.Command(s.o.Wine, args...)
 	cmd.Dir = farm.ExeDir()
