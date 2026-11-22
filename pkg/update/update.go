@@ -23,6 +23,16 @@ type Fleet interface {
 	Pin(ctx context.Context, instance, tag string) error
 }
 
+// Followers is implemented by a fleet that knows which servers run the
+// store's current release. Only those are used as canary: a server pinned to
+// a release of its own would lose its pin when the canary's pin is undone,
+// and would not show how current's servers fare.
+type Followers interface {
+	// FollowsCurrent returns the instances (as Statuses names them) that
+	// run whatever release is current.
+	FollowsCurrent(ctx context.Context) (map[string]bool, error)
+}
+
 // Policy chooses the target release.
 type Policy struct {
 	// Channel is one of nEVR's channels (stable, beta, ...: the release its
@@ -93,7 +103,7 @@ func (u *Updater) Run(ctx context.Context, p Policy) (Result, error) {
 	if _, err := u.Store.Install(ctx, target); err != nil {
 		return res, err
 	}
-	if cur == "" || u.Fleet == nil {
+	if cur == "" || u.Fleet == nil || u.noFollowers(ctx) {
 		res.Action = "switched"
 		return res, u.Store.Use(target.Tag)
 	}
@@ -134,14 +144,41 @@ func (u *Updater) Run(ctx context.Context, p Policy) (Result, error) {
 	return res, nil
 }
 
-// waitIdle returns a registered server that is not hosting a match.
+// noFollowers reports whether the fleet knows no server runs current: then no
+// server can be a canary, and none would notice the switch either.
+func (u *Updater) noFollowers(ctx context.Context) bool {
+	f, ok := u.Fleet.(Followers)
+	if !ok {
+		return false
+	}
+	m, err := f.FollowsCurrent(ctx)
+	if err != nil {
+		return false
+	}
+	for _, yes := range m {
+		if yes {
+			return false
+		}
+	}
+	return true
+}
+
+// waitIdle returns a registered server that runs current and is not hosting a
+// match.
 func (u *Updater) waitIdle(ctx context.Context, timeout, poll time.Duration) (string, error) {
 	deadline := time.Now().Add(timeout)
 	for {
 		sts, err := u.Fleet.Statuses(ctx)
+		follows := func(string) bool { return true }
+		if f, ok := u.Fleet.(Followers); ok && err == nil {
+			var m map[string]bool
+			if m, err = f.FollowsCurrent(ctx); err == nil {
+				follows = func(in string) bool { return m[in] }
+			}
+		}
 		if err == nil {
 			for _, s := range sts {
-				if s.State == status.StateRegistered {
+				if s.State == status.StateRegistered && follows(s.Instance) {
 					return s.Instance, nil
 				}
 			}

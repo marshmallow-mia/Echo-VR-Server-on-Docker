@@ -157,6 +157,44 @@ func TestRolloutWaitsForIdleServer(t *testing.T) {
 
 // The target is the release nEVR's channel names, not GitHub's newest, and
 // it may be older than current: a channel that moves back is followed.
+// followingFleet is a fakeFleet that knows which servers run current.
+type followingFleet struct {
+	*fakeFleet
+	follows map[string]bool
+}
+
+func (f followingFleet) FollowsCurrent(context.Context) (map[string]bool, error) {
+	return f.follows, nil
+}
+
+func TestCanarySkipsPinnedServers(t *testing.T) {
+	u, fleet := setup(t, true)
+	fleet.st = append([]status.Status{{Instance: "pinned", State: status.StateRegistered, RuntimeVersion: "5.4.1"}}, fleet.st...)
+	u.Fleet = followingFleet{fleet, map[string]bool{"echo-1": true, "echo-2": true}}
+	res, err := u.Run(context.Background(), Policy{Channel: "pre"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Action != "switched" || res.Canary != "echo-2" {
+		t.Fatalf("%+v", res)
+	}
+	if strings.Join(fleet.pins, ",") != "echo-2=v5.4.3,echo-2=" {
+		t.Errorf("pins %v (the pinned server must keep its own release)", fleet.pins)
+	}
+}
+
+func TestNoServerFollowsCurrent(t *testing.T) {
+	u, fleet := setup(t, true)
+	u.Fleet = followingFleet{fleet, map[string]bool{"echo-1": false, "echo-2": false}}
+	res, err := u.Run(context.Background(), Policy{Channel: "pre"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Action != "switched" || res.Canary != "" || u.Store.Current() != "v5.4.3" || len(fleet.pins) != 0 {
+		t.Fatalf("%+v current=%s pins=%v", res, u.Store.Current(), fleet.pins)
+	}
+}
+
 func TestTargetFollowsNevrChannel(t *testing.T) {
 	srv := releasesWith(t, map[string]string{"stable": "6.16.5", "beta": "6.17.0"}, "v6.18.1", "v6.17.0", "v6.16.5")
 	u := &Updater{Client: &nevr.Client{BaseURL: srv.URL, ManifestURL: srv.URL + "/nevr-runtime/manifest.json"},
