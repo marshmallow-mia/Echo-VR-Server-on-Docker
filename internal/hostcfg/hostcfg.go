@@ -117,7 +117,11 @@ func (r RuntimePolicy) SelfUpdateEnv() []string {
 	if r.Updater == UpdaterNevr {
 		who = nevr.UpdaterNevr
 	}
-	return []string{"EVR_RUNTIME_UPDATER=" + who, "NEVR_UPDATE_CHANNEL=" + nevr.ChannelName(r.Channel)}
+	ch := nevr.ChannelName(r.Channel)
+	if ch == "pinned" { // a pin is evr-docker's; the channel is not used then
+		ch = nevr.DefaultChannel
+	}
+	return []string{"EVR_RUNTIME_UPDATER=" + who, "NEVR_UPDATE_CHANNEL=" + ch}
 }
 
 // UpdatePolicy says how each part is updated: off, notify or auto.

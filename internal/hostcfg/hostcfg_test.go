@@ -56,6 +56,9 @@ func TestOldRuntimeChannelMigrates(t *testing.T) {
 		if r := cfg.Runtime; r.Updater != UpdaterHost || r.Channel != c.channel || r.Pinned != c.pinned {
 			t.Errorf("%q → %+v", c.in, r)
 		}
+		if env := strings.Join(cfg.Runtime.SelfUpdateEnv(), " "); env != "EVR_RUNTIME_UPDATER=host NEVR_UPDATE_CHANNEL=stable" {
+			t.Errorf("%q: env %s", c.in, env)
+		}
 		cfg.Save(dir)
 		if b, _ := os.ReadFile(filepath.Join(dir, "config.yaml")); !strings.Contains(string(b), "updater: evr-docker") {
 			t.Errorf("saved:\n%s", b)
