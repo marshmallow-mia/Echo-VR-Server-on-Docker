@@ -88,7 +88,7 @@ type Instance struct {
 // RuntimePolicy controls which nevr-runtime "current" points at, and who
 // keeps it current.
 type RuntimePolicy struct {
-	// Updater is UpdaterNevr (from v6.17.0 on the runtime updates itself to
+	// Updater is UpdaterNevr (from v6.18.0 on the runtime updates itself to
 	// its channel's release; evr-docker keeps the store, and so the host DLL,
 	// on that release) or UpdaterHost (evr-docker updates it, with the
 	// canary, and turns the runtime's own update off).

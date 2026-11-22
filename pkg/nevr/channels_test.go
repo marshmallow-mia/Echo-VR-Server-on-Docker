@@ -31,6 +31,11 @@ func TestSelfUpdates(t *testing.T) {
 			t.Errorf("%s: want %v", tag, want)
 		}
 	}
+	for tag, want := range map[string]bool{"v6.16.5": false, "v6.17.0": false, "6.17.9": false, "v6.18.0": true, "6.18.1": true, "current": false} {
+		if UpdateConfigurable(tag) != want {
+			t.Errorf("UpdateConfigurable(%s): want %v", tag, want)
+		}
+	}
 	for in, want := range map[string]string{"": "stable", "pre": "stable", "stable": "stable", "beta": "beta"} {
 		if ChannelName(in) != want {
 			t.Errorf("ChannelName(%q) = %q", in, ChannelName(in))

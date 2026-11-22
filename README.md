@@ -193,10 +193,10 @@ manifest (`stable` unless picked; `beta`, ...). `evr-docker runtime updater` dec
 
 - `nevr` (the default for new hosts): the runtime updates itself and follows the channel (`update.channel` in its
   `config.yaml`). evr-docker still installs that channel's release (the host `BugSplat64.dll` comes only from there)
-  and never moves a runtime nEVR put in place backwards. A runtime before 6.17.0 can't update itself; evr-docker keeps
+  and never moves a runtime nEVR put in place backwards. Only 6.18.0 on can be left to update itself (6.17.x refuses the `update:` section of config.yaml that picks the channel, so it gets `-no-update`); evr-docker keeps
   it on the channel's release until it can.
 - `evr-docker` (hosts set up before v2.3.1 keep it): evr-docker updates with the canary above, and each server starts
-  with `-no-update`, `update.enabled: false` and without what the runtime staged, so nothing comes back after a rollout.
+  with `-no-update` (and from 6.18.0 `update.enabled: false`) and without what the runtime staged, so nothing comes back after a rollout.
   Only here can a version be pinned (`runtime channel pinned v6.17.0`).
 
 `evr-docker runtime channel NAME` picks any channel nEVR's manifest lists (`evr-docker runtime ls` shows them). Hosts

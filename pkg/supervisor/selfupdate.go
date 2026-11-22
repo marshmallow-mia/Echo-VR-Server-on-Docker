@@ -11,19 +11,22 @@ import (
 // selfUpdate is how one start handles the runtime's own update (v6.17.0 on).
 type selfUpdate struct {
 	applies bool   // the runtime updates itself (two-file, nevr.UpdateMin on)
+	config  bool   // its config.yaml takes the update section (nevr.UpdateConfigMin on)
 	nevr    bool   // the runtime keeps itself current; else the host tool does
 	channel string // the channel it follows (nevr only)
 }
 
 // selfUpdateFor decides for a start of the store's release tag. A server
 // pinned to a release (Runtime is a tag, which includes the update canary)
-// runs that release: its own update is off whatever the updater is.
+// runs that release: its own update is off whatever the updater is. So is
+// that of a 6.17.x runtime: its channel can't be chosen (nevr.UpdateConfigMin).
 func (s *Supervisor) selfUpdateFor(twoFile bool, tag string) selfUpdate {
 	u := selfUpdate{applies: twoFile && nevr.SelfUpdates(tag)}
 	if !u.applies {
 		return u
 	}
-	u.nevr = s.o.Updater == nevr.UpdaterNevr && s.o.Runtime == "current"
+	u.config = nevr.UpdateConfigurable(tag)
+	u.nevr = u.config && s.o.Updater == nevr.UpdaterNevr && s.o.Runtime == "current"
 	if u.nevr {
 		u.channel = nevr.ChannelName(s.o.UpdateChannel)
 	}
@@ -40,9 +43,9 @@ func (u selfUpdate) args() []string {
 
 // withUpdate adds the update section to a root config.yaml. A config that has
 // its own update section is the operator's choice and stays as it is
-// (ok false), as does one for a runtime that doesn't update itself.
+// (ok false), as does one for a runtime that doesn't take the section.
 func withUpdate(yaml []byte, u selfUpdate) ([]byte, bool) {
-	if !u.applies {
+	if !u.config {
 		return yaml, false
 	}
 	c, err := config.Parse(yaml)

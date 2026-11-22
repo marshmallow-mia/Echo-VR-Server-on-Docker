@@ -158,15 +158,15 @@ func (a *App) RuntimePolicyText(versions map[string]string) string {
 }
 
 // SelfUpdateNote warns when nEVR is to update itself but its channel's
-// release can't yet (before nevr.UpdateMin): evr-docker keeps it current
+// release can't yet (before nevr.UpdateConfigMin): evr-docker keeps it current
 // until it can.
 func (a *App) SelfUpdateNote(versions map[string]string) string {
 	r := a.Cfg.Runtime
 	if r.Updater != hostcfg.UpdaterNevr {
 		return ""
 	}
-	if v := versions[r.Channel]; v != "" && !nevr.SelfUpdates(v) {
-		return fmt.Sprintf("nEVR %s on %s can't update itself yet (that came in %s); evr-docker keeps it current until it can", v, r.Channel, nevr.UpdateMin)
+	if v := versions[r.Channel]; v != "" && !nevr.UpdateConfigurable(v) {
+		return fmt.Sprintf("nEVR %s on %s can't be left to update itself yet (that needs %s); evr-docker keeps it current until it can", v, r.Channel, nevr.UpdateConfigMin)
 	}
 	return ""
 }

@@ -42,7 +42,7 @@ func TestSelfUpdateOldRuntimeUntouched(t *testing.T) {
 }
 
 func TestSelfUpdateHostManaged(t *testing.T) {
-	args, cfg, root := selfUpdateRun(t, "v6.17.0", func(o *Options, root string) {
+	args, cfg, root := selfUpdateRun(t, "v6.18.1", func(o *Options, root string) {
 		// What nEVR's own update left: a staged 6.18.1 and its swapped runtime.
 		os.MkdirAll(filepath.Join(root, "update", "staging", "6.18.1"), 0o755)
 		os.WriteFile(filepath.Join(root, "update", "staged.json"), []byte("{}"), 0o644)
@@ -78,7 +78,7 @@ func nevrState(t *testing.T, root, version string) {
 }
 
 func TestSelfUpdateNevr(t *testing.T) {
-	args, cfg, root := selfUpdateRun(t, "v6.17.0", func(o *Options, root string) {
+	args, cfg, root := selfUpdateRun(t, "v6.18.0", func(o *Options, root string) {
 		o.Updater, o.UpdateChannel = nevr.UpdaterNevr, "beta"
 		nevrState(t, root, "6.18.1")
 	})
@@ -108,8 +108,8 @@ func TestSelfUpdateNevrNeverBackwards(t *testing.T) {
 
 // A pinned server (the update canary is one) runs its release, not nEVR's.
 func TestSelfUpdateNevrPinned(t *testing.T) {
-	args, cfg, root := selfUpdateRun(t, "v6.17.0", func(o *Options, root string) {
-		o.Updater, o.Runtime = nevr.UpdaterNevr, "v6.17.0"
+	args, cfg, root := selfUpdateRun(t, "v6.18.1", func(o *Options, root string) {
+		o.Updater, o.Runtime = nevr.UpdaterNevr, "v6.18.1"
 		nevrState(t, root, "6.18.1")
 	})
 	if !strings.Contains(args, "-no-update") || !strings.Contains(cfg, "enabled: false") {
@@ -120,9 +120,30 @@ func TestSelfUpdateNevrPinned(t *testing.T) {
 	}
 }
 
+// 6.17.0 refuses config.yaml's update section (a fatal error for a server, seen
+// on echo), so it only gets -no-update, whoever updates it: its channel can't
+// be chosen, so nEVR never updates it.
+func TestSelfUpdate617TakesOnlyTheFlag(t *testing.T) {
+	for _, updater := range []string{nevr.UpdaterHost, nevr.UpdaterNevr} {
+		args, cfg, root := selfUpdateRun(t, "v6.17.0", func(o *Options, root string) {
+			o.Updater, o.UpdateChannel = updater, "beta"
+			nevrState(t, root, "6.18.1")
+		})
+		if !strings.Contains(args, "-no-update") || strings.Contains(cfg, "update:") {
+			t.Errorf("%s: args %q config %q", updater, args, cfg)
+		}
+		if b, _ := os.ReadFile(filepath.Join(root, game.RuntimeName)); string(b) != "runtime" {
+			t.Errorf("%s: the store's 6.17.0 must run: %q", updater, b)
+		}
+		if _, err := os.Stat(filepath.Join(root, "update", "staged.json")); !os.IsNotExist(err) {
+			t.Errorf("%s: nEVR's staged release left", updater)
+		}
+	}
+}
+
 func TestWithUpdateKeepsOperatorSection(t *testing.T) {
 	in := []byte("version: 1\nupdate:\n  channel: beta\n")
-	if out, ok := withUpdate(in, selfUpdate{applies: true}); ok || string(out) != string(in) {
+	if out, ok := withUpdate(in, selfUpdate{applies: true, config: true}); ok || string(out) != string(in) {
 		t.Errorf("%v %q", ok, out)
 	}
 }

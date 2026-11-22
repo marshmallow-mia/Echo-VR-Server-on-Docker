@@ -97,9 +97,9 @@ type Telemetry struct {
 	Token string `yaml:"token,omitempty"`
 }
 
-// Update is the runtime's own update (v6.17.0 on, nevr.UpdateMin): enabled
-// (absent is on) and the channel it follows (absent is stable). Older
-// runtimes refuse the section.
+// Update is the runtime's own update: enabled (absent is on) and the channel
+// it follows. Only v6.18.0 on (nevr.UpdateConfigMin) takes the section; older
+// runtimes, 6.17.0 included, refuse it.
 type Update struct {
 	Enabled *bool  `yaml:"enabled,omitempty"`
 	Channel string `yaml:"channel,omitempty"`

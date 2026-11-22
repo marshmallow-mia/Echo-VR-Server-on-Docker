@@ -111,7 +111,7 @@ Example:
 	f.StringVar(&gameSource, "game", "mirror", "game source: mirror, dir, archive or skip")
 	f.StringVar(&gamePath, "game-path", "", "directory or archive for --game dir/archive")
 	f.StringVar(&an.Game.Mirror, "mirror", "", "rsync mirror (default "+game.DefaultMirror+")")
-	f.StringVar(&an.Runtime.Updater, "updater", "", "who keeps nevr-runtime current: nevr (default; it updates itself from 6.17.0 on) or evr-docker")
+	f.StringVar(&an.Runtime.Updater, "updater", "", "who keeps nevr-runtime current: nevr (default; it updates itself from 6.18.0 on) or evr-docker")
 	f.StringVar(&an.Runtime.Channel, "channel", "", "nEVR channel the runtime follows (stable by default, beta, ...) or pinned")
 	f.StringVar(&an.Runtime.Pinned, "pin", "", "runtime tag when --channel pinned (evr-docker updates then)")
 	f.BoolVar(&initStart, "start", true, "start the servers at the end")
@@ -380,7 +380,7 @@ func runtimeCmd(g *globals) *cobra.Command {
 		},
 	})
 	cmd.AddCommand(&cobra.Command{
-		Use: "updater nevr|evr-docker", Short: "Choose who keeps the runtime current: nEVR itself (6.17.0 on) or evr-docker",
+		Use: "updater nevr|evr-docker", Short: "Choose who keeps the runtime current: nEVR itself (6.18.0 on) or evr-docker",
 		Args: cobra.ExactArgs(1), ValidArgs: []string{hostcfg.UpdaterNevr, hostcfg.UpdaterHost},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return applyPolicy(cmd, args[0], "", "")

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 )
 
@@ -284,7 +285,7 @@ func (a *App) runtimeCheck(ctx context.Context, cur string) Check {
 		return check("runtime", OK, msg, "")
 	}
 	msg += " (" + strings.Join(other, ", ") + ")"
-	if a.Cfg.Runtime.Updater == hostcfg.UpdaterNevr {
+	if a.Cfg.Runtime.Updater == hostcfg.UpdaterNevr && nevr.UpdateConfigurable(cur) {
 		return check("runtime", OK, msg+": nEVR updated itself", "")
 	}
 	return check("runtime", Warn, msg, "evr-docker server apply (recreates them with nEVR's own update off)")

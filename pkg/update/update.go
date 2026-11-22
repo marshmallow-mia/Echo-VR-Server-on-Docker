@@ -126,6 +126,18 @@ func (u *Updater) Run(ctx context.Context, p Policy) (Result, error) {
 		return res, fmt.Errorf("pinning canary %s: %w", canary, err)
 	}
 	ok, detail := u.waitRegistered(ctx, canary, target.Tag, timeout, poll)
+	if !ok && ctx.Err() != nil {
+		// Stopped (the agent restarting), not failed: the release is not
+		// marked bad, and the canary still goes back to current.
+		res.Action, res.Detail = "installed_only", "stopped while the canary started: "+ctx.Err().Error()
+		u.log("canary %s: stopped before it registered with %s; staying on %s", canary, target.Tag, cur)
+		unpinCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Minute)
+		defer cancel()
+		if err := u.Fleet.Pin(unpinCtx, canary, ""); err != nil {
+			return res, fmt.Errorf("unpinning canary %s: %w", canary, err)
+		}
+		return res, ctx.Err()
+	}
 	// Undo the pin either way: on success the canary follows current again.
 	if ok {
 		if err := u.Store.Use(target.Tag); err != nil {

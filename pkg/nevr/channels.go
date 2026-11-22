@@ -22,10 +22,16 @@ const ManifestURL = "https://evr.echo.taxi/nevr-runtime/manifest.json"
 const DefaultChannel = "stable"
 
 // UpdateMin is the first release that updates itself at launch to its
-// channel's release, in either direction, unless update.enabled is false or
-// it runs with -no-update. Older runtimes refuse both the update section of
-// config.yaml and the flag, so neither is ever given to them.
+// channel's release, in either direction, unless it runs with -no-update.
+// Older runtimes refuse the flag, so it is never given to them.
 var UpdateMin = MustParseVersion("v6.17.0")
+
+// UpdateConfigMin is the first release whose config.yaml takes an update
+// section (update.enabled, update.channel). 6.17.0 reads those keys, but its
+// config check refuses the section ("unknown_top_level_key", a fatal error
+// for a server), so 6.17.x only takes -no-update and follows a channel of
+// its own choosing. Letting nEVR update itself needs this release.
+var UpdateConfigMin = MustParseVersion("v6.18.0")
 
 // Updater says who keeps a server's nevr-runtime current.
 const (
@@ -130,7 +136,13 @@ func (c *Client) Channel(ctx context.Context, name string) (Release, error) {
 }
 
 // SelfUpdates reports whether the release tag updates itself (UpdateMin on).
-func SelfUpdates(tag string) bool {
+func SelfUpdates(tag string) bool { return atLeast(tag, UpdateMin) }
+
+// UpdateConfigurable reports whether the release tag takes config.yaml's
+// update section, and so a channel (UpdateConfigMin on).
+func UpdateConfigurable(tag string) bool { return atLeast(tag, UpdateConfigMin) }
+
+func atLeast(tag string, min Version) bool {
 	v, err := ParseVersion(tag)
-	return err == nil && !v.Less(UpdateMin)
+	return err == nil && !v.Less(min)
 }

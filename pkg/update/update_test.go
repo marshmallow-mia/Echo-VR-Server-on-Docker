@@ -157,6 +157,36 @@ func TestRolloutWaitsForIdleServer(t *testing.T) {
 
 // The target is the release nEVR's channel names, not GitHub's newest, and
 // it may be older than current: a channel that moves back is followed.
+// An agent stopped while the canary starts leaves the release unmarked and
+// the canary back on current.
+func TestCanaryStoppedIsNotAFailure(t *testing.T) {
+	u, fleet := setup(t, false) // the canary never registers
+	u.CanaryTimeout = time.Minute
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		for {
+			fleet.mu.Lock()
+			n := len(fleet.pins)
+			fleet.mu.Unlock()
+			if n > 0 {
+				cancel()
+				return
+			}
+			time.Sleep(5 * time.Millisecond)
+		}
+	}()
+	res, err := u.Run(ctx, Policy{Channel: "pre"})
+	if err == nil || res.Action != "installed_only" || u.Store.Current() != "v5.4.2" {
+		t.Fatalf("%+v err %v current=%s", res, err, u.Store.Current())
+	}
+	if inst, _ := u.Store.Get("v5.4.3"); inst.Bad != "" {
+		t.Errorf("marked bad: %s", inst.Bad)
+	}
+	if strings.Join(fleet.pins, ",") != "echo-2=v5.4.3,echo-2=" {
+		t.Errorf("pins %v: the canary must go back to current", fleet.pins)
+	}
+}
+
 // followingFleet is a fakeFleet that knows which servers run current.
 type followingFleet struct {
 	*fakeFleet

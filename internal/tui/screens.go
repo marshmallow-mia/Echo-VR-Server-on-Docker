@@ -434,7 +434,7 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 		chOpts = append(chOpts, huh.NewOption("pinned: stay on one version (evr-docker updates)", "pinned"))
 		f := huh.NewForm(huh.NewGroup(
 			huh.NewSelect[string]().Title("Who updates nevr-runtime").Options(
-				huh.NewOption("nEVR itself (from 6.17.0 on; evr-docker keeps the host DLL on the channel's release)", hostcfg.UpdaterNevr),
+				huh.NewOption("nEVR itself (from 6.18.0 on; evr-docker keeps the host DLL on the channel's release)", hostcfg.UpdaterNevr),
 				huh.NewOption("evr-docker (tried on one idle server first; nEVR's own update off)", hostcfg.UpdaterHost),
 			).Value(&updater),
 			huh.NewSelect[string]().Title("nEVR channel").Description("The release nEVR's manifest names for the channel.").Options(chOpts...).Value(&channel),
