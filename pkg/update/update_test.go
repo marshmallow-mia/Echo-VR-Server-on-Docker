@@ -249,3 +249,21 @@ func TestTargetFollowsNevrChannel(t *testing.T) {
 		t.Errorf("downgrade: %s → %s available=%v %v", cur, target.Tag, available, err)
 	}
 }
+
+// A version picked while the canary runs (the policy pinned to it) is kept:
+// the canary's success no longer switches current to the release it tried.
+func TestCanaryKeepsAPickMadeMeanwhile(t *testing.T) {
+	u, fleet := setup(t, true)
+	// the policy as read once the canary has registered: picked meanwhile
+	u.Policy = func() Policy { return Policy{Channel: "pinned", Pinned: "v5.4.2"} }
+	res, err := u.Run(context.Background(), Policy{Channel: "pre"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Action != "installed_only" || u.Store.Current() != "v5.4.2" {
+		t.Fatalf("%+v current=%s, want the pick v5.4.2 kept", res, u.Store.Current())
+	}
+	if got := fleet.pins[len(fleet.pins)-1]; got != "echo-2=" {
+		t.Errorf("canary not unpinned: %v", fleet.pins)
+	}
+}

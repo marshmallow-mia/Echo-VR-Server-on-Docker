@@ -239,18 +239,14 @@ func stayOn(cmd *cobra.Command, g *globals, a *core.App, tag string) error {
 }
 
 // applyRuntime shows the runtime policy and gives the servers its
-// environment (idle ones now, the rest after their match).
+// environment (idle ones now, the rest once their match ends; it waits).
 func applyRuntime(cmd *cobra.Command, g *globals, a *core.App) error {
 	_, chs, _ := a.Channels(cmd.Context())
 	g.say("nevr-runtime: %s", a.RuntimePolicyText(chs))
 	if note := a.SelfUpdateNote(chs); note != "" {
 		g.say("note: %s", note)
 	}
-	if len(a.Cfg.Instances) == 0 {
-		return nil
-	}
-	_, err := a.Apply(cmd.Context(), false, func(s string) { g.say("%s", s) })
-	return err
+	return a.ApplyRuntime(cmd.Context(), func(s string) { g.say("%s", s) })
 }
 
 func runtimeCmd(g *globals) *cobra.Command {

@@ -469,11 +469,7 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if note := app.SelfUpdateNote(m.chVersions); note != "" {
 					say("note: " + note)
 				}
-				if len(app.Cfg.Instances) > 0 {
-					_, err := app.Apply(ctx, false, say)
-					return err
-				}
-				return nil
+				return app.ApplyRuntime(ctx, say)
 			}, func() tea.Cmd { m.screen = scrRuntime; return m.loadRuntimes() })
 		})
 	}
@@ -499,11 +495,7 @@ func (m *model) stayOn(tag string, rollback bool) tea.Cmd {
 		}
 		say("now current: servers switch to it at their next match boundary")
 		say("they stay on it until you pick a channel again (c)")
-		if len(app.Cfg.Instances) > 0 {
-			_, err := app.Apply(ctx, false, say)
-			return err
-		}
-		return nil
+		return app.ApplyRuntime(ctx, say)
 	}, func() tea.Cmd { m.screen = scrRuntime; return m.loadRuntimes() })
 }
 

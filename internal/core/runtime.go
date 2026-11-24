@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
@@ -180,15 +181,83 @@ func (a *App) SelfUpdateNote(versions map[string]string) string {
 // policy when they are next applied.
 func (a *App) StayOn(ctx context.Context, tag string) error {
 	st := a.Store()
-	if _, err := st.Get(tag); err != nil {
-		if _, err := a.InstallRuntime(ctx, tag, false); err != nil {
+	inst, err := st.Get(tag)
+	if err != nil {
+		if inst, err = a.InstallRuntime(ctx, tag, false); err != nil {
 			return err
 		}
 	}
-	if err := st.Use(tag); err != nil {
+	if inst.Bad != "" {
+		return fmt.Errorf("nevr-runtime %s is marked bad: %s (`evr-docker runtime unmark %s` allows it again)", tag, inst.Bad, tag)
+	}
+	// The pin first: should the switch fail, the next update check still
+	// moves the servers to the version picked, not away from it.
+	if err := a.SetRuntimePolicy(ctx, "", "pinned", tag); err != nil {
 		return err
 	}
-	return a.SetRuntimePolicy(ctx, "", "pinned", tag)
+	return st.Use(tag)
+}
+
+// ApplyRuntime gives the servers a changed runtime policy: idle ones are
+// recreated now and one in a match once its match has ended, waiting up to
+// MatchWait. Apply alone leaves a server in a match for a later apply, and
+// one left on the nevr updater would keep a runtime nEVR updated itself
+// (game.SelfUpdated) instead of the version picked.
+func (a *App) ApplyRuntime(ctx context.Context, say func(string)) error {
+	if len(a.Cfg.Instances) == 0 {
+		return nil
+	}
+	if _, err := a.Apply(ctx, false, say); err != nil {
+		return err
+	}
+	deadline := time.Now().Add(MatchWait)
+	for {
+		waiting, err := a.inMatchWithDrift(ctx)
+		if err != nil || len(waiting) == 0 {
+			return err
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("%s still in a match after %s: `evr-docker server apply` once it ends gives it the change", strings.Join(waiting, ", "), MatchWait)
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("%s not updated yet (%w): `evr-docker server apply` once its match ends gives it the change", strings.Join(waiting, ", "), ctx.Err())
+		case <-time.After(matchPoll):
+		}
+		// only the servers whose match ended are recreated; the others'
+		// "will update after its match" lines aren't repeated
+		quiet := func(s string) {
+			if !strings.Contains(s, "will update after its match") {
+				say(s)
+			}
+		}
+		if _, err := a.Apply(ctx, false, quiet); err != nil {
+			return err
+		}
+	}
+}
+
+// MatchWait is how long ApplyRuntime waits for matches to end; matchPoll how
+// often it looks.
+var (
+	MatchWait = 45 * time.Minute
+	matchPoll = 10 * time.Second
+)
+
+// inMatchWithDrift names the running servers whose container differs from
+// the configuration and that host a match.
+func (a *App) inMatchWithDrift(ctx context.Context) ([]string, error) {
+	servers, err := a.Servers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, s := range servers {
+		if s.Container != nil && s.Drift != "" && s.Running() && s.Status != nil && !s.Status.State.Idle() {
+			out = append(out, s.Instance.Name)
+		}
+	}
+	return out, nil
 }
 
 // StayOnPrevious is a rollback that stays: StayOn the previous version.

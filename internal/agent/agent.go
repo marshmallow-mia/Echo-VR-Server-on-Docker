@@ -187,7 +187,14 @@ func PostUpdate(dir string) func(ctx context.Context, say func(string)) error {
 
 // Updater returns an updater wired to the Docker fleet.
 func Updater(app *core.App, log func(string)) *update.Updater {
-	return &update.Updater{Store: app.Store(), Fleet: fleet{dir: app.Dir}, Log: log}
+	dir := app.Dir
+	return &update.Updater{Store: app.Store(), Fleet: fleet{dir: dir}, Log: log, Policy: func() update.Policy {
+		now, err := core.Open(dir)
+		if err != nil {
+			return update.Policy{} // unreadable: not the policy the check started with
+		}
+		return now.Policy()
+	}}
 }
 
 // fleet pins a canary by setting its runtime in the config and recreating it.

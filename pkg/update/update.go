@@ -59,6 +59,11 @@ type Updater struct {
 	CanaryTimeout time.Duration
 	Poll          time.Duration
 	Log           func(string)
+	// Policy, when set, reads the policy as it is now. A canary can take an
+	// hour; if the policy changed meanwhile (a version was picked, another
+	// channel chosen), the release it tried is no longer wanted and current
+	// is left as the new policy put it.
+	Policy func() Policy
 }
 
 func (u *Updater) log(f string, a ...any) {
@@ -139,7 +144,10 @@ func (u *Updater) Run(ctx context.Context, p Policy) (Result, error) {
 		return res, ctx.Err()
 	}
 	// Undo the pin either way: on success the canary follows current again.
-	if ok {
+	if ok && u.Policy != nil && u.Policy() != p {
+		res.Action, res.Detail = "installed_only", "the runtime policy changed while the canary ran"
+		u.log("canary %s registered with %s, but the runtime policy changed meanwhile; current stays %s", canary, target.Tag, u.Store.Current())
+	} else if ok {
 		if err := u.Store.Use(target.Tag); err != nil {
 			return res, err
 		}
