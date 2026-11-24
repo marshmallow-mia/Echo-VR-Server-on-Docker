@@ -42,3 +42,28 @@ func TestSelfUpdates(t *testing.T) {
 		}
 	}
 }
+
+func TestPickableIsNewestFirstWithoutBlockedOrFailed(t *testing.T) {
+	rels := []Release{{Tag: "v6.16.5"}, {Tag: "v6.18.1"}, {Tag: "v5.4.1", Blocked: "no"}, {Tag: "v6.17.0"}}
+	installed := []Installed{{Tag: "v6.17.0", Bad: "canary failed"}, {Tag: "v6.9.2"}, {Tag: "v6.16.5"}}
+	got := strings.Join(Pickable(rels, installed), " ")
+	if want := "v6.18.1 v6.16.5 v6.9.2"; got != want {
+		t.Fatalf("Pickable = %q, want %q", got, want)
+	}
+	if got := Pickable(nil, nil); len(got) != 0 {
+		t.Fatalf("Pickable of nothing = %v", got)
+	}
+}
+
+func TestPickLabel(t *testing.T) {
+	chs := map[string]string{"stable": "6.16.5", "beta": "6.17.0", "alpha": "6.17.0"}
+	for tag, want := range map[string]string{
+		"v6.17.0": "v6.17.0 (nEVR alpha, nEVR beta, current)",
+		"v6.16.5": "v6.16.5 (nEVR stable)",
+		"v6.9.2":  "v6.9.2",
+	} {
+		if got := PickLabel(tag, chs, "v6.17.0"); got != want {
+			t.Errorf("PickLabel(%s) = %q, want %q", tag, got, want)
+		}
+	}
+}

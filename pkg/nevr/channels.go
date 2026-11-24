@@ -146,3 +146,55 @@ func atLeast(tag string, min Version) bool {
 	v, err := ParseVersion(tag)
 	return err == nil && !v.Less(min)
 }
+
+// Pickable returns the versions a host can be kept on, newest first: the
+// releases servers can use (List) and the installed ones, without blocked
+// releases and ones whose rollout failed. It is the list a version picker
+// offers, as the launcher's "nEVR version" does.
+func Pickable(rels []Release, installed []Installed) []string {
+	skip, seen := map[string]bool{}, map[string]bool{}
+	for _, in := range installed {
+		if in.Bad != "" {
+			skip[in.Tag] = true
+		}
+	}
+	var out []string
+	add := func(tag string) {
+		if !seen[tag] && !skip[tag] && Blocked[tag] == "" {
+			seen[tag] = true
+			out = append(out, tag)
+		}
+	}
+	for _, r := range rels {
+		if r.Blocked == "" {
+			add(r.Tag)
+		}
+	}
+	for _, in := range installed {
+		add(in.Tag)
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		a, aerr := ParseVersion(out[i])
+		b, berr := ParseVersion(out[j])
+		return aerr == nil && (berr != nil || b.Less(a))
+	})
+	return out
+}
+
+// PickLabel is a version picker's label for tag: the nEVR channels that name
+// it now and whether it is current ("v6.17.0 (nEVR beta, current)").
+func PickLabel(tag string, channels map[string]string, current string) string {
+	var notes []string
+	for _, n := range ChannelNames(channels) {
+		if "v"+strings.TrimPrefix(channels[n], "v") == tag {
+			notes = append(notes, "nEVR "+n)
+		}
+	}
+	if tag == current {
+		notes = append(notes, "current")
+	}
+	if len(notes) == 0 {
+		return tag
+	}
+	return tag + " (" + strings.Join(notes, ", ") + ")"
+}

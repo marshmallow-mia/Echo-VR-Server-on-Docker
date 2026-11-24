@@ -224,6 +224,35 @@ func gameCmd(g *globals) *cobra.Command {
 	return cmd
 }
 
+// stayOn keeps the servers on the version tag (core.App.StayOn) and gives
+// them the pinned policy.
+func stayOn(cmd *cobra.Command, g *globals, a *core.App, tag string) error {
+	if err := a.StayOn(cmd.Context(), tag); err != nil {
+		return err
+	}
+	g.say("nevr-runtime %s is now current; servers switch after their current match", tag)
+	if err := applyRuntime(cmd, g, a); err != nil {
+		return err
+	}
+	g.say("they stay on it until you pick a channel again (`evr-docker runtime channel stable`)")
+	return nil
+}
+
+// applyRuntime shows the runtime policy and gives the servers its
+// environment (idle ones now, the rest after their match).
+func applyRuntime(cmd *cobra.Command, g *globals, a *core.App) error {
+	_, chs, _ := a.Channels(cmd.Context())
+	g.say("nevr-runtime: %s", a.RuntimePolicyText(chs))
+	if note := a.SelfUpdateNote(chs); note != "" {
+		g.say("note: %s", note)
+	}
+	if len(a.Cfg.Instances) == 0 {
+		return nil
+	}
+	_, err := a.Apply(cmd.Context(), false, func(s string) { g.say("%s", s) })
+	return err
+}
+
 func runtimeCmd(g *globals) *cobra.Command {
 	cmd := &cobra.Command{Use: "runtime", Short: "Manage nevr-runtime versions"}
 	cmd.AddCommand(&cobra.Command{
@@ -290,45 +319,44 @@ func runtimeCmd(g *globals) *cobra.Command {
 			if len(args) == 1 {
 				tag = args[0]
 			}
-			inst, err := a.InstallRuntime(cmd.Context(), tag, use)
+			inst, err := a.InstallRuntime(cmd.Context(), tag, use && tag == "")
 			if err != nil {
 				return err
 			}
 			g.say("installed nevr-runtime %s (BugSplat64.dll sha256 %s)", inst.Tag, inst.DLLSHA256)
+			if use && tag != "" {
+				return stayOn(cmd, g, a, inst.Tag)
+			}
 			if use {
 				g.say("servers switch to it at their next match boundary")
 			}
 			return nil
 		},
 	}
-	install.Flags().BoolVar(&use, "use", false, "make it the current version")
+	install.Flags().BoolVar(&use, "use", false, "make it the current version (with TAG: and stay on it)")
 	cmd.AddCommand(install)
 	cmd.AddCommand(&cobra.Command{
-		Use: "use TAG", Short: "Switch servers to an installed version (at their next match boundary)", Args: cobra.ExactArgs(1),
+		Use: "use TAG", Short: "Keep the servers on a version (installed if needed; they switch at their next match boundary)", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			a, err := g.app()
 			if err != nil {
 				return err
 			}
-			if err := a.Store().Use(args[0]); err != nil {
-				return err
-			}
-			g.say("nevr-runtime %s is now current; servers switch after their current match", args[0])
-			return nil
+			return stayOn(cmd, g, a, args[0])
 		},
 	})
 	cmd.AddCommand(&cobra.Command{
-		Use: "rollback", Short: "Switch back to the previous version",
+		Use: "rollback", Short: "Go back to the previous version and stay on it",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			a, err := g.app()
 			if err != nil {
 				return err
 			}
-			tag, err := a.Store().Rollback()
-			if err == nil {
-				g.say("rolled back to nevr-runtime %s", tag)
+			if _, err := a.StayOnPrevious(cmd.Context()); err != nil {
+				return err
 			}
-			return err
+			g.say("rolled back")
+			return applyRuntime(cmd, g, a)
 		},
 	})
 	// applyPolicy saves a runtime policy and gives the servers its
@@ -341,17 +369,10 @@ func runtimeCmd(g *globals) *cobra.Command {
 		if err := a.SetRuntimePolicy(cmd.Context(), updater, channel, pinned); err != nil {
 			return err
 		}
-		_, chs, _ := a.Channels(cmd.Context())
-		g.say("nevr-runtime: %s", a.RuntimePolicyText(chs))
-		if note := a.SelfUpdateNote(chs); note != "" {
-			g.say("note: %s", note)
+		if err := applyRuntime(cmd, g, a); err != nil {
+			return err
 		}
-		if len(a.Cfg.Instances) > 0 {
-			if _, err := a.Apply(cmd.Context(), false, func(s string) { g.say("%s", s) }); err != nil {
-				return err
-			}
-		}
-		if channel != "" {
+		if channel != "" && channel != "pinned" {
 			g.say("`evr-docker update apply runtime` moves the servers to the channel's release now (else the next update check does, by updates.runtime)")
 		}
 		return nil
@@ -373,6 +394,11 @@ func runtimeCmd(g *globals) *cobra.Command {
 					return errors.New("pinned needs the version: evr-docker runtime channel pinned v6.17.0")
 				}
 				pinned = args[1]
+				a, err := g.app()
+				if err != nil {
+					return err
+				}
+				return stayOn(cmd, g, a, pinned) // now, as `runtime use` does
 			} else if len(args) == 2 {
 				return fmt.Errorf("only pinned takes a version")
 			}

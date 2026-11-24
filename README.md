@@ -129,6 +129,7 @@ evr-docker server match NAME          the current or last match (match stats)
 evr-docker server api|telemetry on|off|status NAME
 evr-docker game install [--from-dir DIR | --archive FILE] / game status
 evr-docker runtime ls|install [TAG] [--use]|use TAG|rollback|remove TAG|unmark TAG
+evr-docker runtime use TAG            keep the servers on a version (also: rollback, install TAG --use)
 evr-docker runtime channel stable|beta|...|pinned TAG    the nEVR channel the runtime follows
 evr-docker runtime updater nevr|evr-docker              who keeps the runtime current
 evr-docker account code|set|test|servers   console code (default) or password sign-in
@@ -198,6 +199,11 @@ manifest (`stable` unless picked; `beta`, ...). `evr-docker runtime updater` dec
 - `evr-docker` (hosts set up before v2.3.1 keep it): evr-docker updates with the canary above, and each server starts
   with `-no-update` (and from 6.18.0 `update.enabled: false`) and without what the runtime staged, so nothing comes back after a rollout.
   Only here can a version be pinned (`runtime channel pinned v6.17.0`).
+
+Picking a version works as in the launcher's "nEVR version": `evr-docker runtime use v6.16.5`, Enter on the runtime
+screen or its version list (`c` → one version) installs it if needed, makes it current and keeps the servers on it
+(`runtime channel pinned v6.16.5`, evr-docker updating), older or newer, until you pick a channel again. A rollback
+stays on the version it goes back to as well.
 
 `evr-docker runtime channel NAME` picks any channel nEVR's manifest lists (`evr-docker runtime ls` shows them). Hosts
 from before v2.3.1 followed GitHub's newest release (`pre`), which no nEVR channel does; they move to `stable`. A

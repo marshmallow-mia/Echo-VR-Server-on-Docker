@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -169,4 +170,48 @@ func (a *App) SelfUpdateNote(versions map[string]string) string {
 		return fmt.Sprintf("nEVR %s on %s can't be left to update itself yet (that needs %s); evr-docker keeps it current until it can", v, r.Channel, nevr.UpdateConfigMin)
 	}
 	return ""
+}
+
+// StayOn keeps the servers on the version tag, as picking a version does in
+// the launcher: tag is installed if it isn't yet and made current, and the
+// policy is pinned to it, so neither the next update check nor nEVR's own
+// update (a pin hands updating to evr-docker) moves the servers away again.
+// Picking a channel (`runtime channel NAME`) ends it. The servers get the
+// policy when they are next applied.
+func (a *App) StayOn(ctx context.Context, tag string) error {
+	st := a.Store()
+	if _, err := st.Get(tag); err != nil {
+		if _, err := a.InstallRuntime(ctx, tag, false); err != nil {
+			return err
+		}
+	}
+	if err := st.Use(tag); err != nil {
+		return err
+	}
+	return a.SetRuntimePolicy(ctx, "", "pinned", tag)
+}
+
+// StayOnPrevious is a rollback that stays: StayOn the previous version.
+func (a *App) StayOnPrevious(ctx context.Context) (string, error) {
+	prev := a.Store().Previous()
+	if prev == "" {
+		return "", errors.New("no previous runtime to roll back to")
+	}
+	return prev, a.StayOn(ctx, prev)
+}
+
+// Pickable returns the versions the servers can be kept on, newest first
+// (nevr.Pickable of a Runtimes list).
+func Pickable(rts []RuntimeInfo) []string {
+	var rels []nevr.Release
+	var installed []nevr.Installed
+	for _, r := range rts {
+		if r.Remote != nil {
+			rels = append(rels, *r.Remote)
+		}
+		if r.Installed {
+			installed = append(installed, nevr.Installed{Tag: r.Tag, Bad: r.Bad})
+		}
+	}
+	return nevr.Pickable(rels, installed)
 }

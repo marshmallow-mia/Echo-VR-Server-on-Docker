@@ -351,17 +351,7 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.setFlash(sel.Tag+": "+sel.Blocked, true)
 			return m, nil
 		}
-		tag := sel.Tag
-		return m, m.run("Installing nevr-runtime "+tag, func(ctx context.Context, say func(string)) error {
-			say("downloading and verifying " + tag)
-			inst, err := app.InstallRuntime(ctx, tag, true)
-			if err != nil {
-				return err
-			}
-			say("BugSplat64.dll sha256 " + inst.DLLSHA256)
-			say("now current: servers switch to it at their next match boundary")
-			return nil
-		}, func() tea.Cmd { m.screen = scrRuntime; return m.loadRuntimes() })
+		return m, m.stayOn(sel.Tag, false)
 	case "x":
 		if sel == nil || !sel.Installed {
 			return m, nil
@@ -406,13 +396,12 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return nil
 		}, func() tea.Cmd { m.screen = scrRuntime; return m.loadRuntimes() })
 	case "b":
-		return m, func() tea.Msg {
-			tag, err := app.Store().Rollback()
-			if err != nil {
-				return flashMsg{err.Error(), true}
-			}
-			return tea.Batch(func() tea.Msg { return flashMsg{"rolled back to " + tag, false} }, m.loadRuntimes())()
+		prev := app.Store().Previous()
+		if prev == "" {
+			m.setFlash("no previous runtime to roll back to", true)
+			return m, nil
 		}
+		return m, m.stayOn(prev, true)
 	case "c":
 		updater, channel, pinned := app.Cfg.Runtime.Updater, app.Cfg.Runtime.Channel, app.Cfg.Runtime.Pinned
 		auto := app.Cfg.Updates.Runtime == "auto"
@@ -431,16 +420,24 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if channel != "pinned" && !slices.Contains(names, channel) {
 			chOpts = append(chOpts, huh.NewOption(channel, channel))
 		}
-		chOpts = append(chOpts, huh.NewOption("pinned: stay on one version (evr-docker updates)", "pinned"))
-		f := huh.NewForm(huh.NewGroup(
-			huh.NewSelect[string]().Title("Who updates nevr-runtime").Options(
-				huh.NewOption("nEVR itself (from 6.18.0 on; evr-docker keeps the host DLL on the channel's release)", hostcfg.UpdaterNevr),
-				huh.NewOption("evr-docker (tried on one idle server first; nEVR's own update off)", hostcfg.UpdaterHost),
-			).Value(&updater),
-			huh.NewSelect[string]().Title("nEVR channel").Description("The release nEVR's manifest names for the channel.").Options(chOpts...).Value(&channel),
-			huh.NewInput().Title("Pinned version").Description("Only for pinned, e.g. v6.17.0.").Value(&pinned),
-			huh.NewConfirm().Title("Update automatically?").Description("Needs the background service (More → Discord alerts and the background service).").Value(&auto),
-		).Title("Runtime updates"))
+		chOpts = append(chOpts, huh.NewOption("one version: stay on it (evr-docker updates)", "pinned"))
+		if pinned == "" {
+			pinned = app.Store().Current()
+		}
+		f := huh.NewForm(
+			huh.NewGroup(
+				huh.NewSelect[string]().Title("Who updates nevr-runtime").Options(
+					huh.NewOption("nEVR itself (from 6.18.0 on; evr-docker keeps the host DLL on the channel's release)", hostcfg.UpdaterNevr),
+					huh.NewOption("evr-docker (tried on one idle server first; nEVR's own update off)", hostcfg.UpdaterHost),
+				).Value(&updater),
+				huh.NewSelect[string]().Title("nEVR channel").Description("The release nEVR's manifest names for the channel, or one version.").Options(chOpts...).Value(&channel),
+				huh.NewConfirm().Title("Update automatically?").Description("Needs the background service (More → Discord alerts and the background service).").Value(&auto),
+			).Title("Runtime updates"),
+			huh.NewGroup(
+				huh.NewSelect[string]().Title("Version").Description("The servers stay on it until you pick a channel again.").
+					Options(versionOptions(core.Pickable(m.runtimes), m.chVersions, app.Store().Current(), pinned)...).Value(&pinned),
+			).WithHideFunc(func() bool { return channel != "pinned" }),
+		)
 		return m, m.showForm(f, scrRuntime, func() tea.Cmd {
 			if channel != "pinned" {
 				pinned = ""
@@ -451,10 +448,21 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m.run("Saving the runtime settings", func(ctx context.Context, say func(string)) error {
 				if channel == "pinned" && updater == hostcfg.UpdaterNevr {
-					say("pinned: evr-docker updates (nEVR would update itself away from the pin)")
+					say("one version: evr-docker updates (nEVR would update itself away from it)")
 					updater = hostcfg.UpdaterHost
 				}
-				if err := app.SetRuntimePolicy(ctx, updater, channel, pinned); err != nil {
+				var err error
+				if channel == "pinned" {
+					if _, gerr := app.Store().Get(pinned); gerr != nil {
+						say("downloading and verifying " + pinned)
+					}
+					// switched now, as the launcher's picker does; the pin
+					// hands updating to evr-docker
+					err = app.StayOn(ctx, pinned)
+				} else {
+					err = app.SetRuntimePolicy(ctx, updater, channel, "")
+				}
+				if err != nil {
 					return err
 				}
 				say("nevr-runtime: " + app.RuntimePolicyText(m.chVersions))
@@ -472,6 +480,45 @@ func (m *model) updateRuntime(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.rtTable, cmd = m.rtTable.Update(msg)
 	return m, cmd
+}
+
+// stayOn keeps the servers on tag (core.App.StayOn): installs it if needed,
+// makes it current, pins the policy to it and applies the servers.
+func (m *model) stayOn(tag string, rollback bool) tea.Cmd {
+	app := m.app
+	title := "Staying on nevr-runtime " + tag
+	if rollback {
+		title = "Rolling back to nevr-runtime " + tag
+	}
+	return m.run(title, func(ctx context.Context, say func(string)) error {
+		if _, err := app.Store().Get(tag); err != nil {
+			say("downloading and verifying " + tag)
+		}
+		if err := app.StayOn(ctx, tag); err != nil {
+			return err
+		}
+		say("now current: servers switch to it at their next match boundary")
+		say("they stay on it until you pick a channel again (c)")
+		if len(app.Cfg.Instances) > 0 {
+			_, err := app.Apply(ctx, false, say)
+			return err
+		}
+		return nil
+	}, func() tea.Cmd { m.screen = scrRuntime; return m.loadRuntimes() })
+}
+
+// versionOptions are the version picker's choices: tags newest first,
+// labelled with the nEVR channels that name them and whether one is current.
+// pinned stays a choice when the list doesn't have it (GitHub unreachable).
+func versionOptions(tags []string, channels map[string]string, current, pinned string) []huh.Option[string] {
+	if pinned != "" && !slices.Contains(tags, pinned) {
+		tags = append([]string{pinned}, tags...)
+	}
+	var opts []huh.Option[string]
+	for _, t := range tags {
+		opts = append(opts, huh.NewOption(nevr.PickLabel(t, channels, current), t))
+	}
+	return opts
 }
 
 func (m *model) renderRuntime() string {
@@ -493,7 +540,7 @@ func (m *model) renderRuntime() string {
 	}
 	return m.header() + "  " + ui.Bold.Render("nevr-runtime") + "\n\n" + body + "\n\n" + ui.Subtle.Render(policy) + "\n" +
 		ui.Subtle.Render("Servers pick up a new current version at their next match boundary, so no match is cut short.") + "\n" +
-		m.footer(ui.K("enter", "install & use"), ui.K("b", "rollback"), ui.K("x", "delete"), ui.K("m", "allow a failed one again"), ui.K("u", "check for updates"), ui.K("c", "update settings"), ui.K("esc", "back"))
+		m.footer(ui.K("enter", "stay on this version"), ui.K("b", "roll back and stay"), ui.K("x", "delete"), ui.K("m", "allow a failed one again"), ui.K("u", "check for updates"), ui.K("c", "update settings"), ui.K("esc", "back"))
 }
 
 // Account screen.
