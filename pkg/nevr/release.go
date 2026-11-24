@@ -64,8 +64,10 @@ type Asset struct {
 type Client struct {
 	Repo    string
 	BaseURL string // default https://api.github.com
-	Token   string // optional, raises the rate limit
-	HTTP    *http.Client
+	// ManifestURL is nEVR's release manifest (channels); default ManifestURL.
+	ManifestURL string
+	Token       string // optional, raises the rate limit
+	HTTP        *http.Client
 }
 
 func (c *Client) httpClient() *http.Client {

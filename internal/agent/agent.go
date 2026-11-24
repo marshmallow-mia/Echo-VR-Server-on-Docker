@@ -187,7 +187,14 @@ func PostUpdate(dir string) func(ctx context.Context, say func(string)) error {
 
 // Updater returns an updater wired to the Docker fleet.
 func Updater(app *core.App, log func(string)) *update.Updater {
-	return &update.Updater{Store: app.Store(), Fleet: fleet{dir: app.Dir}, Log: log}
+	dir := app.Dir
+	return &update.Updater{Store: app.Store(), Fleet: fleet{dir: dir}, Log: log, Policy: func() update.Policy {
+		now, err := core.Open(dir)
+		if err != nil {
+			return update.Policy{} // unreadable: not the policy the check started with
+		}
+		return now.Policy()
+	}}
 }
 
 // fleet pins a canary by setting its runtime in the config and recreating it.
@@ -217,6 +224,24 @@ func (f fleet) Statuses(ctx context.Context) ([]status.Status, error) {
 	return out, nil
 }
 
+var _ update.Followers = fleet{}
+
+// FollowsCurrent implements update.Followers: servers left to the store's
+// current release, as opposed to pinned to one of their own.
+func (f fleet) FollowsCurrent(context.Context) (map[string]bool, error) {
+	app, err := core.Open(f.dir)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]bool{}
+	for _, in := range app.Cfg.Instances {
+		out[in.Name] = !in.Disabled && followsCurrent(app.Cfg.Effective(in).Runtime)
+	}
+	return out, nil
+}
+
+func followsCurrent(runtime string) bool { return runtime == "" || runtime == "current" }
+
 func (f fleet) Pin(ctx context.Context, instance, tag string) error {
 	app, err := core.Open(f.dir)
 	if err != nil {
@@ -226,7 +251,16 @@ func (f fleet) Pin(ctx context.Context, instance, tag string) error {
 	if !ok {
 		return fmt.Errorf("no server named %q", instance)
 	}
-	in.Settings.Runtime = tag
+	if tag == "" {
+		// back to current: only servers that followed current are canaries
+		// (FollowsCurrent), so this is where the canary was before.
+		in.Settings.Runtime = ""
+		if !followsCurrent(app.Cfg.Effective(*in).Runtime) {
+			in.Settings.Runtime = "current"
+		}
+	} else {
+		in.Settings.Runtime = tag
+	}
 	if err := app.Save(); err != nil {
 		return err
 	}

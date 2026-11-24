@@ -94,9 +94,12 @@ type model struct {
 	reexec      bool
 
 	runtimes []core.RuntimeInfo
-	rtTable  table.Model
-	account  *accountInfo
-	checks   []core.Check
+	// channels and chVersions are nEVR's channels as the runtime screen last read them.
+	channels   []string
+	chVersions map[string]string
+	rtTable    table.Model
+	account    *accountInfo
+	checks     []core.Check
 
 	confirm     string
 	confirmFunc func() tea.Cmd
@@ -166,8 +169,10 @@ type (
 	busyLineMsg struct{ line string }
 	busyDoneMsg struct{ err error }
 	runtimesMsg struct {
-		list []core.RuntimeInfo
-		err  error
+		list     []core.RuntimeInfo
+		err      error
+		channels []string          // nEVR's channels, stable first
+		versions map[string]string // channel → version
 	}
 	checksMsg  []core.Check
 	accountMsg *accountInfo
@@ -303,6 +308,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case runtimesMsg:
 		m.runtimes = msg.list
+		m.channels, m.chVersions = msg.channels, msg.versions
 		if msg.err != nil {
 			m.setFlash("cannot reach GitHub: "+msg.err.Error(), true)
 		}

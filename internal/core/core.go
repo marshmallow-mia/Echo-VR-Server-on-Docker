@@ -210,6 +210,12 @@ func (a *App) spec(in hostcfg.Instance) docker.ContainerSpec {
 		"EVR_GAME_DIR=/opt/echovr/game/" + game.CurrentLink,
 		"EVR_NEVR_DIR=/opt/echovr/nevr",
 	}, set.Env()...)
+	if set.Runtime == "" || set.Runtime == "current" {
+		// A pinned server runs its release with the runtime's own update off
+		// whatever the policy is (the supervisor's default), so a change of
+		// the policy doesn't recreate it.
+		env = append(env, a.Cfg.Runtime.SelfUpdateEnv()...)
+	}
 	env = append(env, a.Secrets.GameEnv()...)
 	res := a.Cfg.EffectiveResources(in)
 	var ports []docker.Port

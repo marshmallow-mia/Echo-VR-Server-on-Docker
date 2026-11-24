@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 )
 
@@ -79,7 +80,7 @@ func Doctor(ctx context.Context, a *App) []Check {
 	if cur := a.Store().Current(); cur == "" {
 		out = append(out, check("runtime", Fail, "no nevr-runtime selected", "evr-docker runtime install"))
 	} else {
-		out = append(out, check("runtime", OK, "nevr-runtime "+cur, ""))
+		out = append(out, a.runtimeCheck(ctx, cur))
 	}
 	if dc != "" {
 		if d, err := a.Docker(); err == nil {
@@ -261,4 +262,31 @@ func virtualIface(name string) bool {
 		}
 	}
 	return false
+}
+
+// runtimeCheck reports the current runtime, who updates it, and servers that
+// run another version than current: with nEVR updating itself that is its
+// own update; with evr-docker updating, the runtime's own update undid one
+// (an image from before evr-docker turned it off).
+func (a *App) runtimeCheck(ctx context.Context, cur string) Check {
+	msg := "nevr-runtime " + cur + "; " + a.RuntimePolicyText(nil)
+	var other []string
+	if servers, err := a.Servers(ctx); err == nil {
+		for _, s := range servers {
+			if s.Status == nil || s.Status.RuntimeVersion == "" || a.Cfg.Effective(s.Instance).Runtime != "current" {
+				continue
+			}
+			if v := strings.TrimPrefix(s.Status.RuntimeVersion, "v"); v != strings.TrimPrefix(cur, "v") {
+				other = append(other, s.Instance.Name+" runs "+v)
+			}
+		}
+	}
+	if len(other) == 0 {
+		return check("runtime", OK, msg, "")
+	}
+	msg += " (" + strings.Join(other, ", ") + ")"
+	if a.Cfg.Runtime.Updater == hostcfg.UpdaterNevr && nevr.UpdateConfigurable(cur) {
+		return check("runtime", OK, msg+": nEVR updated itself", "")
+	}
+	return check("runtime", Warn, msg, "evr-docker server apply (recreates them with nEVR's own update off)")
 }

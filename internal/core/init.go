@@ -13,6 +13,7 @@ import (
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/game"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/instance"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/auth"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr/config"
 )
@@ -44,7 +45,8 @@ type Answers struct {
 		Mirror string `yaml:"mirror,omitempty"`
 	} `yaml:"game"`
 	Runtime struct {
-		Channel string `yaml:"channel,omitempty"` // pre (default), stable, pinned
+		Updater string `yaml:"updater,omitempty"` // nevr (default), evr-docker
+		Channel string `yaml:"channel,omitempty"` // a nEVR channel (stable by default, beta, ...) or pinned
 		Pinned  string `yaml:"pinned,omitempty"`
 	} `yaml:"runtime"`
 	Start bool `yaml:"start"`
@@ -133,7 +135,13 @@ func Init(ctx context.Context, dir string, an Answers, progress func(step, detai
 		cfg.Defaults.Guilds = an.Guilds
 	}
 	if an.Runtime.Channel != "" {
-		cfg.Runtime.Channel, cfg.Runtime.Pinned = an.Runtime.Channel, an.Runtime.Pinned
+		cfg.Runtime.Channel, cfg.Runtime.Pinned = nevr.ChannelName(an.Runtime.Channel), an.Runtime.Pinned
+		if cfg.Runtime.Channel == "pinned" {
+			cfg.Runtime.Updater = hostcfg.UpdaterHost // nEVR would update itself away from the pin
+		}
+	}
+	if an.Runtime.Updater != "" {
+		cfg.Runtime.Updater = an.Runtime.Updater
 	}
 	sec, err := hostcfg.LoadSecrets(dir)
 	if err != nil {

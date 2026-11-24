@@ -23,9 +23,22 @@ type Fleet interface {
 	Pin(ctx context.Context, instance, tag string) error
 }
 
+// Followers is implemented by a fleet that knows which servers run the
+// store's current release. Only those are used as canary: a server pinned to
+// a release of its own would lose its pin when the canary's pin is undone,
+// and would not show how current's servers fare.
+type Followers interface {
+	// FollowsCurrent returns the instances (as Statuses names them) that
+	// run whatever release is current.
+	FollowsCurrent(ctx context.Context) (map[string]bool, error)
+}
+
 // Policy chooses the target release.
 type Policy struct {
-	Channel string // pre, stable or pinned
+	// Channel is one of nEVR's channels (stable, beta, ...: the release its
+	// manifest names for it) or "pinned" (Pinned). "pre", evr-docker's old
+	// "newest GitHub release", is stable (nevr.ChannelName).
+	Channel string
 	Pinned  string
 }
 
@@ -46,6 +59,11 @@ type Updater struct {
 	CanaryTimeout time.Duration
 	Poll          time.Duration
 	Log           func(string)
+	// Policy, when set, reads the policy as it is now. A canary can take an
+	// hour; if the policy changed meanwhile (a version was picked, another
+	// channel chosen), the release it tried is no longer wanted and current
+	// is left as the new policy put it.
+	Policy func() Policy
 }
 
 func (u *Updater) log(f string, a ...any) {
@@ -60,14 +78,10 @@ func (u *Updater) Target(ctx context.Context, p Policy) (nevr.Release, error) {
 	if c == nil {
 		c = &nevr.Client{}
 	}
-	switch p.Channel {
-	case "pinned":
+	if p.Channel == "pinned" {
 		return c.Find(ctx, p.Pinned)
-	case "stable":
-		return c.Newest(ctx, false)
-	default:
-		return c.Newest(ctx, true)
 	}
+	return c.Channel(ctx, p.Channel)
 }
 
 // Check reports whether an update is available without changing anything.
@@ -94,7 +108,7 @@ func (u *Updater) Run(ctx context.Context, p Policy) (Result, error) {
 	if _, err := u.Store.Install(ctx, target); err != nil {
 		return res, err
 	}
-	if cur == "" || u.Fleet == nil {
+	if cur == "" || u.Fleet == nil || u.noFollowers(ctx) {
 		res.Action = "switched"
 		return res, u.Store.Use(target.Tag)
 	}
@@ -117,8 +131,23 @@ func (u *Updater) Run(ctx context.Context, p Policy) (Result, error) {
 		return res, fmt.Errorf("pinning canary %s: %w", canary, err)
 	}
 	ok, detail := u.waitRegistered(ctx, canary, target.Tag, timeout, poll)
+	if !ok && ctx.Err() != nil {
+		// Stopped (the agent restarting), not failed: the release is not
+		// marked bad, and the canary still goes back to current.
+		res.Action, res.Detail = "installed_only", "stopped while the canary started: "+ctx.Err().Error()
+		u.log("canary %s: stopped before it registered with %s; staying on %s", canary, target.Tag, cur)
+		unpinCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Minute)
+		defer cancel()
+		if err := u.Fleet.Pin(unpinCtx, canary, ""); err != nil {
+			return res, fmt.Errorf("unpinning canary %s: %w", canary, err)
+		}
+		return res, ctx.Err()
+	}
 	// Undo the pin either way: on success the canary follows current again.
-	if ok {
+	if ok && u.Policy != nil && u.Policy() != p {
+		res.Action, res.Detail = "installed_only", "the runtime policy changed while the canary ran"
+		u.log("canary %s registered with %s, but the runtime policy changed meanwhile; current stays %s", canary, target.Tag, u.Store.Current())
+	} else if ok {
 		if err := u.Store.Use(target.Tag); err != nil {
 			return res, err
 		}
@@ -135,14 +164,41 @@ func (u *Updater) Run(ctx context.Context, p Policy) (Result, error) {
 	return res, nil
 }
 
-// waitIdle returns a registered server that is not hosting a match.
+// noFollowers reports whether the fleet knows no server runs current: then no
+// server can be a canary, and none would notice the switch either.
+func (u *Updater) noFollowers(ctx context.Context) bool {
+	f, ok := u.Fleet.(Followers)
+	if !ok {
+		return false
+	}
+	m, err := f.FollowsCurrent(ctx)
+	if err != nil {
+		return false
+	}
+	for _, yes := range m {
+		if yes {
+			return false
+		}
+	}
+	return true
+}
+
+// waitIdle returns a registered server that runs current and is not hosting a
+// match.
 func (u *Updater) waitIdle(ctx context.Context, timeout, poll time.Duration) (string, error) {
 	deadline := time.Now().Add(timeout)
 	for {
 		sts, err := u.Fleet.Statuses(ctx)
+		follows := func(string) bool { return true }
+		if f, ok := u.Fleet.(Followers); ok && err == nil {
+			var m map[string]bool
+			if m, err = f.FollowsCurrent(ctx); err == nil {
+				follows = func(in string) bool { return m[in] }
+			}
+		}
 		if err == nil {
 			for _, s := range sts {
-				if s.State == status.StateRegistered {
+				if s.State == status.StateRegistered && follows(s.Instance) {
 					return s.Instance, nil
 				}
 			}
