@@ -67,3 +67,21 @@ func TestPickLabel(t *testing.T) {
 		}
 	}
 }
+
+func TestSameRelease(t *testing.T) {
+	for _, c := range []struct {
+		a, b string
+		want bool
+	}{
+		{"v6.16.5", "6.16.5", true},
+		{"v6.16.5-tel2100b", "6.16.5", true},
+		{"v6.17.0", "6.17.0-dev.125+1a874753", true},
+		{"v6.18.1", "6.16.5", false},
+		{"current", "current", true},
+		{"v6.16.5", "", false},
+	} {
+		if got := SameRelease(c.a, c.b); got != c.want {
+			t.Errorf("SameRelease(%q, %q) = %v", c.a, c.b, got)
+		}
+	}
+}

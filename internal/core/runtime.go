@@ -210,6 +210,9 @@ func (a *App) ApplyRuntime(ctx context.Context, say func(string)) error {
 	if _, err := a.Apply(ctx, false, say); err != nil {
 		return err
 	}
+	if err := a.restartIdleOnOtherVersion(ctx, say); err != nil {
+		return err
+	}
 	deadline := time.Now().Add(MatchWait)
 	for {
 		waiting, err := a.inMatchWithDrift(ctx)
@@ -235,6 +238,39 @@ func (a *App) ApplyRuntime(ctx context.Context, say func(string)) error {
 			return err
 		}
 	}
+}
+
+// restartIdleOnOtherVersion restarts the game of each idle server that
+// follows current but runs another version while evr-docker updates, so a
+// version picked (or a channel's release installed) takes effect now. A
+// server picks up current at each start of its game, which is otherwise only
+// after its next match; one in a match still switches when the match ends.
+func (a *App) restartIdleOnOtherVersion(ctx context.Context, say func(string)) error {
+	cur := a.Store().Current()
+	if a.Cfg.Runtime.Updater != hostcfg.UpdaterHost || cur == "" {
+		return nil // nEVR updating: a server may rightly run a newer one it put in place
+	}
+	servers, err := a.Servers(ctx)
+	if err != nil {
+		return err
+	}
+	for _, s := range servers {
+		in, ok := a.Cfg.Instance(s.Instance.Name)
+		if !ok || in.Disabled || !s.Running() || s.Status == nil || !s.Status.State.Idle() {
+			continue
+		}
+		if rt := a.Cfg.Effective(*in).Runtime; rt != "" && rt != "current" {
+			continue // pinned to its own version
+		}
+		if v := s.Status.RuntimeVersion; v == "" || nevr.SameRelease(v, cur) {
+			continue
+		}
+		if err := a.Restart(ctx, in.Name, true); err != nil {
+			return fmt.Errorf("%s: %w", in.Name, err)
+		}
+		say(fmt.Sprintf("%s: idle on %s, restarting its game on %s", in.Name, s.Status.RuntimeVersion, cur))
+	}
+	return nil
 }
 
 // MatchWait is how long ApplyRuntime waits for matches to end; matchPoll how

@@ -198,3 +198,16 @@ func PickLabel(tag string, channels map[string]string, current string) string {
 	}
 	return tag + " (" + strings.Join(notes, ", ") + ")"
 }
+
+// SameRelease reports whether two version names are the same release
+// (MAJOR.MINOR.PATCH): the store's tag ("v6.16.5", "v6.16.5-tel2100b") and
+// what a running game reports ("6.16.5", "6.17.0-dev.125+1a874753") differ in
+// form. Names that aren't versions are compared as they are.
+func SameRelease(a, b string) bool {
+	va, erra := ParseVersion(a)
+	vb, errb := ParseVersion(b)
+	if erra != nil || errb != nil {
+		return strings.TrimPrefix(a, "v") == strings.TrimPrefix(b, "v")
+	}
+	return va.Major == vb.Major && va.Minor == vb.Minor && va.Patch == vb.Patch
+}
