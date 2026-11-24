@@ -9,6 +9,7 @@ import (
 
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/internal/hostcfg"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/nevr"
+	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/status"
 	"github.com/marshmallow-mia/Echo-VR-Server-on-Docker/v2/pkg/update"
 )
 
@@ -207,10 +208,14 @@ func (a *App) ApplyRuntime(ctx context.Context, say func(string)) error {
 	if len(a.Cfg.Instances) == 0 {
 		return nil
 	}
+	before, err := a.containerIDs(ctx)
+	if err != nil {
+		return err
+	}
 	if _, err := a.Apply(ctx, false, say); err != nil {
 		return err
 	}
-	if err := a.restartIdleOnOtherVersion(ctx, say); err != nil {
+	if err := a.restartIdleOnOtherVersion(ctx, before, say); err != nil {
 		return err
 	}
 	deadline := time.Now().Add(MatchWait)
@@ -245,7 +250,11 @@ func (a *App) ApplyRuntime(ctx context.Context, say func(string)) error {
 // version picked (or a channel's release installed) takes effect now. A
 // server picks up current at each start of its game, which is otherwise only
 // after its next match; one in a match still switches when the match ends.
-func (a *App) restartIdleOnOtherVersion(ctx context.Context, say func(string)) error {
+//
+// before has each server's container ID from before Apply: a container it
+// created or recreated starts its game on current anyway, while its status
+// file may still be the old one's.
+func (a *App) restartIdleOnOtherVersion(ctx context.Context, before map[string]string, say func(string)) error {
 	cur := a.Store().Current()
 	if a.Cfg.Runtime.Updater != hostcfg.UpdaterHost || cur == "" {
 		return nil // nEVR updating: a server may rightly run a newer one it put in place
@@ -256,8 +265,11 @@ func (a *App) restartIdleOnOtherVersion(ctx context.Context, say func(string)) e
 	}
 	for _, s := range servers {
 		in, ok := a.Cfg.Instance(s.Instance.Name)
-		if !ok || in.Disabled || !s.Running() || s.Status == nil || !s.Status.State.Idle() {
-			continue
+		if !ok || in.Disabled || !s.Running() || before[in.Name] != s.Container.ID {
+			continue // stopped, or (re)created just now
+		}
+		if s.State() == "starting" || s.Status.State == status.StateStarting || !s.Status.State.Idle() {
+			continue // its game starts on current anyway, or it is in a match
 		}
 		if rt := a.Cfg.Effective(*in).Runtime; rt != "" && rt != "current" {
 			continue // pinned to its own version
@@ -271,6 +283,21 @@ func (a *App) restartIdleOnOtherVersion(ctx context.Context, say func(string)) e
 		say(fmt.Sprintf("%s: idle on %s, restarting its game on %s", in.Name, s.Status.RuntimeVersion, cur))
 	}
 	return nil
+}
+
+// containerIDs maps each server to its container's ID ("" without one).
+func (a *App) containerIDs(ctx context.Context) (map[string]string, error) {
+	servers, err := a.Servers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]string{}
+	for _, s := range servers {
+		if s.Container != nil {
+			out[s.Instance.Name] = s.Container.ID
+		}
+	}
+	return out, nil
 }
 
 // MatchWait is how long ApplyRuntime waits for matches to end; matchPoll how
